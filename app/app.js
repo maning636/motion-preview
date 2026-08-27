@@ -267,8 +267,8 @@ function openGetPromptModal(template) {
         ? "会员预览模板：完整提示词与模板源文件仅会员渠道发放。<br />详情见首页「关注我们」。"
         : "公开模板：178 个提示词已在 GitHub 全量开源，直接下载；<br />生产 Skill 进社区免费领；完整版 Skill、会员动效系列与成片流水线在知识星球逐步开放。"}</p>
       <div class="get-actions">
-        <a class="button primary" href="${GITHUB_REPO}" target="_blank" rel="noreferrer">GitHub 免费下载样例</a>
-        <a class="button" href="#follow-us" id="get-goto-qr">扫码进社区</a>
+        ${isMember ? "" : `<a class="button primary" href="${GITHUB_REPO}" target="_blank" rel="noreferrer">GitHub 免费下载样例</a>`}
+        <a class="button${isMember ? " primary" : ""}" href="#follow-us" id="get-goto-qr">扫码进社区</a>
       </div>
     </div>`;
   document.body.append(overlay);
