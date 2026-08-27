@@ -1,0 +1,474 @@
+{
+  "segMax": 6,
+  "modes": {
+    "T00": {
+      "segs": [
+        "chapter-nav-player",
+        "step-breakdown-card",
+        "prompt-assembly-list",
+        "terminal-prompt-card"
+      ],
+      "mtimes": {
+        "chapter-nav-player": 1786809281.0362592,
+        "step-breakdown-card": 1786809335.5662434,
+        "prompt-assembly-list": 1786809385.5433636,
+        "terminal-prompt-card": 1786809436.3247316
+      },
+      "pending": [],
+      "missing": [],
+      "note": null
+    },
+    "T01": {
+      "segs": [
+        "chapter-nav-player",
+        "bar-chart-race-smooth",
+        "timeline-cursor-slide",
+        "exploded-donut-pie"
+      ],
+      "mtimes": {
+        "chapter-nav-player": 1786809281.0362592,
+        "bar-chart-race-smooth": 1786792692.0451603,
+        "timeline-cursor-slide": 1786808956.5742998,
+        "exploded-donut-pie": 1786810097.236812
+      },
+      "pending": [],
+      "missing": [],
+      "note": null
+    },
+    "T02": {
+      "segs": [
+        "coverflow-carousel",
+        "hero3d-float-cards",
+        "hero3d-tilt-showcase",
+        "shot-spotlight-hero"
+      ],
+      "mtimes": {
+        "coverflow-carousel": 1786793566.68424,
+        "hero3d-float-cards": 1786637826.3119018,
+        "hero3d-tilt-showcase": 1786637880.2013488,
+        "shot-spotlight-hero": 1785172670.4599452
+      },
+      "pending": [],
+      "missing": [],
+      "note": null
+    },
+    "T03": {
+      "segs": [
+        "transition-raindrop-reveal",
+        "transition-raindrop-loop",
+        "shot-circle-iris",
+        "spec-scene-card"
+      ],
+      "mtimes": {
+        "transition-raindrop-reveal": 1786792844.1319692,
+        "transition-raindrop-loop": 1786809112.1408274,
+        "shot-circle-iris": 1785182058.2709029,
+        "spec-scene-card": 1786810151.9784708
+      },
+      "pending": [],
+      "missing": [],
+      "note": null
+    },
+    "T04": {
+      "segs": [
+        "vinyl-disc-player",
+        "lyrics-scroll-highlight",
+        "sin-spectrum-bars",
+        "audio-waveform"
+      ],
+      "mtimes": {
+        "vinyl-disc-player": 1786803297.8659105,
+        "lyrics-scroll-highlight": 1786809170.891642,
+        "sin-spectrum-bars": 1786809226.1257825,
+        "audio-waveform": 1786634757.5935075
+      },
+      "pending": [],
+      "missing": [],
+      "note": null
+    },
+    "T05": {
+      "segs": [
+        "video-text-mask-reveal",
+        "shot-text-mask",
+        "shot-karaoke-fill",
+        "karaoke-line"
+      ],
+      "mtimes": {
+        "video-text-mask-reveal": 1787417741.340961,
+        "shot-text-mask": 1785176733.160963,
+        "shot-karaoke-fill": 1785217772.709184,
+        "karaoke-line": 1785755996.8665054
+      },
+      "pending": [],
+      "missing": [
+        "aperture-split-wipe"
+      ],
+      "note": null
+    },
+    "T06": {
+      "segs": [
+        "handdraw-story-player",
+        "whiteboard-draw",
+        "handwrite-title",
+        "shot-draw-svg-trace"
+      ],
+      "mtimes": {
+        "handdraw-story-player": 1786793038.178944,
+        "whiteboard-draw": 1785755565.304981,
+        "handwrite-title": 1785755946.6604166,
+        "shot-draw-svg-trace": 1785175422.3457522
+      },
+      "pending": [
+        "lineart-color-wipe-scene",
+        "step-flow-stepper",
+        "three-step-flow",
+        "progress-chapters"
+      ],
+      "missing": [],
+      "note": "另有 4 个配套模板待入库，补齐后重跑可加长演示"
+    },
+    "T07": {
+      "segs": [
+        "petal-mask-rotate",
+        "shot-circle-iris",
+        "shot-morph-primitive",
+        "anti-pattern-note"
+      ],
+      "mtimes": {
+        "petal-mask-rotate": 1787408508.8231227,
+        "shot-circle-iris": 1785182058.2709029,
+        "shot-morph-primitive": 1785175378.4883773,
+        "anti-pattern-note": 1786809688.5008855
+      },
+      "pending": [
+        "timed-loop-slideshow"
+      ],
+      "missing": [
+        "rim-sample-stroke"
+      ],
+      "note": "另有 1 个配套模板待入库，补齐后重跑可加长演示"
+    },
+    "T08": {
+      "segs": [
+        "parallax-album-intro",
+        "toc-sidebar-spotlight",
+        "prompt-tuning-bubbles",
+        "shot-depth-parallax"
+      ],
+      "mtimes": {
+        "parallax-album-intro": 1786793174.2971761,
+        "toc-sidebar-spotlight": 1786809738.059801,
+        "prompt-tuning-bubbles": 1786809532.821202,
+        "shot-depth-parallax": 1785182548.76074
+      },
+      "pending": [],
+      "missing": [
+        "parallax-depth-stage"
+      ],
+      "note": null
+    },
+    "T09": {
+      "segs": [
+        "form-red-notice",
+        "form-table-rows",
+        "form-stamp-approve",
+        "form-checklist-audit"
+      ],
+      "mtimes": {
+        "form-red-notice": 1786636994.2481894,
+        "form-table-rows": 1786637134.6623511,
+        "form-stamp-approve": 1786642606.6646597,
+        "form-checklist-audit": 1786636906.5387175
+      },
+      "pending": [],
+      "missing": [],
+      "note": null
+    },
+    "T10": {
+      "segs": [
+        "board-marker-title",
+        "board-sticky-notes",
+        "board-compare-grid",
+        "board-flow-arrows"
+      ],
+      "mtimes": {
+        "board-marker-title": 1787216373.211686,
+        "board-sticky-notes": 1786635197.2902625,
+        "board-compare-grid": 1786635041.060287,
+        "board-flow-arrows": 1786635081.1298368
+      },
+      "pending": [],
+      "missing": [],
+      "note": null
+    },
+    "T11": {
+      "segs": [
+        "timeline-cursor-slide",
+        "exploded-donut-pie",
+        "timeline-scan",
+        "top-rank-list"
+      ],
+      "mtimes": {
+        "timeline-cursor-slide": 1786808956.5742998,
+        "exploded-donut-pie": 1786810097.236812,
+        "timeline-scan": 1786640925.9320552,
+        "top-rank-list": 1786640984.0202715
+      },
+      "pending": [
+        "bar-chart-race-smooth"
+      ],
+      "missing": [],
+      "note": "另有 1 个配套模板待入库，补齐后重跑可加长演示"
+    },
+    "T12": {
+      "segs": [
+        "sin-spectrum-bars",
+        "lyrics-scroll-highlight",
+        "audio-waveform",
+        "karaoke-line"
+      ],
+      "mtimes": {
+        "sin-spectrum-bars": 1786809226.1257825,
+        "lyrics-scroll-highlight": 1786809170.891642,
+        "audio-waveform": 1786634757.5935075,
+        "karaoke-line": 1785755996.8665054
+      },
+      "pending": [
+        "vinyl-disc-player"
+      ],
+      "missing": [],
+      "note": "另有 1 个配套模板待入库，补齐后重跑可加长演示"
+    },
+    "T13": {
+      "segs": [
+        "hero3d-float-cards",
+        "hero3d-tilt-showcase",
+        "photo-wall-zoom",
+        "shot-spotlight-hero"
+      ],
+      "mtimes": {
+        "hero3d-float-cards": 1786637826.3119018,
+        "hero3d-tilt-showcase": 1786637880.2013488,
+        "photo-wall-zoom": 1785756452.4408605,
+        "shot-spotlight-hero": 1785172670.4599452
+      },
+      "pending": [
+        "coverflow-carousel",
+        "parallax-album-intro"
+      ],
+      "missing": [],
+      "note": "另有 2 个配套模板待入库，补齐后重跑可加长演示"
+    },
+    "T14": {
+      "segs": [
+        "shot-slow-push",
+        "big-type-hero",
+        "photo-wall-zoom",
+        "shot-waterfall-wall"
+      ],
+      "mtimes": {
+        "shot-slow-push": 1785217239.7998633,
+        "big-type-hero": 1786634952.6869552,
+        "photo-wall-zoom": 1785756452.4408605,
+        "shot-waterfall-wall": 1785212789.115858
+      },
+      "pending": [
+        "timed-loop-slideshow"
+      ],
+      "missing": [],
+      "note": "另有 1 个配套模板待入库，补齐后重跑可加长演示"
+    },
+    "T15": {
+      "segs": [
+        "whiteboard-draw",
+        "handwrite-title",
+        "shot-draw-svg-trace",
+        "shot-wireframe-draw"
+      ],
+      "mtimes": {
+        "whiteboard-draw": 1785755565.304981,
+        "handwrite-title": 1785755946.6604166,
+        "shot-draw-svg-trace": 1785175422.3457522,
+        "shot-wireframe-draw": 1785220448.2951515
+      },
+      "pending": [
+        "lineart-color-wipe-scene",
+        "handdraw-story-player"
+      ],
+      "missing": [],
+      "note": "另有 2 个配套模板待入库，补齐后重跑可加长演示"
+    },
+    "T16": {
+      "segs": [
+        "shot-text-mask",
+        "pull-quote-hero",
+        "glass-quote-card",
+        "big-type-hero"
+      ],
+      "mtimes": {
+        "shot-text-mask": 1785176733.160963,
+        "pull-quote-hero": 1786639126.1596143,
+        "glass-quote-card": 1786637620.9125984,
+        "big-type-hero": 1786634952.6869552
+      },
+      "pending": [
+        "video-text-mask-reveal"
+      ],
+      "missing": [],
+      "note": "另有 1 个配套模板待入库，补齐后重跑可加长演示"
+    },
+    "T17": {
+      "segs": [
+        "file-dossier-cover",
+        "file-evidence-wall",
+        "file-photo-zoom",
+        "file-newspaper-clip"
+      ],
+      "mtimes": {
+        "file-dossier-cover": 1787321240.6627066,
+        "file-evidence-wall": 1787321327.9253485,
+        "file-photo-zoom": 1787321361.2970204,
+        "file-newspaper-clip": 1787321268.904374
+      },
+      "pending": [],
+      "missing": [],
+      "note": null
+    },
+    "T18": {
+      "segs": [
+        "glass-dashboard",
+        "glass-feature-grid",
+        "glass-stat-card",
+        "glass-bar-live"
+      ],
+      "mtimes": {
+        "glass-dashboard": 1786637411.0331614,
+        "glass-feature-grid": 1786637469.6598673,
+        "glass-stat-card": 1786637671.9817173,
+        "glass-bar-live": 1786637358.343952
+      },
+      "pending": [],
+      "missing": [],
+      "note": null
+    },
+    "T19": {
+      "segs": [
+        "toc-sidebar-spotlight",
+        "keyword-sticker",
+        "concept-card",
+        "concept-spotlight"
+      ],
+      "mtimes": {
+        "toc-sidebar-spotlight": 1786809738.059801,
+        "keyword-sticker": 1786638268.494253,
+        "concept-card": 1786635979.0871048,
+        "concept-spotlight": 1786636077.4944417
+      },
+      "pending": [],
+      "missing": [],
+      "note": null
+    },
+    "T20": {
+      "segs": [
+        "big-type-hero",
+        "cream-big-type-hero",
+        "subtitle-highlight",
+        "karaoke-line"
+      ],
+      "mtimes": {
+        "big-type-hero": 1786634952.6869552,
+        "cream-big-type-hero": 1784969982.5857382,
+        "subtitle-highlight": 1786640621.9219072,
+        "karaoke-line": 1785755996.8665054
+      },
+      "pending": [],
+      "missing": [],
+      "note": null
+    },
+    "T21": {
+      "segs": [
+        "glass-dashboard",
+        "dashboard-mock",
+        "glass-stat-card",
+        "metric-pulse"
+      ],
+      "mtimes": {
+        "glass-dashboard": 1786637411.0331614,
+        "dashboard-mock": 1786636173.970576,
+        "glass-stat-card": 1786637671.9817173,
+        "metric-pulse": 1786638520.5756536
+      },
+      "pending": [],
+      "missing": [],
+      "note": null
+    },
+    "T22": {
+      "segs": [
+        "composite-grid",
+        "icon-grid",
+        "shot-waterfall-wall",
+        "shot-grid-flash"
+      ],
+      "mtimes": {
+        "composite-grid": 1786635882.2739394,
+        "icon-grid": 1786638082.946823,
+        "shot-waterfall-wall": 1785212789.115858,
+        "shot-grid-flash": 1785212820.5932508
+      },
+      "pending": [],
+      "missing": [],
+      "note": null
+    },
+    "T23": {
+      "segs": [
+        "myth-fact-swap",
+        "cream-myth-fact-swap",
+        "versus-frame",
+        "shot-versus-slam"
+      ],
+      "mtimes": {
+        "myth-fact-swap": 1786638675.8417275,
+        "cream-myth-fact-swap": 1785141472.3537843,
+        "versus-frame": 1786641226.9546647,
+        "shot-versus-slam": 1785217388.385171
+      },
+      "pending": [],
+      "missing": [],
+      "note": null
+    },
+    "T24": {
+      "segs": [
+        "simple-flow-chart",
+        "cream-simple-flow-chart",
+        "three-step-flow",
+        "complex-flow"
+      ],
+      "mtimes": {
+        "simple-flow-chart": 1786640101.8426228,
+        "cream-simple-flow-chart": 1784974387.7385626,
+        "three-step-flow": 1786640862.9200473,
+        "complex-flow": 1786635696.905438
+      },
+      "pending": [],
+      "missing": [],
+      "note": null
+    },
+    "T25": {
+      "segs": [
+        "chat-thread",
+        "neon-chat-bubbles",
+        "neon-chat-input",
+        "shot-ai-stream"
+      ],
+      "mtimes": {
+        "chat-thread": 1786635495.784475,
+        "neon-chat-bubbles": 1785958058.4456172,
+        "neon-chat-input": 1785958052.1584232,
+        "shot-ai-stream": 1785179186.7283826
+      },
+      "pending": [],
+      "missing": [],
+      "note": null
+    }
+  }
+}
