@@ -101,7 +101,6 @@ const SERIES_SECTIONS = [
 ];
 const SERIES_NAV = [
   ...SERIES_SECTIONS.map((s) => ({ key: s.key, title: s.title, sub: s.subtitle, member: !!s.member })),
-  { key: "all", title: "全部", sub: "四个系列一起看" },
 ];
 
 function seriesOf(template) {
@@ -187,14 +186,13 @@ function renderTabs(resultCount) {
 function renderSeriesNav(resultCount) {
   const nav = document.createElement("div");
   nav.className = "series-nav";
+  nav.style.setProperty("--series-count", SERIES_NAV.length);
   for (const item of SERIES_NAV) {
-    const count = item.key === "all"
-      ? state.catalog.templates.length
-      : state.catalog.templates.filter(SERIES_SECTIONS.find((s) => s.key === item.key).match).length;
+    const count = state.catalog.templates.filter(SERIES_SECTIONS.find((s) => s.key === item.key).match).length;
     const pill = document.createElement("button");
     pill.type = "button";
     pill.className = `series-pill ${state.series === item.key ? "active" : ""}`;
-    pill.innerHTML = `<span class="sp-title">${item.title}${item.member ? '<span class="sp-vip">会员</span>' : item.key === "all" ? "" : '<span class="sp-free">免费</span>'}</span><span class="sp-sub">${item.sub}</span><span class="sp-count">${count} 个模板</span>`;
+    pill.innerHTML = `<span class="sp-title">${item.title}${item.member ? '<span class="sp-vip">会员</span>' : '<span class="sp-free">免费</span>'}</span><span class="sp-sub">${item.sub}</span><span class="sp-count">${count} 个模板</span>`;
     pill.addEventListener("click", () => {
       state.series = item.key;
       state.category = ALL_CATEGORY;
