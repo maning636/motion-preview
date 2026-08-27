@@ -1,6 +1,6 @@
 import { MODES } from "./modes-data.js?v=20260825-pace2";
 
-const state = { catalog: null, selected: null, values: {}, output: null, view: "home", category: "全部", series: "all", staticDemo: false, playing: null };
+const state = { catalog: null, selected: null, values: {}, output: null, view: "home", category: "全部", series: "standard", staticDemo: false, playing: null };
 const stage = document.querySelector("#stage");
 const stageContent = document.querySelector("#stage-content");
 const tabbar = document.querySelector("#tabbar");
@@ -94,12 +94,15 @@ function escapeHtml(value) {
 /* ── 系列大类 ── */
 
 const SERIES_SECTIONS = [
-  { key: "shot", title: "视觉动效", subtitle: "近期上新：镜头语言级动效、口播荧光绿包装、拼贴纪实、SC2 差异化复刻——描线实体化、乱码解码、关键词接力、波形语音等", match: (t) => t.id.startsWith("shot-") || t.id.startsWith("sc2-") || t.series === "shot" || t.series === "sc2" },
-  { key: "standard", title: "标准版 · 暗色科技", subtitle: "深色底 + 荧光绿强调，适合科技感、教程、录屏叠加", match: (t) => !t.id.startsWith("shot-") && !t.id.startsWith("sc2-") && !["shot", "sc2", "cream", "member-area", "form", "board", "file", "glass", "hero3d", "fx", "teach", "page"].includes(t.series) },
-  { key: "cream", title: "奶油贴纸版", subtitle: "奶油纸面 + 贴纸硬投影，适合知识讲解、口播配图", match: (t) => t.series === "cream" },
-  { key: "families", title: "新风格族", subtitle: "公文表单、白板黄卡、档案拼贴、玻璃拟态、3D Hero、模式特效、教学外壳、书页系——2026-08 新增八组", match: (t) => ["form", "board", "file", "glass", "hero3d", "fx", "teach", "page"].includes(t.series) },
+  { key: "standard", title: "标准版 · 暗色科技", subtitle: "深色底 + 荧光绿强调，适合科技感、教程、录屏叠加（免费开源）", match: (t) => !t.id.startsWith("shot-") && !t.id.startsWith("sc2-") && !["shot", "sc2", "cream", "member-area", "form", "board", "file", "glass", "hero3d", "fx", "teach", "page"].includes(t.series) },
+  { key: "cream", title: "奶油贴纸版", subtitle: "奶油纸面 + 贴纸硬投影，适合知识讲解、口播配图（免费开源）", match: (t) => t.series === "cream" },
+  { key: "families", title: "新风格族", member: true, subtitle: "公文表单、白板黄卡、档案拼贴、玻璃拟态、3D Hero、模式特效、教学外壳、书页系——2026-08 新增八组", match: (t) => ["form", "board", "file", "glass", "hero3d", "fx", "teach", "page"].includes(t.series) },
+  { key: "shot", title: "视觉动效", member: true, subtitle: "近期上新：镜头语言级动效、口播荧光绿包装、拼贴纪实、SC2 差异化复刻——描线实体化、乱码解码、关键词接力、波形语音等", match: (t) => t.id.startsWith("shot-") || t.id.startsWith("sc2-") || t.series === "shot" || t.series === "sc2" },
 ];
-const SERIES_NAV = [{ key: "all", title: "全部", sub: "三个系列一起看" }, ...SERIES_SECTIONS.map((s) => ({ key: s.key, title: s.title, sub: s.subtitle }))];
+const SERIES_NAV = [
+  ...SERIES_SECTIONS.map((s) => ({ key: s.key, title: s.title, sub: s.subtitle, member: !!s.member })),
+  { key: "all", title: "全部", sub: "四个系列一起看" },
+];
 
 function seriesOf(template) {
   const found = SERIES_SECTIONS.find((s) => s.match(template));
@@ -191,7 +194,7 @@ function renderSeriesNav(resultCount) {
     const pill = document.createElement("button");
     pill.type = "button";
     pill.className = `series-pill ${state.series === item.key ? "active" : ""}`;
-    pill.innerHTML = `<span class="sp-title">${item.title}</span><span class="sp-sub">${item.sub}</span><span class="sp-count">${count} 个模板</span>`;
+    pill.innerHTML = `<span class="sp-title">${item.title}${item.member ? '<span class="sp-vip">会员</span>' : ""}</span><span class="sp-sub">${item.sub}</span><span class="sp-count">${count} 个模板</span>`;
     pill.addEventListener("click", () => {
       state.series = item.key;
       state.category = ALL_CATEGORY;
@@ -380,7 +383,7 @@ function renderGallery() {
     wrap.className = `series-section series-${section.key}`;
     const head = document.createElement("div");
     head.className = "series-header";
-    head.innerHTML = `<div class="series-title-row"><h2>${section.title}</h2><span class="series-count">${sectionItems.length} 个模板</span></div><p>${section.subtitle}</p>`;
+    head.innerHTML = `<div class="series-title-row"><h2>${section.title}${section.member ? '<span class="sp-vip">会员</span>' : ""}</h2><span class="series-count">${sectionItems.length} 个模板</span></div><p>${section.subtitle}</p>`;
     wrap.append(head);
     // 系列内按二级分类再分小节，不再是一整坨
     const buckets = new Map();
