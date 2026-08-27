@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>动效仓库</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&display=swap" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lenis@1.3.25/dist/lenis.css" />
+    <link rel="stylesheet" href="./app/styles.css?v=20260825-pace2" />
+    <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.25/dist/lenis.min.js"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <div class="brand-text">
+          <p class="kicker">HYPERFRAMES TEMPLATE HUB</p>
+          <h1>动效仓库</h1>
+        </div>
+      </div>
+      <div class="search-wrap"><input id="search" type="search" placeholder="搜索模板、分类或标签" /></div>
+      <div class="topbar-right">
+        <div class="library-count"><span id="template-count">0</span><small>个可复用模板</small></div>
+        <nav class="topbar-actions" aria-label="站点导航">
+          <button class="nav-pill active" type="button" id="show-home">首页</button>
+          <button class="nav-pill" type="button" id="show-library">模板库</button>
+          <button class="nav-pill" type="button" id="show-modes">制片逻辑</button>
+          <a class="nav-pill nav-link" href="https://github.com/maning636/motion-prompts" target="_blank" rel="noreferrer">GitHub</a>
+        </nav>
+      </div>
+    </header>
+    <div class="tabbar" id="tabbar" role="tablist"></div>
+    <main id="stage"><div id="stage-content"></div></main>
+    <template id="template-card">
+      <div class="template-card" role="button" tabindex="0">
+        <span class="card-media">
+          <video muted loop playsinline preload="none"></video>
+          <span class="card-badge card-duration"></span>
+        </span>
+        <span class="card-body">
+          <strong class="template-name"></strong>
+          <span class="template-description"></span>
+          <span class="template-meta"></span>
+        </span>
+        <span class="card-footer">
+          <button class="copy-prompt" type="button">复制提示词</button>
+        </span>
+      </div>
+    </template>
+    <script type="module" src="./app/app.js?v=20260825-pace2"></script>
+  </body>
+</html>
