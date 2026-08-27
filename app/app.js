@@ -194,7 +194,7 @@ function renderSeriesNav(resultCount) {
     const pill = document.createElement("button");
     pill.type = "button";
     pill.className = `series-pill ${state.series === item.key ? "active" : ""}`;
-    pill.innerHTML = `<span class="sp-title">${item.title}${item.member ? '<span class="sp-vip">会员</span>' : ""}</span><span class="sp-sub">${item.sub}</span><span class="sp-count">${count} 个模板</span>`;
+    pill.innerHTML = `<span class="sp-title">${item.title}${item.member ? '<span class="sp-vip">会员</span>' : '<span class="sp-free">免费</span>'}</span><span class="sp-sub">${item.sub}</span><span class="sp-count">${count} 个模板</span>`;
     pill.addEventListener("click", () => {
       state.series = item.key;
       state.category = ALL_CATEGORY;
@@ -302,6 +302,11 @@ function buildCard(template) {
     vipBadge.className = "card-badge card-vip";
     vipBadge.textContent = "会员预览";
     media.append(vipBadge);
+  } else {
+    const freeBadge = document.createElement("span");
+    freeBadge.className = "card-badge card-free";
+    freeBadge.textContent = "免费";
+    media.append(freeBadge);
   }
   fragment.querySelector(".template-name").textContent = template.name;
   fragment.querySelector(".template-description").textContent = template.description;
@@ -383,7 +388,7 @@ function renderGallery() {
     wrap.className = `series-section series-${section.key}`;
     const head = document.createElement("div");
     head.className = "series-header";
-    head.innerHTML = `<div class="series-title-row"><h2>${section.title}${section.member ? '<span class="sp-vip">会员</span>' : ""}</h2><span class="series-count">${sectionItems.length} 个模板</span></div><p>${section.subtitle}</p>`;
+    head.innerHTML = `<div class="series-title-row"><h2>${section.title}${section.member ? '<span class="sp-vip">会员</span>' : '<span class="sp-free">免费</span>'}</h2><span class="series-count">${sectionItems.length} 个模板</span></div><p>${section.subtitle}</p>`;
     wrap.append(head);
     // 系列内按二级分类再分小节，不再是一整坨
     const buckets = new Map();
