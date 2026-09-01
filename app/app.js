@@ -604,18 +604,16 @@ function renderHome() {
         </article>
         <article class="guide-card qr-card" id="follow-us">
           <strong>关注我们</strong>
-          <h3>完整版逐步开放，都在社区</h3>
+          <h3>完整版逐步开放，加微信进社区</h3>
           <div class="qr-row">
-            <div class="unlock-qr"><img class="qr-image" src="./app/assets/qr-wechat-group.png" alt="微信群二维码" data-label="社区" /><span class="qr-name">社区 · 免费领 Skill + 星球入口</span></div>
-            <div class="unlock-qr"><img class="qr-image" src="./app/assets/qr-wechat-personal.jpg" alt="个人微信二维码" data-label="个人微信" /><span class="qr-name">个人微信 · 会员 / 定制咨询</span></div>
+            <div class="unlock-qr qr-feature"><img class="qr-image" src="./app/assets/qr-wechat-personal.jpg" alt="个人微信二维码" data-label="个人微信" /><span class="qr-name">个人微信 · 统一入口：领 Skill / 进社区 / 会员咨询</span></div>
             <div class="unlock-qr"><img class="qr-image" src="./app/assets/qr-douyin.png" alt="抖音二维码" data-label="抖音" /><span class="qr-name">抖音 · 更新预告</span></div>
             <div class="unlock-qr"><img class="qr-image" src="./app/assets/qr-xhs.png" alt="小红书二维码" data-label="小红书" /><span class="qr-name">小红书 · 更新预告</span></div>
           </div>
           <ul class="follow-points">
             <li><strong>GitHub 全量开源</strong>：178 个提示词直接下载；上不去 GitHub 的，可在公众号后台领同款打包</li>
-            <li><strong>社区免费领</strong>：生产 Skill，关注公众号「老马AI研习社」即可领取</li>
-            <li><strong>知识星球逐步开放</strong>：会员新模板族、专属生产工具箱（skill + 脚本）、成片流水线文档（现有 26 套，持续增加）——星球入口请关注社区</li>
-            <li><strong>个人微信</strong>：会员与定制需求直达</li>
+            <li><strong>个人微信 · 统一入口</strong>：免费领生产 Skill、进社区、知识星球入口、会员与定制咨询，都从这里走</li>
+            <li><strong>知识星球逐步开放</strong>：会员新模板族、专属生产工具箱（skill + 脚本）、成片流水线文档（现有 26 套，持续增加）——星球入口在社区公布</li>
             <li><strong>抖音 / 小红书</strong>：同步更新预告</li>
           </ul>
         </article>
