@@ -19,7 +19,8 @@ const search = document.querySelector("#search");
 const showHome = document.querySelector("#show-home");
 const showLibrary = document.querySelector("#show-library");
 const showModes = document.querySelector("#show-modes");
-const STATIC_CATALOG_VERSION = "20260816-green-renders-400";
+const showPlayground = document.querySelector("#show-playground");
+const STATIC_CATALOG_VERSION = "20260921-open-443";
 const ALL_CATEGORY = "全部";
 
 async function api(url, options) {
@@ -101,6 +102,7 @@ const SERIES_SECTIONS = [
 ];
 const SERIES_NAV = [
   ...SERIES_SECTIONS.map((s) => ({ key: s.key, title: s.title, sub: s.subtitle, member: !!s.member })),
+  { key: "new", title: "免费新增", sub: "2026-09 新开源：纪实档案族 · 转场包 · 新品，全部免费，点进来直接挑", fresh: true },
 ];
 
 function seriesOf(template) {
@@ -158,6 +160,7 @@ function subcatCounts(pool) {
 
 function seriesPool() {
   if (state.series === "all") return state.catalog.templates;
+  if (state.series === "new") return state.catalog.templates.filter((t) => t.isNew);
   const section = SERIES_SECTIONS.find((s) => s.key === state.series);
   return section ? state.catalog.templates.filter(section.match) : state.catalog.templates;
 }
@@ -188,11 +191,13 @@ function renderSeriesNav(resultCount) {
   nav.className = "series-nav";
   nav.style.setProperty("--series-count", SERIES_NAV.length);
   for (const item of SERIES_NAV) {
-    const count = state.catalog.templates.filter(SERIES_SECTIONS.find((s) => s.key === item.key).match).length;
+    const count = item.key === "new"
+      ? state.catalog.templates.filter((t) => t.isNew).length
+      : state.catalog.templates.filter(SERIES_SECTIONS.find((s) => s.key === item.key).match).length;
     const pill = document.createElement("button");
     pill.type = "button";
     pill.className = `series-pill ${state.series === item.key ? "active" : ""}`;
-    pill.innerHTML = `<span class="sp-title">${item.title}${item.member ? '<span class="sp-vip">会员</span>' : '<span class="sp-free">免费</span>'}</span><span class="sp-sub">${item.sub}</span><span class="sp-count">${count} 个模板</span>`;
+    pill.innerHTML = `<span class="sp-title">${item.title}${item.fresh ? '<span class="sp-new">免费新增</span>' : item.member ? '<span class="sp-vip">会员</span>' : '<span class="sp-free">免费</span>'}</span><span class="sp-sub">${item.sub}</span><span class="sp-count">${count} 个模板</span>`;
     pill.addEventListener("click", () => {
       state.series = item.key;
       state.category = ALL_CATEGORY;
@@ -295,6 +300,13 @@ function buildCard(template) {
   noBadge.textContent = template.no ? `#${template.no}` : "#--";
   noBadge.title = "公众号回复该编号，获取对应教程文章";
   media.append(noBadge);
+  if (template.isNew) {
+    const newBadge = document.createElement("span");
+    newBadge.className = "card-badge card-fresh";
+    newBadge.textContent = "新";
+    newBadge.title = "2026-09 免费新增";
+    media.append(newBadge);
+  }
   if (isMember) {
     const vipBadge = document.createElement("span");
     vipBadge.className = "card-badge card-vip";
@@ -343,7 +355,7 @@ function renderGallery() {
   state.view = "gallery";
   updateNav();
   stopPlaying();
-  tabbar.style.display = state.series === "all" ? "none" : "";
+  tabbar.style.display = state.series === "all" || state.series === "new" ? "none" : "";
   const items = filteredTemplates();
   renderTabs(items.length);
   stageContent.innerHTML = "";
@@ -353,6 +365,14 @@ function renderGallery() {
     return;
   }
   const searching = !!search.value.trim();
+  if (state.series === "new") {
+    // 免费新增：不细分功能，一整面平铺
+    const grid = document.createElement("div");
+    grid.className = "gallery-grid";
+    items.forEach((template) => grid.append(buildCard(template)));
+    stageContent.append(grid);
+    return;
+  }
   const groupedAll = state.series === "all" && state.category === ALL_CATEGORY && !searching;
   const groupedSeries = state.series !== "all" && state.category === ALL_CATEGORY && !searching;
   if (!groupedAll && !groupedSeries) {
@@ -477,6 +497,7 @@ function updateNav() {
   showHome.classList.toggle("active", state.view === "home");
   showLibrary.classList.toggle("active", state.view === "gallery" || state.view === "workspace");
   showModes.classList.toggle("active", state.view === "modes");
+  showPlayground.classList.toggle("active", state.view === "playground");
 }
 
 /* ── 首页视图（四段式产品橱窗） ── */
@@ -484,7 +505,7 @@ function updateNav() {
 const SHOWCASE_IDS = [
   "shot-popup-book", "shot-card-flip", "shot-marker-underline",
   "neon-phone-wall", "broll-charts-bar",
-  "bar-chart-grow", "number-counter",
+  "bar-chart-grow", "docu-stat-counter",
   "cream-analogy-frame", "cream-cause-chain",
 ];
 
@@ -512,6 +533,7 @@ function renderHome() {
           <p class="hero-desc"><strong>不需要 Claude 和 Codex，豆包、DeepSeek 也能一键出片。</strong>${total} 个视频动效模板，每一个都配好了打磨过的提示词。挑素材、GitHub 下载提示词、粘贴给你的 AI，同款大片动效即刻生成；装上 Skill，一篇文章直接产出一整条成片。</p>
           <div class="hero-cta-row">
             <button class="hero-cta" type="button" id="hero-cta">进入模板库<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg></button>
+            <button class="hero-cta hero-cta-dark" type="button" id="hero-playground">试玩编辑器<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg></button>
             <a class="hero-cta-ghost" href="${GITHUB_REPO}" target="_blank" rel="noreferrer">GitHub 免费下载</a>
           </div>
         </div>
@@ -625,6 +647,7 @@ function renderHome() {
       <span>模板与 Skill 获取方式见上方「关注我们」</span>
     </footer>`;
   stage.querySelector("#hero-cta").addEventListener("click", () => { state.series = "all"; state.category = ALL_CATEGORY; renderGallery(); });
+  stage.querySelector("#hero-playground").addEventListener("click", renderPlayground);
   stage.querySelectorAll(".qr-image").forEach((img) => {
     img.addEventListener("error", () => {
       const placeholder = document.createElement("div");
@@ -733,6 +756,7 @@ function selectTemplate(template) {
 showHome.addEventListener("click", renderHome);
 showLibrary.addEventListener("click", renderGallery);
 showModes.addEventListener("click", renderModes);
+showPlayground.addEventListener("click", renderPlayground);
 search.addEventListener("input", renderGallery);
 
 async function savePreset() {
@@ -770,8 +794,283 @@ async function renderVideo(event) {
   } catch (error) { button.disabled = false; status.className = "status error"; status.textContent = error.message; }
 }
 
+/* ── 编辑器试玩器（compose 工作台 · 产出 compose.json 清单） ── */
+
+const PG_BASES = [
+  { id: "bg-window", name: "窗影氛围", src: "./app/assets/bg/01-window-silhouette.mp4" },
+  { id: "bg-bridge", name: "雪夜大桥", src: "./app/assets/bg/04-bridge-snow-night.mp4" },
+  { id: "bg-skyline", name: "天际线剪影", src: "./app/assets/bg/06-skyline-silhouette.mp4" },
+  { id: "bg-empire", name: "帝国大厦", src: "./app/assets/bg/13-empire-state.mp4" },
+];
+
+const PG_POSITIONS = [
+  ["tl", "左上"], ["tc", "上中"], ["tr", "右上"],
+  ["cl", "左中"], ["cc", "居中"], ["cr", "右中"],
+  ["bl", "左下"], ["bc", "下中"], ["br", "右下"],
+];
+
+const pgState = {
+  base: { type: "builtin", id: "bg-window", src: PG_BASES[0].src, name: PG_BASES[0].name },
+  duration: 15,
+  layers: [],
+  picked: null,
+  filter: "",
+};
+
+function pgLayerDefaults(template) {
+  return { templateId: template.id, name: template.name, position: "cc", scale: 100, start: 0, end: Math.min(template.duration || 6, pgState.duration), values: defaults(template) };
+}
+
+function pgComposeJson() {
+  return {
+    version: "compose/1",
+    generator: "motion-preview 编辑器试玩器",
+    canvas: { width: 1920, height: 1080 },
+    duration: pgState.duration,
+    base: pgState.base.type === "upload"
+      ? { type: "upload", name: pgState.base.name, note: "本地文件不出站，请与 compose.json 放在同一目录" }
+      : { type: "video", src: pgState.base.src },
+    layers: pgState.layers.map(({ name, ...layer }) => layer),
+  };
+}
+
+function pgStageLayerStyle(layer) {
+  const scale = Math.max(20, Math.min(200, layer.scale)) / 100;
+  const width = 34 * scale;
+  const style = { width: `${width}%` };
+  const v = layer.position;
+  if (v.includes("l")) style.left = "4%";
+  if (v.includes("r")) style.right = "4%";
+  if (v.includes("t")) style.top = "6%";
+  if (v.includes("b")) style.bottom = "8%";
+  if (v.includes("c") && v[0] === "c") { style.left = "50%"; style.transform = "translateX(-50%)"; }
+  if (v[1] === "c") {
+    if (style.transform) style.transform = "translate(-50%, -50%)";
+    else { style.top = "50%"; style.transform = (style.transform || "") + "translateY(-50%)"; }
+  }
+  return Object.entries(style).map(([k, val]) => `${k}:${val}`).join(";");
+}
+
+function renderPlayground() {
+  state.view = "playground";
+  updateNav();
+  stopPlaying();
+  tabbar.style.display = "none";
+  const layerRows = pgState.layers.map((layer, index) => `
+    <div class="pg-layer ${pgState.picked === index ? "active" : ""}" data-layer="${index}">
+      <div class="pg-layer-head">
+        <strong>${escapeHtml(layer.name)}</strong>
+        <button class="pg-layer-del" type="button" data-del="${index}" aria-label="删除图层">×</button>
+      </div>
+      <div class="pg-grid3">${PG_POSITIONS.map(([key, label]) => `<button type="button" class="pg-pos ${layer.position === key ? "on" : ""}" data-pos="${index}:${key}" title="${label}"></button>`).join("")}</div>
+      <div class="pg-row2">
+        <label>缩放 <input type="range" min="20" max="200" step="5" value="${layer.scale}" data-scale="${index}"><em>${layer.scale}%</em></label>
+      </div>
+      <div class="pg-row2">
+        <label>入点 <input type="number" min="0" max="${pgState.duration}" step="0.5" value="${layer.start}" data-start="${index}">s</label>
+        <label>出点 <input type="number" min="0" max="${pgState.duration}" step="0.5" value="${layer.end}" data-end="${index}">s</label>
+      </div>
+    </div>`).join("");
+  const baseButtons = PG_BASES.map((base) => `
+    <button type="button" class="pg-base ${pgState.base.type === "builtin" && pgState.base.id === base.id ? "on" : ""}" data-base="${base.id}">
+      <video muted loop playsinline preload="metadata" src="${base.src}"></video><span>${base.name}</span>
+    </button>`).join("");
+  stageContent.innerHTML = `
+    <div class="pg-wrap">
+      <header class="pg-head">
+        <div>
+          <p class="kicker">PLAYGROUND</p>
+          <h2>编辑器试玩器<span class="sec-period">。</span></h2>
+          <p class="pg-desc">挑一条底片，把模板库里的动效叠上去，摆位置、定大小、卡时间段——玩出你的第一条 compose.json。</p>
+        </div>
+        <div class="pg-actions">
+          <button class="button primary" type="button" id="pg-export">导出 compose.json</button>
+          <button class="button" type="button" id="pg-copy">复制 JSON</button>
+          <button class="button" type="button" id="pg-clear">清空图层</button>
+        </div>
+      </header>
+      <div class="pg-grid">
+        <aside class="pg-left">
+          <section class="pg-panel">
+            <h3>底片</h3>
+            <div class="pg-bases">${baseButtons}</div>
+            <label class="pg-upload">上传自己的底片（视频 / 图片）<input type="file" id="pg-file" accept="video/*,image/*" hidden></label>
+            <p class="pg-upload-name">${pgState.base.type === "upload" ? `已选：${escapeHtml(pgState.base.name)}` : "未上传则用内置氛围底片"}</p>
+          </section>
+          <section class="pg-panel">
+            <h3>图层（${pgState.layers.length}）</h3>
+            <div class="pg-layers">${layerRows || `<p class="pg-empty-layer">右边素材库点「＋ 加为图层」，动效就叠到底片上。</p>`}</div>
+          </section>
+          <section class="pg-panel">
+            <h3>成片时长</h3>
+            <label class="pg-duration">总时长 <input type="number" id="pg-duration" min="3" max="600" step="1" value="${pgState.duration}"> 秒</label>
+          </section>
+        </aside>
+        <div class="pg-center">
+          <div class="pg-stage" id="pg-stage">
+            ${pgState.base.type === "upload" && pgState.base.dataUrl && pgState.base.kind === "image"
+              ? `<img class="pg-base-media" src="${pgState.base.dataUrl}" alt="底片">`
+              : pgState.base.type === "upload" && pgState.base.dataUrl
+                ? `<video class="pg-base-media" src="${pgState.base.dataUrl}" muted loop playsinline autoplay></video>`
+                : `<video class="pg-base-media" src="${pgState.base.src}" muted loop playsinline autoplay></video>`}
+            ${pgState.layers.map((layer) => `<div class="pg-stage-layer" style="${pgStageLayerStyle(layer)}" title="${escapeHtml(layer.name)}"><span>${escapeHtml(layer.name)}</span><em>${layer.start}s–${layer.end}s</em></div>`).join("")}
+          </div>
+          <p class="pg-stage-hint">预览只示意图层的位置与大小；真实动效渲染在本地用 HyperFrames 完成（见下方说明）。</p>
+        </div>
+        <aside class="pg-right">
+          <section class="pg-panel">
+            <h3>素材库</h3>
+            <input type="search" id="pg-filter" placeholder="搜模板名 / 分类 / 标签" value="${escapeHtml(pgState.filter)}">
+            <div class="pg-list" id="pg-list"></div>
+          </section>
+        </aside>
+      </div>
+      <section class="pg-about">
+        <div class="howto-head">
+          <p class="kicker">WHAT IS THIS</p>
+          <h2>这是什么<span class="sec-period">。</span></h2>
+        </div>
+        <div class="pg-about-grid">
+          <article class="pg-about-card">
+            <strong>试玩器不渲染视频</strong>
+            <p>这里产出的是一份 <code>compose.json</code> 编排清单：底片是谁、叠哪些模板动效、每个动效摆在什么位置、多大、第几秒进第几秒出。舞台预览只示意布局，不是成片。</p>
+          </article>
+          <article class="pg-about-card">
+            <strong>compose.json 拿回家渲染</strong>
+            <p>把 JSON 下载下来，连同你的底片素材一起交给本地渲染管线（HyperFrames），就能按清单逐层渲染、自动叠加、直出成片。模板源文件在 GitHub 仓库 <a href="${GITHUB_REPO}" target="_blank" rel="noreferrer">motion-prompts</a> 全部开源。</p>
+          </article>
+          <article class="pg-about-card">
+            <strong>清单长这样</strong>
+            <pre class="pg-sample">${escapeHtml(JSON.stringify({ version: "compose/1", canvas: { width: 1920, height: 1080 }, duration: 15, base: { type: "video", src: "app/assets/bg/01-window-silhouette.mp4" }, layers: [{ templateId: "docu-stat-counter", position: "cc", scale: 100, start: 0, end: 6, values: { title: "2024 营收", value: 91 } }] }, null, 2))}</pre>
+          </article>
+        </div>
+      </section>
+      <footer class="site-footer">
+        <span>编辑器试玩器 · 产出 compose.json 编排清单 · 本地 HyperFrames 渲染出片</span>
+        <span>模板与 Skill 获取方式见首页「关注我们」</span>
+      </footer>
+    </div>`;
+
+  /* 左侧：底片 / 图层 / 时长 */
+  stageContent.querySelectorAll("[data-base]").forEach((btn) => btn.addEventListener("click", () => {
+    const base = PG_BASES.find((b) => b.id === btn.dataset.base);
+    pgState.base = { type: "builtin", id: base.id, src: base.src, name: base.name };
+    renderPlayground();
+  }));
+  stageContent.querySelector("#pg-file").addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      pgState.base = { type: "upload", name: file.name, dataUrl: reader.result, kind: file.type.startsWith("image") ? "image" : "video" };
+      renderPlayground();
+    };
+    reader.readAsDataURL(file);
+  });
+  stageContent.querySelector("#pg-duration").addEventListener("change", (event) => {
+    pgState.duration = Math.max(3, Math.min(600, Number(event.target.value) || 15));
+    renderPlayground();
+  });
+  stageContent.querySelectorAll("[data-del]").forEach((btn) => btn.addEventListener("click", () => {
+    pgState.layers.splice(Number(btn.dataset.del), 1);
+    pgState.picked = null;
+    renderPlayground();
+  }));
+  stageContent.querySelectorAll("[data-pos]").forEach((btn) => btn.addEventListener("click", () => {
+    const [index, key] = btn.dataset.pos.split(":");
+    pgState.layers[Number(index)].position = key;
+    renderPlayground();
+  }));
+  stageContent.querySelectorAll("[data-scale]").forEach((input) => input.addEventListener("input", () => {
+    pgState.layers[Number(input.dataset.scale)].scale = Number(input.value);
+    renderPlayground();
+  }));
+  stageContent.querySelectorAll("[data-start]").forEach((input) => input.addEventListener("change", () => {
+    pgState.layers[Number(input.dataset.start)].start = Math.max(0, Number(input.value) || 0);
+    renderPlayground();
+  }));
+  stageContent.querySelectorAll("[data-end]").forEach((input) => input.addEventListener("change", () => {
+    pgState.layers[Number(input.dataset.end)].end = Math.max(0, Number(input.value) || 0);
+    renderPlayground();
+  }));
+  stageContent.querySelectorAll(".pg-layer").forEach((row) => row.addEventListener("click", (event) => {
+    if (event.target.closest("button, input")) return;
+    pgState.picked = Number(row.dataset.layer);
+    stageContent.querySelectorAll(".pg-layer").forEach((r) => r.classList.toggle("active", r === row));
+  }));
+
+  /* 顶栏：导出 */
+  stageContent.querySelector("#pg-export").addEventListener("click", () => {
+    const blob = new Blob([JSON.stringify(pgComposeJson(), null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "compose.json";
+    link.click();
+    URL.revokeObjectURL(url);
+  });
+  stageContent.querySelector("#pg-copy").addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(pgComposeJson(), null, 2));
+      button.textContent = "已复制 ✓";
+    } catch {
+      button.textContent = "复制失败，用导出";
+    }
+    setTimeout(() => { button.textContent = "复制 JSON"; }, 1600);
+  });
+  stageContent.querySelector("#pg-clear").addEventListener("click", () => {
+    pgState.layers = [];
+    pgState.picked = null;
+    renderPlayground();
+  });
+
+  /* 右侧：素材库 */
+  const list = stageContent.querySelector("#pg-list");
+  const filterInput = stageContent.querySelector("#pg-filter");
+  function renderPgList() {
+    const needle = pgState.filter.trim().toLowerCase();
+    const pool = state.catalog.templates
+      .filter((t) => t.status === "ready")
+      .filter((t) => !needle || JSON.stringify(t).toLowerCase().includes(needle))
+      .slice(0, 60);
+    list.innerHTML = pool.map((t) => `
+      <div class="pg-item" data-add="${t.id}">
+        <video muted loop playsinline preload="none" data-src="${assetUrl(t.preview)}"></video>
+        <div class="pg-item-info"><strong>${escapeHtml(t.name)}</strong><span>${escapeHtml(t.category)} · ${t.duration}s</span></div>
+        <button class="pg-add" type="button" data-add="${t.id}">＋</button>
+      </div>`).join("") || `<p class="pg-empty-layer">没有匹配的模板。</p>`;
+    list.querySelectorAll(".pg-item").forEach((item) => {
+      const video = item.querySelector("video");
+      item.addEventListener("mouseenter", () => {
+        if (!video.dataset.src) return;
+        video.src = video.dataset.src;
+        video.play().catch(() => {});
+      });
+      item.addEventListener("mouseleave", () => { video.pause(); });
+    });
+    list.querySelectorAll("[data-add]").forEach((btn) => btn.addEventListener("click", (event) => {
+      event.stopPropagation();
+      const template = state.catalog.templates.find((t) => t.id === btn.dataset.add);
+      if (!template) return;
+      pgState.layers.push(pgLayerDefaults(template));
+      pgState.picked = pgState.layers.length - 1;
+      renderPlayground();
+    }));
+  }
+  renderPgList();
+  filterInput.addEventListener("input", () => {
+    pgState.filter = filterInput.value;
+    renderPgList();
+  });
+
+  scrollStageTop();
+}
+
 state.catalog = await loadCatalog();
 document.querySelector("#template-count").textContent = state.catalog.templates.filter((template) => template.status === "ready").length;
 if (location.hash === "#library") renderGallery();
 else if (location.hash === "#modes") renderModes();
+else if (location.hash === "#playground") renderPlayground();
+else if (location.hash === "#new") { state.series = "new"; state.category = ALL_CATEGORY; renderGallery(); }
 else renderHome();

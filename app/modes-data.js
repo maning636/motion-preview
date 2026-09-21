@@ -646,8 +646,8 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "docu-puppet",
-        "name": "纪录片皮影场景",
+        "id": "docu-title-chapter",
+        "name": "章节大标题·皮影档案",
         "pending": false
       },
       {
@@ -1131,8 +1131,8 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "number-counter",
-        "name": "数字计数器",
+        "id": "docu-stat-counter",
+        "name": "计数器·皮影档案",
         "pending": false
       },
       {
@@ -1490,8 +1490,8 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "docu-puppet",
-        "name": "纪录片皮影场景",
+        "id": "docu-title-chapter",
+        "name": "章节大标题·皮影档案",
         "pending": false
       }
     ],
@@ -1712,8 +1712,8 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "vox-cutout",
-        "name": "杂志拼贴场景（Vox 风）",
+        "id": "docu-photo-polaroid",
+        "name": "拍立得·皮影档案",
         "pending": false
       }
     ],
@@ -1929,8 +1929,8 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "lower-third",
-        "name": "下三分之一人物条",
+        "id": "docu-lower-third-stripe",
+        "name": "标准字幕条·皮影档案",
         "pending": false
       },
       {
@@ -1939,8 +1939,8 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "comment-pop",
-        "name": "评论弹出卡",
+        "id": "page-comment-cta-bookmark",
+        "name": "评论关键词 CTA 横幅（书签抽出式）",
         "pending": false
       }
     ],
@@ -2106,7 +2106,7 @@ export const MODES = [
       {
         "range": "8–30%",
         "name": "核心指标",
-        "text": "1–2 个大数字 count-up：glass-stat-card / metric-pulse / number-counter，末尾 wobble 落定"
+        "text": "1–2 个大数字 count-up：glass-stat-card / metric-pulse / docu-stat-counter，末尾 wobble 落定"
       },
       {
         "range": "30–55%",
@@ -2151,8 +2151,8 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "number-counter",
-        "name": "数字计数器",
+        "id": "docu-stat-counter",
+        "name": "计数器·皮影档案",
         "pending": false
       },
       {
@@ -2670,8 +2670,8 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "comment-pop",
-        "name": "评论弹出卡",
+        "id": "page-comment-cta-bookmark",
+        "name": "评论关键词 CTA 横幅（书签抽出式）",
         "pending": false
       },
       {
