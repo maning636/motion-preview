@@ -14798,10 +14798,10 @@
    ]
   },
   {
-   "id": "shot-split-flap",
+   "id": "shot-flapper-01",
    "name": "机场翻牌标题",
    "description": "每字符一个机械翻牌格，乱码翻找后从左到右级联咔哒停定，适合开场/章节大标题与发布日期播报",
-   "path": "templates/shot-split-flap",
+   "path": "templates/shot-flapper-01",
    "category": "镜头动效",
    "tags": [
     "翻牌",
@@ -14815,7 +14815,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-split-flap/sample.webm",
+   "preview": "/renders/shot-flapper-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 181,
@@ -14867,10 +14867,10 @@
    ]
   },
   {
-   "id": "shot-odometer",
+   "id": "shot-tumbler-01",
    "name": "里程表数字滚动",
    "description": "全屏巨号指标每个数位独立纵向滚动带残影，从左到右逐位过冲锁定，适合王牌数据亮相",
-   "path": "templates/shot-odometer",
+   "path": "templates/shot-tumbler-01",
    "category": "镜头动效",
    "tags": [
     "数字",
@@ -14884,7 +14884,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-odometer/sample.webm",
+   "preview": "/renders/shot-tumbler-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 182,
@@ -14950,10 +14950,10 @@
    ]
   },
   {
-   "id": "shot-marker-underline",
+   "id": "shot-highlighter-01",
    "name": "马克笔下划线标题",
    "description": "大标题落定后马克笔下划线从左到右一笔描出，变宽笔形毛糙边缘微上斜，适合强调单个关键词",
-   "path": "templates/shot-marker-underline",
+   "path": "templates/shot-highlighter-01",
    "category": "镜头动效",
    "tags": [
     "标题",
@@ -14967,7 +14967,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-marker-underline/sample.webm",
+   "preview": "/renders/shot-highlighter-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 183,
@@ -15033,10 +15033,10 @@
    ]
   },
   {
-   "id": "shot-card-flip",
+   "id": "shot-plate-01",
    "name": "功能卡翻面揭数字",
    "description": "一排功能卡沿 Y 轴翻面，侧棱高光扫过，背面揭出大号成果数字逐张错峰，适合功能→成果叙事",
-   "path": "templates/shot-card-flip",
+   "path": "templates/shot-plate-01",
    "category": "镜头动效",
    "tags": [
     "翻面",
@@ -15050,7 +15050,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-card-flip/sample.webm",
+   "preview": "/renders/shot-plate-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 184,
@@ -15276,10 +15276,10 @@
    ]
   },
   {
-   "id": "shot-deck-deal",
+   "id": "shot-flick-01",
    "name": "发牌飞入卡片墙",
    "description": "一摞卡像发牌一样硬加速甩进网格，带 z 弧顶、过冲 settle 与残影，适合展示内容量大/模板库",
-   "path": "templates/shot-deck-deal",
+   "path": "templates/shot-flick-01",
    "category": "镜头动效",
    "tags": [
     "卡片墙",
@@ -15293,7 +15293,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-deck-deal/sample.webm",
+   "preview": "/renders/shot-flick-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 185,
@@ -15352,10 +15352,10 @@
    ]
   },
   {
-   "id": "shot-spotlight-hero",
+   "id": "shot-footlight-01",
    "name": "聚光灯主角卡",
    "description": "聚光灯游走四站锁定主角卡，相机斜侧推进，卡片弹起悬浮、轮廓光束绕两圈后贴回原位，适合单品/核心功能开场",
-   "path": "templates/shot-spotlight-hero",
+   "path": "templates/shot-footlight-01",
    "category": "镜头动效",
    "tags": [
     "聚光灯",
@@ -15369,7 +15369,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-spotlight-hero/sample.webm",
+   "preview": "/renders/shot-footlight-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 186,
@@ -15428,10 +15428,10 @@
    ]
   },
   {
-   "id": "shot-gradient-sweep",
+   "id": "shot-lumenfill-01",
    "name": "关键词渐变充能",
    "description": "黑底标语里关键词被渐变彩光从左到右快速扫过充能，波前最亮向后衰减，填满后稳态泛光呼吸加稀疏闪电，适合卖点词爆点",
-   "path": "templates/shot-gradient-sweep",
+   "path": "templates/shot-lumenfill-01",
    "category": "镜头动效",
    "tags": [
     "渐变",
@@ -15445,7 +15445,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-gradient-sweep/sample.webm",
+   "preview": "/renders/shot-lumenfill-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 187,
@@ -15504,10 +15504,10 @@
    ]
   },
   {
-   "id": "shot-text-converge",
+   "id": "shot-glyph-01",
    "name": "双词对峙合拢",
    "description": "左右两词钉死等屏边距硬切轮换全程零收缩，末词后唯一一次滑到居中咬合成句，小字硬切浮现，适合版本揭晓/口号收束",
-   "path": "templates/shot-text-converge",
+   "path": "templates/shot-glyph-01",
    "category": "镜头动效",
    "tags": [
     "标题",
@@ -15521,7 +15521,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-text-converge/sample.webm",
+   "preview": "/renders/shot-glyph-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 188,
@@ -15587,10 +15587,10 @@
    ]
   },
   {
-   "id": "shot-gauge-sweep",
+   "id": "shot-az46-02",
    "name": "仪表盘点火自检",
    "description": "三表盘指针满弧 270° 甩针再带过冲回落真值，多表错峰成波浪，落定数值弹出，适合性能指标/dashboard 开场仪式",
-   "path": "templates/shot-gauge-sweep",
+   "path": "templates/shot-az46-02",
    "category": "镜头动效",
    "tags": [
     "仪表盘",
@@ -15604,7 +15604,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-gauge-sweep/sample.webm",
+   "preview": "/renders/shot-az46-02/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 189,
@@ -15698,10 +15698,10 @@
    ]
   },
   {
-   "id": "shot-timeline-travel",
+   "id": "shot-epoch-01",
    "name": "时间轴旅行",
    "description": "镜头沿水平时间轴缓起冲刺急刹掠过版本刻度，每过一格卡片弹簧立起，末刻度急停推近，适合 changelog/里程碑/发展史",
-   "path": "templates/shot-timeline-travel",
+   "path": "templates/shot-epoch-01",
    "category": "镜头动效",
    "tags": [
     "时间轴",
@@ -15715,7 +15715,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-timeline-travel/sample.webm",
+   "preview": "/renders/shot-epoch-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 190,
@@ -15767,10 +15767,10 @@
    ]
   },
   {
-   "id": "shot-crash-zoom",
+   "id": "shot-dashcam-01",
    "name": "急推撞停点名",
    "description": "全景卡片墙一拍急推到目标卡特写（6f），落位撞停加指数衰减震屏，强调级点名镜头",
-   "path": "templates/shot-crash-zoom",
+   "path": "templates/shot-dashcam-01",
    "category": "镜头动效",
    "tags": [
     "推镜",
@@ -15783,7 +15783,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-crash-zoom/sample.webm",
+   "preview": "/renders/shot-dashcam-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 191,
@@ -15842,10 +15842,10 @@
    ]
   },
   {
-   "id": "shot-before-after-slider",
+   "id": "shot-splitview-01",
    "name": "前后对比拉杆",
    "description": "处理前后两版叠放，分割杆先猛甩过冲再慢扫回，杆过处新版显影揭出，AI 效果对比段标配",
-   "path": "templates/shot-before-after-slider",
+   "path": "templates/shot-splitview-01",
    "category": "镜头动效",
    "tags": [
     "对比",
@@ -15858,7 +15858,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-before-after-slider/sample.webm",
+   "preview": "/renders/shot-splitview-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 192,
@@ -15917,10 +15917,10 @@
    ]
   },
   {
-   "id": "shot-morph-primitive",
+   "id": "shot-transmute-01",
    "name": "原型变形长卡",
    "description": "正圆呼吸一拍做预备，轮廓 24f 连续变形长成圆角卡片，内容再淡入，logo→UI 容器经典入场",
-   "path": "templates/shot-morph-primitive",
+   "path": "templates/shot-transmute-01",
    "category": "镜头动效",
    "tags": [
     "变形",
@@ -15933,7 +15933,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-morph-primitive/sample.webm",
+   "preview": "/renders/shot-transmute-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 193,
@@ -15992,10 +15992,10 @@
    ]
   },
   {
-   "id": "shot-draw-svg-trace",
+   "id": "shot-etch-01",
    "name": "描边生长圈注",
    "description": "带笔头的墨线沿卡片轮廓跑一圈把它画出来，闭合闪白交棒、内容淡入，元素级点名入场",
-   "path": "templates/shot-draw-svg-trace",
+   "path": "templates/shot-etch-01",
    "category": "镜头动效",
    "tags": [
     "描边",
@@ -16008,7 +16008,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-draw-svg-trace/sample.webm",
+   "preview": "/renders/shot-etch-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 194,
@@ -16067,10 +16067,10 @@
    ]
   },
   {
-   "id": "shot-neon-marquee",
+   "id": "shot-lumin-02",
    "name": "三行霓虹跑马灯",
    "description": "三连主题词空心描边巨字对向横滚，三行按 1/3 相位轮流亮起霓虹通电，片尾 recap 余韵拍",
-   "path": "templates/shot-neon-marquee",
+   "path": "templates/shot-lumin-02",
    "category": "镜头动效",
    "tags": [
     "跑马灯",
@@ -16083,7 +16083,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-neon-marquee/sample.webm",
+   "preview": "/renders/shot-lumin-02/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 195,
@@ -16149,10 +16149,10 @@
    ]
   },
   {
-   "id": "shot-command-palette",
+   "id": "shot-summons-01",
    "name": "命令面板降临",
    "description": "整屏压暗加模糊，⌘K 面板带过冲弹落，候选行错峰浮现，敲字列表行高塌缩收窄，效率功能仪式感登场",
-   "path": "templates/shot-command-palette",
+   "path": "templates/shot-summons-01",
    "category": "镜头动效",
    "tags": [
     "命令面板",
@@ -16165,7 +16165,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-command-palette/sample.webm",
+   "preview": "/renders/shot-summons-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 196,
@@ -16245,10 +16245,10 @@
    ]
   },
   {
-   "id": "shot-axis-rescale",
+   "id": "shot-azaxis-01",
    "name": "轴爆表重标",
    "description": "增长曲线新值顶破图表上沿冲进标题区，停半拍后 y 轴哗啦重标：刻度换、网格密、旧线压扁，off the charts 字面化",
-   "path": "templates/shot-axis-rescale",
+   "path": "templates/shot-azaxis-01",
    "category": "镜头动效",
    "tags": [
     "图表",
@@ -16261,7 +16261,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-axis-rescale/sample.webm",
+   "preview": "/renders/shot-azaxis-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 197,
@@ -16313,10 +16313,10 @@
    ]
   },
   {
-   "id": "shot-brand-ink-open",
+   "id": "shot-sealmark-02",
    "name": "品牌墨印开场",
    "description": "十字准星描画→字标逐字压印（scale+blur 入场三件套）→打字机副标→静止满一秒再上浮消散，低能量品牌片头",
-   "path": "templates/shot-brand-ink-open",
+   "path": "templates/shot-sealmark-02",
    "category": "镜头动效",
    "tags": [
     "品牌",
@@ -16329,7 +16329,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-brand-ink-open/sample.webm",
+   "preview": "/renders/shot-sealmark-02/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 198,
@@ -16381,10 +16381,10 @@
    ]
   },
   {
-   "id": "shot-wipe-clock",
+   "id": "shot-az45-01",
    "name": "时钟扫描转场",
    "description": "雷达指针从屏心匀速扫一圈，扇形 clip 扫过处旧页换新页，扫描沿带四层亮线，数据刷新语义通用转场",
-   "path": "templates/shot-wipe-clock",
+   "path": "templates/shot-az45-01",
    "category": "镜头动效",
    "tags": [
     "转场",
@@ -16397,7 +16397,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-wipe-clock/sample.webm",
+   "preview": "/renders/shot-az45-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 199,
@@ -16449,10 +16449,10 @@
    ]
   },
   {
-   "id": "shot-terminal-typewriter",
+   "id": "shot-azterm-01",
    "name": "终端打字引爆",
    "description": "暗色终端逐字敲命令、方块光标方波闪，回车帧 6f 急推进命令行硬切产品界面，开发者产品开场引信",
-   "path": "templates/shot-terminal-typewriter",
+   "path": "templates/shot-azterm-01",
    "category": "镜头动效",
    "tags": [
     "打字机",
@@ -16465,7 +16465,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-terminal-typewriter/sample.webm",
+   "preview": "/renders/shot-azterm-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 200,
@@ -16517,10 +16517,10 @@
    ]
   },
   {
-   "id": "shot-speed-ramp",
+   "id": "shot-tempo-01",
    "name": "变速凝视卡流",
    "description": "卡片横移流里帧号非线性 remap：冲刺→0.1x 凝视目标卡→再冲刺，快糊慢清联动，路过重点多看一眼",
-   "path": "templates/shot-speed-ramp",
+   "path": "templates/shot-tempo-01",
    "category": "镜头动效",
    "tags": [
     "变速",
@@ -16533,7 +16533,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-speed-ramp/sample.webm",
+   "preview": "/renders/shot-tempo-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 201,
@@ -16585,10 +16585,10 @@
    ]
   },
   {
-   "id": "shot-text-mask",
+   "id": "shot-glyph-02",
    "name": "文字遮罩开门",
    "description": "超粗大标题字内部透出缓慢平移的产品画面，结尾字形放大 26 倍溢出、产品接管全屏，字是门产品在门里",
-   "path": "templates/shot-text-mask",
+   "path": "templates/shot-glyph-02",
    "category": "镜头动效",
    "tags": [
     "遮罩",
@@ -16601,7 +16601,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-text-mask/sample.webm",
+   "preview": "/renders/shot-glyph-02/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 202,
@@ -16653,10 +16653,10 @@
    ]
   },
   {
-   "id": "shot-skeleton-reveal",
+   "id": "shot-wireframe2-01",
    "name": "三级显影登场",
    "description": "手绘涂鸦煮沸→灰条骨架弹入→镜头推近逐行显影成真实内容，末字晚半拍收尾，草稿到产品的三级跃迁",
-   "path": "templates/shot-skeleton-reveal",
+   "path": "templates/shot-wireframe2-01",
    "category": "镜头动效",
    "tags": [
     "骨架屏",
@@ -16669,7 +16669,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-skeleton-reveal/sample.webm",
+   "preview": "/renders/shot-wireframe2-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 203,
@@ -16728,10 +16728,10 @@
    ]
   },
   {
-   "id": "shot-title-demote",
+   "id": "shot-masthead-01",
    "name": "标题降格节标签",
    "description": "大标题居中站稳一拍，单次连续补间缩到 0.3x 飞左上角落成本节门牌，内容区同步生长，章节交接零空档",
-   "path": "templates/shot-title-demote",
+   "path": "templates/shot-masthead-01",
    "category": "镜头动效",
    "tags": [
     "标题",
@@ -16744,7 +16744,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-title-demote/sample.webm",
+   "preview": "/renders/shot-masthead-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 204,
@@ -16810,10 +16810,10 @@
    ]
   },
   {
-   "id": "shot-pill-slot",
+   "id": "shot-capsule-01",
    "name": "句中词槽轮换",
    "description": "句干纹丝不动，句尾 pill 徽章每 0.7s 老虎机滚一格列举功能词，末词飞走结论过冲落位盖章",
-   "path": "templates/shot-pill-slot",
+   "path": "templates/shot-capsule-01",
    "category": "镜头动效",
    "tags": [
     "轮换",
@@ -16826,7 +16826,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-pill-slot/sample.webm",
+   "preview": "/renders/shot-capsule-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 205,
@@ -16885,10 +16885,10 @@
    ]
   },
   {
-   "id": "shot-list-stack",
+   "id": "shot-roster-01",
    "name": "列表堆叠压弹",
    "description": "列表卡从底部逐张飞上摞起，每张落地压弹整摞、计数器同步跳格、高亮条滞后长出，收尾一道扫光",
-   "path": "templates/shot-list-stack",
+   "path": "templates/shot-roster-01",
    "category": "镜头动效",
    "tags": [
     "堆叠",
@@ -16901,7 +16901,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-list-stack/sample.webm",
+   "preview": "/renders/shot-roster-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 206,
@@ -16981,10 +16981,10 @@
    ]
   },
   {
-   "id": "shot-ai-stream",
+   "id": "shot-neural-01",
    "name": "AI 证据流响应",
    "description": "AI 面板先落结论摘要，证据行带状态图标逐条汇入（pending→running→done 晚 3f 拖拽），末条后面板一次完成脉冲",
-   "path": "templates/shot-ai-stream",
+   "path": "templates/shot-neural-01",
    "category": "镜头动效",
    "tags": [
     "AI",
@@ -16997,7 +16997,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-ai-stream/sample.webm",
+   "preview": "/renders/shot-neural-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 207,
@@ -17084,10 +17084,10 @@
    ]
   },
   {
-   "id": "shot-gap-dial",
+   "id": "shot-az67-01",
    "name": "间距拨盘布局",
    "description": "框选描边+8手柄包住一排导航块，徽章数字逐格跳动、块被 gap 参数同帧推开再弹簧过冲回位，参数驱动布局可视化",
-   "path": "templates/shot-gap-dial",
+   "path": "templates/shot-az67-01",
    "category": "镜头动效",
    "tags": [
     "参数",
@@ -17100,7 +17100,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-gap-dial/sample.webm",
+   "preview": "/renders/shot-az67-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 208,
@@ -17173,10 +17173,10 @@
    ]
   },
   {
-   "id": "shot-beat-cut",
+   "id": "shot-cadence-01",
    "name": "递进硬切串",
    "description": "同一面板 6 种构图按 16→12→8→6→4f 间隔减半硬切加速逼近，末刀回主画面轻推收住，切点本身就是鼓点",
-   "path": "templates/shot-beat-cut",
+   "path": "templates/shot-cadence-01",
    "category": "镜头动效",
    "tags": [
     "硬切",
@@ -17189,7 +17189,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-beat-cut/sample.webm",
+   "preview": "/renders/shot-cadence-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 209,
@@ -17241,10 +17241,10 @@
    ]
   },
   {
-   "id": "shot-theme-beats",
+   "id": "shot-aztheme-01",
    "name": "三通道主题节拍器",
    "description": "形容词列表逐拍上移，中央胶囊同拍接住新词换色、全场底色同拍跟换，行/色/场三通道锁死同一拍点",
-   "path": "templates/shot-theme-beats",
+   "path": "templates/shot-aztheme-01",
    "category": "镜头动效",
    "tags": [
     "节拍",
@@ -17257,7 +17257,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-theme-beats/sample.webm",
+   "preview": "/renders/shot-aztheme-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 210,
@@ -17302,10 +17302,10 @@
    ]
   },
   {
-   "id": "shot-bottom-push",
+   "id": "shot-az51-01",
    "name": "底边上推换章",
    "description": "新章连底色整屏从底边向上顶入、旧章刚性顶出画外，上缘接缝阴影作证，连推三章各配饱和底色当全片骨架",
-   "path": "templates/shot-bottom-push",
+   "path": "templates/shot-az51-01",
    "category": "镜头动效",
    "tags": [
     "转场",
@@ -17318,7 +17318,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-bottom-push/sample.webm",
+   "preview": "/renders/shot-az51-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 211,
@@ -17384,10 +17384,10 @@
    ]
   },
   {
-   "id": "shot-brand-frame",
+   "id": "shot-sealmark-01",
    "name": "品牌画框翻色",
    "description": "粗品牌色画框先长出包住全屏、录屏窗口落进框内，模式切换时画框/窗内布局/角标同帧硬翻色，一个 borderColor 干三件事",
-   "path": "templates/shot-brand-frame",
+   "path": "templates/shot-sealmark-01",
    "category": "镜头动效",
    "tags": [
     "品牌",
@@ -17400,7 +17400,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-brand-frame/sample.webm",
+   "preview": "/renders/shot-sealmark-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 212,
@@ -17466,10 +17466,10 @@
    ]
   },
   {
-   "id": "shot-bubble-swarm",
+   "id": "shot-froth-01",
    "name": "气泡群幕布转场",
    "description": "珠光气泡群从四边飘入涨大遮满全屏，洗白层压底、峰值帧藏硬切，气泡径向散开后已是新场景",
-   "path": "templates/shot-bubble-swarm",
+   "path": "templates/shot-froth-01",
    "category": "镜头动效",
    "tags": [
     "转场",
@@ -17482,7 +17482,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-bubble-swarm/sample.webm",
+   "preview": "/renders/shot-froth-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 213,
@@ -17534,10 +17534,10 @@
    ]
   },
   {
-   "id": "shot-canvas-cascade",
+   "id": "shot-az49-01",
    "name": "级联生成树",
    "description": "prompt 逐字敲出确认后，折角连线描线先行牵出节点、根→子→孙逐层错峰弹出一句话长成一棵树，收尾整棵呼吸一拍",
-   "path": "templates/shot-canvas-cascade",
+   "path": "templates/shot-az49-01",
    "category": "镜头动效",
    "tags": [
     "生成",
@@ -17550,7 +17550,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-canvas-cascade/sample.webm",
+   "preview": "/renders/shot-az49-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 214,
@@ -17644,10 +17644,10 @@
    ]
   },
   {
-   "id": "shot-card-flock",
+   "id": "shot-plate-02",
    "name": "页卡翻飞坍缩",
    "description": "三张页卡从侧棱 3D 翻飞成重叠阶梯、慢转不停，瞬间吸入中心炸出单个湍流烟环，品牌巨字穿环收场",
-   "path": "templates/shot-card-flock",
+   "path": "templates/shot-plate-02",
    "category": "镜头动效",
    "tags": [
     "3D",
@@ -17660,7 +17660,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-card-flock/sample.webm",
+   "preview": "/renders/shot-plate-02/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 215,
@@ -17726,10 +17726,10 @@
    ]
   },
   {
-   "id": "shot-cel-stomp",
+   "id": "shot-flashcard-01",
    "name": "底色闪砸字",
    "description": "大词逐拍歪着图章砸屏，落定瞬间背景两纯色频闪数帧而文字纹丝不动，主体稳背景闪的动漫必杀技字卡",
-   "path": "templates/shot-cel-stomp",
+   "path": "templates/shot-flashcard-01",
    "category": "镜头动效",
    "tags": [
     "砸字",
@@ -17742,7 +17742,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-cel-stomp/sample.webm",
+   "preview": "/renders/shot-flashcard-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 216,
@@ -17808,10 +17808,10 @@
    ]
   },
   {
-   "id": "shot-circle-iris",
+   "id": "shot-roundel-01",
    "name": "圆心匹配光圈切",
    "description": "光圈从头像圆心炸开，圈内新页的圆环图接在同一个圆上同心生长，圆对圆完成'这个人→他的数据'匹配剪辑",
-   "path": "templates/shot-circle-iris",
+   "path": "templates/shot-roundel-01",
    "category": "镜头动效",
    "tags": [
     "光圈",
@@ -17824,7 +17824,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-circle-iris/sample.webm",
+   "preview": "/renders/shot-roundel-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 217,
@@ -17890,10 +17890,10 @@
    ]
   },
   {
-   "id": "shot-cloner-echo",
+   "id": "shot-twin-01",
    "name": "克隆纵队吸回",
    "description": "主卡瞬间复印出 7 个半透明分身沿斜向纵深排开成队，停一拍后全体加速吸回合体+弹跳，一镜讲完'一个=很多'",
-   "path": "templates/shot-cloner-echo",
+   "path": "templates/shot-twin-01",
    "category": "镜头动效",
    "tags": [
     "克隆",
@@ -17906,7 +17906,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-cloner-echo/sample.webm",
+   "preview": "/renders/shot-twin-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 218,
@@ -17958,10 +17958,10 @@
    ]
   },
   {
-   "id": "shot-cursor-duet",
+   "id": "shot-az80-01",
    "name": "协作光标双人舞",
    "description": "蓝绿两枚具名光标纯暗场对手戏：贝塞尔入场→靠近对话→上下半圆弧礼让绕位→名牌灯光交接→绿光标 easeIn 放大 68 倍成转场遮挡",
-   "path": "templates/shot-cursor-duet",
+   "path": "templates/shot-az80-01",
    "category": "镜头动效",
    "tags": [
     "协作",
@@ -17974,7 +17974,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-cursor-duet/sample.webm",
+   "preview": "/renders/shot-az80-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 219,
@@ -18026,10 +18026,10 @@
    ]
   },
   {
-   "id": "shot-step-wipe",
+   "id": "shot-az50-01",
    "name": "阶跃色块吞屏",
    "description": "品牌色中央小条按不等距节拍硬跳阶跃扩成全屏（先横条后纵向补齐），接管后徽章三跳过冲弹出，零缓动的像素游戏手感",
-   "path": "templates/shot-step-wipe",
+   "path": "templates/shot-az50-01",
    "category": "镜头动效",
    "tags": [
     "转场",
@@ -18042,7 +18042,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-step-wipe/sample.webm",
+   "preview": "/renders/shot-az50-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 220,
@@ -18094,10 +18094,10 @@
    ]
   },
   {
-   "id": "shot-crane-rise",
+   "id": "shot-az54-01",
    "name": "升降臂拉升揭示",
    "description": "开场怼住一行数据特写，相机减速拉升后拉、可见区上缘越线时逐行脉冲涌入，直到整面 dashboard 铺满——焦点→全局",
-   "path": "templates/shot-crane-rise",
+   "path": "templates/shot-az54-01",
    "category": "镜头动效",
    "tags": [
     "开场",
@@ -18110,7 +18110,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-crane-rise/sample.webm",
+   "preview": "/renders/shot-az54-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 221,
@@ -18155,10 +18155,10 @@
    ]
   },
   {
-   "id": "shot-dataviz-landscape",
+   "id": "shot-terrain-01",
    "name": "支流线束地景开场",
    "description": "暗场数据地景：支流 bezier 切向汇入唯一主干、虚构 ID 标签浮在中景线上，三层景深 + 相机低速视差飞越——无数工作流汇成一个产品",
-   "path": "templates/shot-dataviz-landscape",
+   "path": "templates/shot-terrain-01",
    "category": "镜头动效",
    "tags": [
     "开场",
@@ -18171,7 +18171,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-dataviz-landscape/sample.webm",
+   "preview": "/renders/shot-terrain-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 222,
@@ -18251,10 +18251,10 @@
    ]
   },
   {
-   "id": "shot-depth-parallax",
+   "id": "shot-az70-01",
    "name": "多层视差滑轨",
    "description": "同一 drive 位移乘 0.35/0.7/1.4 三层速度梯度横移：背景退成环境（blur+降饱和）、中景主阅读层清晰、前景浮块掠过镜头",
-   "path": "templates/shot-depth-parallax",
+   "path": "templates/shot-az70-01",
    "category": "镜头动效",
    "tags": [
     "运镜",
@@ -18267,7 +18267,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-depth-parallax/sample.webm",
+   "preview": "/renders/shot-az70-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 223,
@@ -18326,10 +18326,10 @@
    ]
   },
   {
-   "id": "shot-doc-typewriter",
+   "id": "shot-az18-01",
    "name": "文档打字机揭示",
    "description": "整页文档在光标后自己写出来：底色遮罩右锚收窄、强调色 caret 永远只有一支笔尖、@-mention 后长高亮、侧栏历史条目逐个落入",
-   "path": "templates/shot-doc-typewriter",
+   "path": "templates/shot-az18-01",
    "category": "镜头动效",
    "tags": [
     "文档",
@@ -18342,7 +18342,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-doc-typewriter/sample.webm",
+   "preview": "/renders/shot-az18-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 224,
@@ -18394,10 +18394,10 @@
    ]
   },
   {
-   "id": "shot-logo-button",
+   "id": "shot-azlogo-01",
    "name": "片尾 logo 彩蛋钩子",
    "description": "收黑→logo 淡入定住（观众以为结束）→突插 12f UI 特写彩蛋硬切→切回 logo 收尾，预告片 button ending",
-   "path": "templates/shot-logo-button",
+   "path": "templates/shot-azlogo-01",
    "category": "镜头动效",
    "tags": [
     "片尾",
@@ -18410,7 +18410,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-logo-button/sample.webm",
+   "preview": "/renders/shot-azlogo-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 225,
@@ -18462,10 +18462,10 @@
    ]
   },
   {
-   "id": "shot-axial-stretch",
+   "id": "shot-azaxial-01",
    "name": "轴向拉伸糖稀",
    "description": "飞得越快沿运动轴拉得越长：速度差分实算驱动 scaleX 2.2/scaleY 0.72 糖稀拉丝，落点 8f 压扁回弹收正——squash & stretch 的 UI 翻译",
-   "path": "templates/shot-axial-stretch",
+   "path": "templates/shot-azaxial-01",
    "category": "镜头动效",
    "tags": [
     "身体感",
@@ -18478,7 +18478,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-axial-stretch/sample.webm",
+   "preview": "/renders/shot-azaxial-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 226,
@@ -18537,10 +18537,10 @@
    ]
   },
   {
-   "id": "shot-reticle-lock",
+   "id": "shot-crosshair-01",
    "name": "准星咬合锁定",
    "description": "四个 L 形角标从画外 1200px 冲入、超调回弹'咔'地咬合到目标四角，咬合帧目标微亮+标签同帧弹出——流动中点名",
-   "path": "templates/shot-reticle-lock",
+   "path": "templates/shot-crosshair-01",
    "category": "镜头动效",
    "tags": [
     "HUD",
@@ -18553,7 +18553,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-reticle-lock/sample.webm",
+   "preview": "/renders/shot-crosshair-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 227,
@@ -18605,10 +18605,10 @@
    ]
   },
   {
-   "id": "shot-flyline-arc",
+   "id": "shot-azarc-01",
    "name": "飞线连接打点",
    "description": "发光弧线从 A 卡打到 B 卡：亮点头领跑渐隐光尾、22f out-cubic 生长，落点描边脉冲点亮+指标 count-up——数据流向有了方向",
-   "path": "templates/shot-flyline-arc",
+   "path": "templates/shot-azarc-01",
    "category": "镜头动效",
    "tags": [
     "飞线",
@@ -18621,7 +18621,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-flyline-arc/sample.webm",
+   "preview": "/renders/shot-azarc-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 228,
@@ -18673,10 +18673,10 @@
    ]
   },
   {
-   "id": "shot-graze-tour",
+   "id": "shot-sideswipe-01",
    "name": "贴面游走巡礼",
    "description": "镜头大倾角贴着 UI 表面低飞掠过，各功能区文字悬浮在界面上空带同形软影，随镜头行进先后加速贴落——界面在镜头前依次完成自己",
-   "path": "templates/shot-graze-tour",
+   "path": "templates/shot-sideswipe-01",
    "category": "镜头动效",
    "tags": [
     "巡礼",
@@ -18689,7 +18689,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-graze-tour/sample.webm",
+   "preview": "/renders/shot-sideswipe-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 229,
@@ -18769,10 +18769,10 @@
    ]
   },
   {
-   "id": "shot-hashtag-pill",
+   "id": "shot-aztag-01",
    "name": "话题词打字实体化",
    "description": "居中打出话题词（红实心光标恒亮）→1 帧硬切成宽大胶囊→hold 后缩移归位→再 1 帧硬切揭示成品页：两次硬切夹一次滑动",
-   "path": "templates/shot-hashtag-pill",
+   "path": "templates/shot-aztag-01",
    "category": "镜头动效",
    "tags": [
     "打字",
@@ -18785,7 +18785,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-hashtag-pill/sample.webm",
+   "preview": "/renders/shot-aztag-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 230,
@@ -18837,10 +18837,10 @@
    ]
   },
   {
-   "id": "shot-icon-field",
+   "id": "shot-sigil-01",
    "name": "图标场品牌点亮",
    "description": "170 枚灰阶小图标错峰浮现铺满全屏，停一拍后 4 道品牌色横带波纹斜切快扫翻亮全场，前沿图标 1.22x pop",
-   "path": "templates/shot-icon-field",
+   "path": "templates/shot-sigil-01",
    "category": "镜头动效",
    "tags": [
     "开场",
@@ -18853,7 +18853,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-icon-field/sample.webm",
+   "preview": "/renders/shot-sigil-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 231,
@@ -18891,10 +18891,10 @@
    ]
   },
   {
-   "id": "shot-pop-burst",
+   "id": "shot-az21-01",
    "name": "爆花确认",
    "description": "大对勾 0.6x 蓄力→1.35x 过冲落回，同帧 10 根径向粒子+描边环扩 2.5 倍炸开——'完成'不是画出来的是炸出来的",
-   "path": "templates/shot-pop-burst",
+   "path": "templates/shot-az21-01",
    "category": "镜头动效",
    "tags": [
     "确认",
@@ -18907,7 +18907,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-pop-burst/sample.webm",
+   "preview": "/renders/shot-az21-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 232,
@@ -18952,10 +18952,10 @@
    ]
   },
   {
-   "id": "shot-hit-counter",
+   "id": "shot-az61-01",
    "name": "连招计数命中",
    "description": "三卡接连砸落，每命中=伤害数字上浮+×N 计数跳字逐次加码（峰值 1.3/1.45/1.6、旋转递增）——功能清单剪成一套连招",
-   "path": "templates/shot-hit-counter",
+   "path": "templates/shot-az61-01",
    "category": "镜头动效",
    "tags": [
     "命中",
@@ -18968,7 +18968,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-hit-counter/sample.webm",
+   "preview": "/renders/shot-az61-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 233,
@@ -19027,10 +19027,10 @@
    ]
   },
   {
-   "id": "shot-keycap-smash",
+   "id": "shot-az59-01",
    "name": "键帽引信猛切",
    "description": "假 3D 键帽呼吸悬浮→3f 压扁+亮环引信→30f 卡片持续加速冲镜轰鸣→动势最猛一帧硬切静止全景、键帽嵌顶栏回收",
-   "path": "templates/shot-keycap-smash",
+   "path": "templates/shot-az59-01",
    "category": "镜头动效",
    "tags": [
     "开场",
@@ -19043,7 +19043,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-keycap-smash/sample.webm",
+   "preview": "/renders/shot-az59-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 234,
@@ -19095,10 +19095,10 @@
    ]
   },
   {
-   "id": "shot-hub-flip",
+   "id": "shot-azhub-01",
    "name": "翻面生态接入",
    "description": "旧页一口气快翻 180°（侧棱瞬闪）落成新中枢页，五图标同帧弹现、五彩虹光管同帧齐连，管内脉冲持续输送",
-   "path": "templates/shot-hub-flip",
+   "path": "templates/shot-azhub-01",
    "category": "镜头动效",
    "tags": [
     "翻面",
@@ -19111,7 +19111,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-hub-flip/sample.webm",
+   "preview": "/renders/shot-azhub-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 235,
@@ -19156,10 +19156,10 @@
    ]
   },
   {
-   "id": "shot-letterspace",
+   "id": "shot-stretchy-01",
    "name": "字标描画结晶",
    "description": "大字距骨架字标全字符并行连续描画：同帧起笔、pathLength 归一保证同帧齐收成词——整词一体的结晶仪式",
-   "path": "templates/shot-letterspace",
+   "path": "templates/shot-stretchy-01",
    "category": "镜头动效",
    "tags": [
     "字标",
@@ -19172,7 +19172,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-letterspace/sample.webm",
+   "preview": "/renders/shot-stretchy-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 236,
@@ -19217,10 +19217,10 @@
    ]
   },
   {
-   "id": "shot-spotlight-sweep",
+   "id": "shot-footlight-03",
    "name": "聚光扫字揭示",
    "description": "暗场里几乎不可见的标题被锥形光摆动扫亮——双层同文本，亮版 radial mask 随光斑走，两个来回后全亮定格",
-   "path": "templates/shot-spotlight-sweep",
+   "path": "templates/shot-footlight-03",
    "category": "镜头动效",
    "tags": [
     "光效",
@@ -19233,7 +19233,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-spotlight-sweep/sample.webm",
+   "preview": "/renders/shot-footlight-03/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 237,
@@ -19278,10 +19278,10 @@
    ]
   },
   {
-   "id": "shot-line-boil",
+   "id": "shot-stroke2-01",
    "name": "线条沸腾 hold",
    "description": "hold 期间标题轮廓每 3 帧被'重描'一次：feTurbulence scale 8 + seed 阶梯跳变，活着的静止——手绘逐帧重描质感",
-   "path": "templates/shot-line-boil",
+   "path": "templates/shot-stroke2-01",
    "category": "镜头动效",
    "tags": [
     "沸腾",
@@ -19294,7 +19294,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-line-boil/sample.webm",
+   "preview": "/renders/shot-stroke2-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 238,
@@ -19339,10 +19339,10 @@
    ]
   },
   {
-   "id": "shot-line-carry",
+   "id": "shot-stroke2-02",
    "name": "线条接力转场",
    "description": "进度条走满后线头冲出画面、镜头跟线横移，线在移动中拐直角围出下一场景卡框——全程无剪切的招牌转场",
-   "path": "templates/shot-line-carry",
+   "path": "templates/shot-stroke2-02",
    "category": "镜头动效",
    "tags": [
     "转场",
@@ -19355,7 +19355,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-line-carry/sample.webm",
+   "preview": "/renders/shot-stroke2-02/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 239,
@@ -19393,10 +19393,10 @@
    ]
   },
   {
-   "id": "shot-card-flourish",
+   "id": "shot-plate-03",
    "name": "魔术甩牌登场",
    "description": "蓝色星芒闪现 0.3s，卡片从光点弹射而出、沿对角轴自旋 13 圈弧线飞向镜头，瞬间硬定格近满幅后 sheen 扫光",
-   "path": "templates/shot-card-flourish",
+   "path": "templates/shot-plate-03",
    "category": "镜头动效",
    "tags": [
     "登场",
@@ -19409,7 +19409,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-card-flourish/sample.webm",
+   "preview": "/renders/shot-plate-03/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 240,
@@ -19447,10 +19447,10 @@
    ]
   },
   {
-   "id": "shot-domino-cascade",
+   "id": "shot-az46-01",
    "name": "多米诺连锁入场",
    "description": "标题砸落震起卡片列、末卡落地撞进侧边栏——每个元素的入场由上一个的撞击触发，整页入场讲成连锁反应",
-   "path": "templates/shot-domino-cascade",
+   "path": "templates/shot-az46-01",
    "category": "镜头动效",
    "tags": [
     "节奏",
@@ -19463,7 +19463,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-domino-cascade/sample.webm",
+   "preview": "/renders/shot-az46-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 241,
@@ -19501,10 +19501,10 @@
    ]
   },
   {
-   "id": "shot-neon-forerun",
+   "id": "shot-lumin-01",
    "name": "霓虹框先行登场",
    "description": "霓虹框两头奔画先行成型，页面在框内由暗转亮，组件带同形软影错峰贴落，背景霓虹管终段熄灭让位",
-   "path": "templates/shot-neon-forerun",
+   "path": "templates/shot-lumin-01",
    "category": "镜头动效",
    "tags": [
     "登场",
@@ -19517,7 +19517,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-neon-forerun/sample.webm",
+   "preview": "/renders/shot-lumin-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 242,
@@ -19570,10 +19570,10 @@
    ]
   },
   {
-   "id": "shot-neon-orbit",
+   "id": "shot-lumin-03",
    "name": "霓虹环绕齐落",
    "description": "霓虹框先行描框后镜头绕页面左→右弧线旋转，全部组件同帧从空中贴落、软影同步收敛——一页一次性隆重揭幕",
-   "path": "templates/shot-neon-orbit",
+   "path": "templates/shot-lumin-03",
    "category": "镜头动效",
    "tags": [
     "登场",
@@ -19586,7 +19586,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-neon-orbit/sample.webm",
+   "preview": "/renders/shot-lumin-03/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 243,
@@ -19639,10 +19639,10 @@
    ]
   },
   {
-   "id": "shot-outro-photo",
+   "id": "shot-az96-01",
    "name": "全家福合影收尾",
    "description": "全片元素从四面八方飞来围住字标合影，crane 落机位+舞台光+金尘，发布会级 outro 终镜",
-   "path": "templates/shot-outro-photo",
+   "path": "templates/shot-az96-01",
    "category": "镜头动效",
    "tags": [
     "收尾",
@@ -19655,7 +19655,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-outro-photo/sample.webm",
+   "preview": "/renders/shot-az96-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 244,
@@ -19693,10 +19693,10 @@
    ]
   },
   {
-   "id": "shot-tilt-reveal",
+   "id": "shot-aztilt-01",
    "name": "俯仰抬正揭示",
    "description": "整页 rotateX 平躺只露上缘窄带，机位抬头回正、内容一排排涌入视野——像掀开桌上图纸的开场揭示",
-   "path": "templates/shot-tilt-reveal",
+   "path": "templates/shot-aztilt-01",
    "category": "镜头动效",
    "tags": [
     "开场",
@@ -19709,7 +19709,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-tilt-reveal/sample.webm",
+   "preview": "/renders/shot-aztilt-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 245,
@@ -19747,10 +19747,10 @@
    ]
   },
   {
-   "id": "shot-cube-rotate",
+   "id": "shot-azcube-01",
    "name": "立方体翻页转场",
    "description": "两页贴立方体相邻面转 90°，旧面转出压暗、新面转进变亮——章节级并列翻篇的体块仪式",
-   "path": "templates/shot-cube-rotate",
+   "path": "templates/shot-azcube-01",
    "category": "镜头动效",
    "tags": [
     "转场",
@@ -19763,7 +19763,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-cube-rotate/sample.webm",
+   "preview": "/renders/shot-azcube-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 246,
@@ -19801,10 +19801,10 @@
    ]
   },
   {
-   "id": "shot-waterfall-wall",
+   "id": "shot-cascade2-01",
    "name": "页面瀑布墙",
    "description": "3 列页面卡在 3D 后仰墙面上差速反向无限滚动，视差+镜头缓推做「内容多到流不完」的体量一览",
-   "path": "templates/shot-waterfall-wall",
+   "path": "templates/shot-cascade2-01",
    "category": "镜头动效",
    "tags": [
     "陈列",
@@ -19817,7 +19817,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-waterfall-wall/sample.webm",
+   "preview": "/renders/shot-cascade2-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 247,
@@ -19855,10 +19855,10 @@
    ]
   },
   {
-   "id": "shot-grid-flash",
+   "id": "shot-azgrid-01",
    "name": "九宫闪切吞屏",
    "description": "3×3 格按十六分音符乱序逐格硬入填墙，停一拍后中心格 14f 放大 3.28 倍吞掉全屏——功能矩阵一秒全亮相",
-   "path": "templates/shot-grid-flash",
+   "path": "templates/shot-azgrid-01",
    "category": "镜头动效",
    "tags": [
     "节奏",
@@ -19871,7 +19871,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-grid-flash/sample.webm",
+   "preview": "/renders/shot-azgrid-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 248,
@@ -19909,10 +19909,10 @@
    ]
   },
   {
-   "id": "shot-tape-slap",
+   "id": "shot-az24-02",
    "name": "纸胶带拍定",
    "description": "悬浮微晃的纸卡被两条撕边胶带「啪啪」先后拍在对角，第二条同帧停晃、投影变薄、整卡下沉——按死定妆",
-   "path": "templates/shot-tape-slap",
+   "path": "templates/shot-az24-02",
    "category": "镜头动效",
    "tags": [
     "纸艺",
@@ -19925,7 +19925,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-tape-slap/sample.webm",
+   "preview": "/renders/shot-az24-02/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 249,
@@ -19977,10 +19977,10 @@
    ]
   },
   {
-   "id": "shot-popup-book",
+   "id": "shot-az55-01",
    "name": "立体书立起",
    "description": "整页平躺如摊开书页，卡片沿各自底边错峰立起成墙，立到 95° 回弹 90°，根部投影随立起收窄——系统被搭建起来",
-   "path": "templates/shot-popup-book",
+   "path": "templates/shot-az55-01",
    "category": "镜头动效",
    "tags": [
     "纸艺",
@@ -19993,7 +19993,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-popup-book/sample.webm",
+   "preview": "/renders/shot-az55-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 250,
@@ -20031,10 +20031,10 @@
    ]
   },
   {
-   "id": "shot-paper-plane",
+   "id": "shot-papyrus-01",
    "name": "纸飞机信使转场",
    "description": "点击发送后镜头拉远，折纸飞机沿贝塞尔弧线伴飞穿过多层视差道具（俯仰跟随切线），飞抵窗口 B 接管全屏",
-   "path": "templates/shot-paper-plane",
+   "path": "templates/shot-papyrus-01",
    "category": "镜头动效",
    "tags": [
     "转场",
@@ -20047,7 +20047,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-paper-plane/sample.webm",
+   "preview": "/renders/shot-papyrus-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 251,
@@ -20085,10 +20085,10 @@
    ]
   },
   {
-   "id": "shot-paper-title",
+   "id": "shot-papyrus-02",
    "name": "纸面压印字卡",
    "description": "一句话逐词压印上纸（scale 1.28+blur 7 配方），一个强调色斜体重点词，短划线收束——章节间的呼吸位",
-   "path": "templates/shot-paper-title",
+   "path": "templates/shot-papyrus-02",
    "category": "镜头动效",
    "tags": [
     "字卡",
@@ -20101,7 +20101,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-paper-title/sample.webm",
+   "preview": "/renders/shot-papyrus-02/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 252,
@@ -20167,10 +20167,10 @@
    ]
   },
   {
-   "id": "shot-confetti",
+   "id": "shot-serpentine-01",
    "name": "双侧礼炮庆祝",
    "description": "里程碑揭晓帧左下右下双炮同帧开火，百颗翻转彩屑抛物线交叉飞过全屏再落出画外——一次性大庆祝",
-   "path": "templates/shot-confetti",
+   "path": "templates/shot-serpentine-01",
    "category": "镜头动效",
    "tags": [
     "庆祝",
@@ -20183,7 +20183,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-confetti/sample.webm",
+   "preview": "/renders/shot-serpentine-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 253,
@@ -20235,10 +20235,10 @@
    ]
   },
   {
-   "id": "shot-sand-fill",
+   "id": "shot-granule-01",
    "name": "粒子落斗成柱",
    "description": "柱状图不长高而是「下雨下出来」：方点粒子逐颗坠落堆积成柱，堆满凝成实体+数值弹出——看得见的积累",
-   "path": "templates/shot-sand-fill",
+   "path": "templates/shot-granule-01",
    "category": "镜头动效",
    "tags": [
     "数据",
@@ -20251,7 +20251,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-sand-fill/sample.webm",
+   "preview": "/renders/shot-granule-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 254,
@@ -20289,10 +20289,10 @@
    ]
   },
   {
-   "id": "shot-ink-bleed",
+   "id": "shot-azink-01",
    "name": "墨渗揭示转场",
    "description": "新画面透过须状渗边的有机圆形遮罩从落墨点洇开、快慢不匀吃掉旧景——介质显影型转场",
-   "path": "templates/shot-ink-bleed",
+   "path": "templates/shot-azink-01",
    "category": "镜头动效",
    "tags": [
     "转场",
@@ -20305,7 +20305,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-ink-bleed/sample.webm",
+   "preview": "/renders/shot-azink-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 255,
@@ -20343,10 +20343,10 @@
    ]
   },
   {
-   "id": "shot-jump-cut",
+   "id": "shot-az68-01",
    "name": "三级跳切推近",
    "description": "同构图三次无补间跳大（1x→1.6x→2.6x），每跳 2f 加深脉冲当 tick——戈达尔跳切的强制聚焦",
-   "path": "templates/shot-jump-cut",
+   "path": "templates/shot-az68-01",
    "category": "镜头动效",
    "tags": [
     "节奏",
@@ -20359,7 +20359,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-jump-cut/sample.webm",
+   "preview": "/renders/shot-az68-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 256,
@@ -20411,10 +20411,10 @@
    ]
   },
   {
-   "id": "shot-riso-hit",
+   "id": "shot-az67-02",
    "name": "套印错位单发",
    "description": "标题 8f 撞停瞬间裂成浅灰/深墨两份印版（multiply 油墨感），震荡衰减后硬切套准+脉冲盖章",
-   "path": "templates/shot-riso-hit",
+   "path": "templates/shot-az67-02",
    "category": "镜头动效",
    "tags": [
     "命中",
@@ -20427,7 +20427,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-riso-hit/sample.webm",
+   "preview": "/renders/shot-az67-02/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 257,
@@ -20472,10 +20472,10 @@
    ]
   },
   {
-   "id": "shot-row-embed",
+   "id": "shot-tier-01",
    "name": "内容行嵌入",
    "description": "内容行从空中降下、rotateX 收平嵌入布局，嵌入瞬间底边亮一道强调色的缝——结构化数据长进页面",
-   "path": "templates/shot-row-embed",
+   "path": "templates/shot-tier-01",
    "category": "镜头动效",
    "tags": [
     "入场",
@@ -20488,7 +20488,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-row-embed/sample.webm",
+   "preview": "/renders/shot-tier-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 258,
@@ -20526,10 +20526,10 @@
    ]
   },
   {
-   "id": "shot-runway-skim",
+   "id": "shot-azrunway-01",
    "name": "掠地急雨贴落",
    "description": "低角度跑道上卡片群急雨式贴落（起点微错、9f 重力加速、零回弹），落齐后整页立起视角转正",
-   "path": "templates/shot-runway-skim",
+   "path": "templates/shot-azrunway-01",
    "category": "镜头动效",
    "tags": [
     "登场",
@@ -20542,7 +20542,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-runway-skim/sample.webm",
+   "preview": "/renders/shot-azrunway-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 259,
@@ -20580,10 +20580,10 @@
    ]
   },
   {
-   "id": "shot-sakuga",
+   "id": "shot-onethree-01",
    "name": "拍数切换冲刺",
    "description": "元素先以每 3 帧一步的手翻书顿挫移动，高潮瞬间切成逐帧丝滑冲刺——帧率量化突变本身就是看点",
-   "path": "templates/shot-sakuga",
+   "path": "templates/shot-onethree-01",
    "category": "镜头动效",
    "tags": [
     "节奏",
@@ -20596,7 +20596,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-sakuga/sample.webm",
+   "preview": "/renders/shot-onethree-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 260,
@@ -20634,10 +20634,10 @@
    ]
   },
   {
-   "id": "shot-scroll-brake",
+   "id": "shot-parchment-01",
    "name": "长卷急刹停位",
    "description": "更新日志长卷高速掠过糊成色带，指数减速精准急刹停在本次发布那条——抬升高亮、其余退暗",
-   "path": "templates/shot-scroll-brake",
+   "path": "templates/shot-parchment-01",
    "category": "镜头动效",
    "tags": [
     "数据",
@@ -20650,7 +20650,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-scroll-brake/sample.webm",
+   "preview": "/renders/shot-parchment-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 261,
@@ -20688,10 +20688,10 @@
    ]
   },
   {
-   "id": "shot-segmented-hero",
+   "id": "shot-azsegment-01",
    "name": "分段控件特写",
    "description": "超大胶囊分段控件弹簧浮入，描边光标画外滑入按下，白 thumb 8f 滑到另一段、新图标弹出——模式切换宣告",
-   "path": "templates/shot-segmented-hero",
+   "path": "templates/shot-azsegment-01",
    "category": "镜头动效",
    "tags": [
     "交互",
@@ -20704,7 +20704,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-segmented-hero/sample.webm",
+   "preview": "/renders/shot-azsegment-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 262,
@@ -20756,10 +20756,10 @@
    ]
   },
   {
-   "id": "shot-whip-pan",
+   "id": "shot-azwhip-01",
    "name": "甩镜转场",
    "description": "机位一拍横甩到下一场景：8 帧急甩跨 1.5 屏+运动模糊，后 40 帧长尾滑入落位——高能量场景跳转",
-   "path": "templates/shot-whip-pan",
+   "path": "templates/shot-azwhip-01",
    "category": "镜头动效",
    "tags": [
     "转场",
@@ -20772,7 +20772,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-whip-pan/sample.webm",
+   "preview": "/renders/shot-azwhip-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 263,
@@ -20810,10 +20810,10 @@
    ]
   },
   {
-   "id": "shot-score-slam",
+   "id": "shot-az77-01",
    "name": "比分砸落",
    "description": "KPI 大数字从 2.5 倍大小 6 帧加速砸落，落点帧圆环扩散+尘点飞散+震屏三件套同帧起爆——重磅登场",
-   "path": "templates/shot-score-slam",
+   "path": "templates/shot-az77-01",
    "category": "镜头动效",
    "tags": [
     "入场",
@@ -20826,7 +20826,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-score-slam/sample.webm",
+   "preview": "/renders/shot-az77-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 264,
@@ -20878,10 +20878,10 @@
    ]
   },
   {
-   "id": "shot-exploded-view",
+   "id": "shot-az14-01",
    "name": "爆炸分解视图",
    "description": "整页 3D 倾斜后五个构件沿纵深错峰炸开悬停（投影变虚+远层压暗），一拍后逆序合体震屏收口——架构展示",
-   "path": "templates/shot-exploded-view",
+   "path": "templates/shot-az14-01",
    "category": "镜头动效",
    "tags": [
     "3D",
@@ -20894,7 +20894,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-exploded-view/sample.webm",
+   "preview": "/renders/shot-az14-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 265,
@@ -20932,10 +20932,10 @@
    ]
   },
   {
-   "id": "shot-smear-multiples",
+   "id": "shot-afterimage-01",
    "name": "残像分身",
    "description": "卡片高速横移拖出 4 个清晰可数的半透明分身（速度门限 >25px/f 才出现），落位瞬间收拢合一——漫画式速度感",
-   "path": "templates/shot-smear-multiples",
+   "path": "templates/shot-afterimage-01",
    "category": "镜头动效",
    "tags": [
     "速度",
@@ -20948,7 +20948,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-smear-multiples/sample.webm",
+   "preview": "/renders/shot-afterimage-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 266,
@@ -20993,10 +20993,10 @@
    ]
   },
   {
-   "id": "shot-spectrum-morph",
+   "id": "shot-band-01",
    "name": "频谱下划线",
    "description": "标题下划线裂成 28 根竖条按伪 FFT 频谱跳动两小节（左高右矮包络、4 帧换挡），再收拢还原成直线——借用归还式声画同步",
-   "path": "templates/shot-spectrum-morph",
+   "path": "templates/shot-band-01",
    "category": "镜头动效",
    "tags": [
     "频谱",
@@ -21009,7 +21009,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-spectrum-morph/sample.webm",
+   "preview": "/renders/shot-band-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 267,
@@ -21054,10 +21054,10 @@
    ]
   },
   {
-   "id": "shot-spotlight-pan",
+   "id": "shot-footlight-02",
    "name": "贴边泛光横摇",
    "description": "暗场中紫色辉光贴着 UI 边缘渗入（先竖缘后顶边），聚光头严格匀速右移显影、面板匀速左滑成相机右摇——光即运镜",
-   "path": "templates/shot-spotlight-pan",
+   "path": "templates/shot-footlight-02",
    "category": "镜头动效",
    "tags": [
     "聚光",
@@ -21070,7 +21070,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-spotlight-pan/sample.webm",
+   "preview": "/renders/shot-footlight-02/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 268,
@@ -21108,10 +21108,10 @@
    ]
   },
   {
-   "id": "shot-steep-tilt",
+   "id": "shot-slant-01",
    "name": "陡角侧立滑移",
    "description": "页面以 60° 强透视侧立成一堵斜墙，镜头钉死不动、页面沿自身横面滑移掠过，带速度重影+悬空贴落+由暗揭亮",
-   "path": "templates/shot-steep-tilt",
+   "path": "templates/shot-slant-01",
    "category": "镜头动效",
    "tags": [
     "3D",
@@ -21124,7 +21124,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-steep-tilt/sample.webm",
+   "preview": "/renders/shot-slant-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 269,
@@ -21162,10 +21162,10 @@
    ]
   },
   {
-   "id": "shot-stroke-build",
+   "id": "shot-brushwork-01",
    "name": "断笔成字",
    "description": "GOAL 拆成 14 段互不相连的粗笔画乱序点亮，前 70% 不可读，钥匙段压最后——末段落位瞬间语义啪地成立",
-   "path": "templates/shot-stroke-build",
+   "path": "templates/shot-brushwork-01",
    "category": "镜头动效",
    "tags": [
     "悬念",
@@ -21178,7 +21178,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-stroke-build/sample.webm",
+   "preview": "/renders/shot-brushwork-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 270,
@@ -21223,10 +21223,10 @@
    ]
   },
   {
-   "id": "shot-glitch-displace",
+   "id": "shot-az40-01",
    "name": "噪声撕裂转场",
    "description": "页面切成 16 条横带按噪声 ±70px 错位抖动、叠明暗双重影，抖动衰减中硬切新页——数字故障语义的条带级撕裂",
-   "path": "templates/shot-glitch-displace",
+   "path": "templates/shot-az40-01",
    "category": "镜头动效",
    "tags": [
     "转场",
@@ -21239,7 +21239,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-glitch-displace/sample.webm",
+   "preview": "/renders/shot-az40-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 271,
@@ -21277,10 +21277,10 @@
    ]
   },
   {
-   "id": "shot-slow-push",
+   "id": "shot-az33-01",
    "name": "慢推压迫切亮",
    "description": "4 秒匀加速推近+暗角渐深把张力压到顶点，零过渡硬切亮场释放——大数字/宣言前的蓄力",
-   "path": "templates/shot-slow-push",
+   "path": "templates/shot-az33-01",
    "category": "镜头动效",
    "tags": [
     "运镜",
@@ -21293,7 +21293,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-slow-push/sample.webm",
+   "preview": "/renders/shot-az33-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 272,
@@ -21352,10 +21352,10 @@
    ]
   },
   {
-   "id": "shot-theme-sweep",
+   "id": "shot-aztheme-02",
    "name": "斜向扫场换肤",
    "description": "15° 斜向边界带白亮线从左上扫到右下，扫过处浅色 UI 就地变深色——同一界面在你眼前换肤",
-   "path": "templates/shot-theme-sweep",
+   "path": "templates/shot-aztheme-02",
    "category": "镜头动效",
    "tags": [
     "主题",
@@ -21368,7 +21368,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-theme-sweep/sample.webm",
+   "preview": "/renders/shot-aztheme-02/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 273,
@@ -21406,10 +21406,10 @@
    ]
   },
   {
-   "id": "shot-trailer-bumper",
+   "id": "shot-aztrailer-01",
    "name": "前置速剪钩子",
    "description": "正片前 0.9 秒三个镜头各 9f 等长速剪（镜内微推保活），纯黑静默一拍后标题淡入微升——预告片的预告",
-   "path": "templates/shot-trailer-bumper",
+   "path": "templates/shot-aztrailer-01",
    "category": "镜头动效",
    "tags": [
     "开场",
@@ -21422,7 +21422,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-trailer-bumper/sample.webm",
+   "preview": "/renders/shot-aztrailer-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 274,
@@ -21467,10 +21467,10 @@
    ]
   },
   {
-   "id": "shot-versus-slam",
+   "id": "shot-az39-01",
    "name": "对撞开屏",
    "description": "左右两半屏带 78° 斜缝加速对冲撞合，撞击帧白闪+震屏+VS 盖章三件套同帧起爆——对比/对阵语义开屏",
-   "path": "templates/shot-versus-slam",
+   "path": "templates/shot-az39-01",
    "category": "镜头动效",
    "tags": [
     "对比",
@@ -21483,7 +21483,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-versus-slam/sample.webm",
+   "preview": "/renders/shot-az39-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 275,
@@ -21535,10 +21535,10 @@
    ]
   },
   {
-   "id": "shot-shared-element",
+   "id": "shot-az25-01",
    "name": "共享元素归位",
    "description": "全屏详情卡收缩位移长出圆角、带 3% 过冲严丝合缝飞落 dashboard 网格槽位，落座瞬间背景提亮——穿越式归位",
-   "path": "templates/shot-shared-element",
+   "path": "templates/shot-az25-01",
    "category": "镜头动效",
    "tags": [
     "转场",
@@ -21551,7 +21551,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-shared-element/sample.webm",
+   "preview": "/renders/shot-az25-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 276,
@@ -21589,10 +21589,10 @@
    ]
   },
   {
-   "id": "shot-type-filter",
+   "id": "shot-keystroke-01",
    "name": "打字搜索穿透",
    "description": "搜索框 3f/字符真人速度打字、非目标卡按阅读序错峰淡出、目标卡滑位浮起、双圈 ripple 点击后相机推进穿透",
-   "path": "templates/shot-type-filter",
+   "path": "templates/shot-keystroke-01",
    "category": "镜头动效",
    "tags": [
     "交互",
@@ -21605,7 +21605,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-type-filter/sample.webm",
+   "preview": "/renders/shot-keystroke-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 277,
@@ -21650,10 +21650,10 @@
    ]
   },
   {
-   "id": "shot-split-stagger",
+   "id": "shot-flapper-02",
    "name": "逐字裂升",
    "description": "标题逐字从裁切线下滑升、带 10% 过冲回落（每字间隔 2f），末字强调色收尾——琴键式利落入场",
-   "path": "templates/shot-split-stagger",
+   "path": "templates/shot-flapper-02",
    "category": "镜头动效",
    "tags": [
     "标题",
@@ -21666,7 +21666,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-split-stagger/sample.webm",
+   "preview": "/renders/shot-flapper-02/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 278,
@@ -21718,10 +21718,10 @@
    ]
   },
   {
-   "id": "shot-scramble-decode",
+   "id": "shot-cipher-01",
    "name": "乱码解码入场",
    "description": "标题全员高速跳乱码，从左到右逐个锁定真字符、锁定瞬间反色闪 2f，底部进度条同步推进——答案从噪声里长出来",
-   "path": "templates/shot-scramble-decode",
+   "path": "templates/shot-cipher-01",
    "category": "镜头动效",
    "tags": [
     "标题",
@@ -21734,7 +21734,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-scramble-decode/sample.webm",
+   "preview": "/renders/shot-cipher-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 279,
@@ -21779,10 +21779,10 @@
    ]
   },
   {
-   "id": "shot-karaoke-fill",
+   "id": "shot-azlyric-01",
    "name": "跟读填色",
    "description": "标语逐词从左到右填色点亮，活跃词下带读指下划线、读完保持——视线被旁白节奏牵着走",
-   "path": "templates/shot-karaoke-fill",
+   "path": "templates/shot-azlyric-01",
    "category": "镜头动效",
    "tags": [
     "文字",
@@ -21795,7 +21795,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-karaoke-fill/sample.webm",
+   "preview": "/renders/shot-azlyric-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 280,
@@ -21840,10 +21840,10 @@
    ]
   },
   {
-   "id": "shot-strip-away",
+   "id": "shot-az24-01",
    "name": "减法蒸发收尾",
    "description": "点击 Publish 后整个编辑器 UI 从外围到中心每 4f 一层错峰蒸发，黑场上只剩按钮滑到屏心放大升格，再淡出交棒字标定版",
-   "path": "templates/shot-strip-away",
+   "path": "templates/shot-az24-01",
    "category": "镜头动效",
    "tags": [
     "收尾",
@@ -21856,7 +21856,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-strip-away/sample.webm",
+   "preview": "/renders/shot-az24-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 281,
@@ -21901,10 +21901,10 @@
    ]
   },
   {
-   "id": "shot-icon-flip-bloom",
+   "id": "shot-sigil-02",
    "name": "图标翻身绽放",
    "description": "图标蓄力晃两下后 Y 轴翻扁成竖线（双层拖影），最薄处实体交换、spring 绽放成 5 瓣花形 mark，mark 左移让位、wordmark 逐字由大变小落位",
-   "path": "templates/shot-icon-flip-bloom",
+   "path": "templates/shot-sigil-02",
    "category": "镜头动效",
    "tags": [
     "品牌",
@@ -21917,7 +21917,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-icon-flip-bloom/sample.webm",
+   "preview": "/renders/shot-sigil-02/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 282,
@@ -21962,10 +21962,10 @@
    ]
   },
   {
-   "id": "shot-voice-waveform",
+   "id": "shot-sonogram-01",
    "name": "实时声纹胶囊",
    "description": "64 根细竖条随'说话'起伏：说时中部高耸、停顿缩成点线、波形从右往左滚动，发送后 12f 塌缩收走——'它在听'的功能性回执",
-   "path": "templates/shot-voice-waveform",
+   "path": "templates/shot-sonogram-01",
    "category": "镜头动效",
    "tags": [
     "语音",
@@ -21978,7 +21978,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-voice-waveform/sample.webm",
+   "preview": "/renders/shot-sonogram-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 283,
@@ -22016,10 +22016,10 @@
    ]
   },
   {
-   "id": "shot-wireframe-draw",
+   "id": "shot-az67-03",
    "name": "蓝图描线实体化",
    "description": "界面先以细线蓝图分组描画成形，再一条强调色发光竖线左→右扫过，扫过处线框实体化成真实界面——'从设计到实物'",
-   "path": "templates/shot-wireframe-draw",
+   "path": "templates/shot-az67-03",
    "category": "镜头动效",
    "tags": [
     "整墙",
@@ -22032,7 +22032,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-wireframe-draw/sample.webm",
+   "preview": "/renders/shot-az67-03/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 284,
@@ -22070,10 +22070,10 @@
    ]
   },
   {
-   "id": "shot-word-relay",
+   "id": "shot-lexicon-01",
    "name": "词接力胶片",
    "description": "左列黑白相间页面卡平时完全静止、只在切词瞬间步进滚动一格，右侧衬线大词原位接力（名词恒定+动词轮换），词块中心与当前卡中点像素级对齐",
-   "path": "templates/shot-word-relay",
+   "path": "templates/shot-lexicon-01",
    "category": "镜头动效",
    "tags": [
     "枚举",
@@ -22086,7 +22086,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/shot-word-relay/sample.webm",
+   "preview": "/renders/shot-lexicon-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "no": 285,
@@ -27951,10 +27951,10 @@
    ]
   },
   {
-   "id": "video-text-mask-reveal",
+   "id": "footage-glyph",
    "name": "视频填充文字开场（模式特效）",
    "description": "大字作 SVG 蒙版镂空透出视频：锚点字母先行，两侧字母 ease-out 归位，中央 aperture 裂开、字形复用为上下两实例退场，最后 scale 1.055 推近。MV/片头开场用。",
-   "path": "templates/video-text-mask-reveal",
+   "path": "templates/footage-glyph",
    "category": "标题与开场",
    "tags": [
     "文字蒙版",
@@ -27969,7 +27969,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/video-text-mask-reveal/sample.webm",
+   "preview": "/renders/footage-glyph/sample.webm",
    "status": "ready",
    "tier": "member",
    "series": "fx",
@@ -30527,10 +30527,10 @@
    ]
   },
   {
-   "id": "sc2-dashboard-glow",
+   "id": "sc2-console-01",
    "name": "仪表盘荧光扫描高亮",
    "description": "深色仪表盘行列表，荧光绿扫描行从上往下扫，扫到目标行高亮胶囊弹亮、其余行压暗。源卡 dashboard-glow-highlight-pill 差异化：改纵向扫描+绿荧光。",
-   "path": "templates/sc2-dashboard-glow",
+   "path": "templates/sc2-console-01",
    "category": "数据可视化",
    "tags": [
     "仪表盘",
@@ -30544,7 +30544,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/sc2-dashboard-glow/sample.webm",
+   "preview": "/renders/sc2-console-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "series": "sc2",
@@ -30603,10 +30603,10 @@
    ]
   },
   {
-   "id": "sc2-hatch-depth",
+   "id": "sc2-hachure-01",
    "name": "排线纵深揭示",
    "description": "白底黑排线（hatch）从画面中心向外生长出纵深层次，标题在排线收束处显影。源卡 hatch-depth 差异化：改纸感排线+单点透视。",
-   "path": "templates/sc2-hatch-depth",
+   "path": "templates/sc2-hachure-01",
    "category": "标题与开场",
    "tags": [
     "排线",
@@ -30620,7 +30620,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/sc2-hatch-depth/sample.webm",
+   "preview": "/renders/sc2-hachure-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "series": "sc2",
@@ -30686,10 +30686,10 @@
    ]
   },
   {
-   "id": "sc2-card-stack",
+   "id": "sc2-plate-01",
    "name": "卡堆抽拉翻览",
    "description": "一摞卡堆叠，当前卡拉到台前放大、看完压回堆底，循环翻览三张。源卡 card-stack 差异化：改纸感卡+硬投影抽拉。",
-   "path": "templates/sc2-card-stack",
+   "path": "templates/sc2-plate-01",
    "category": "信息卡片",
    "tags": [
     "卡堆",
@@ -30703,7 +30703,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/sc2-card-stack/sample.webm",
+   "preview": "/renders/sc2-plate-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "series": "sc2",
@@ -30762,10 +30762,10 @@
    ]
   },
   {
-   "id": "sc2-chip-select-dim",
+   "id": "sc2-azchip-01",
    "name": "芯片网格单选压暗",
    "description": "芯片胶囊网格铺满，逐个点灰后目标芯片荧光绿弹亮、全场压暗聚光。源卡 chip-grid-single-select-blackout 差异化：改绿点亮+硬边框。",
-   "path": "templates/sc2-chip-select-dim",
+   "path": "templates/sc2-azchip-01",
    "category": "信息卡片",
    "tags": [
     "芯片",
@@ -30779,7 +30779,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/sc2-chip-select-dim/sample.webm",
+   "preview": "/renders/sc2-azchip-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "series": "sc2",
@@ -30838,10 +30838,10 @@
    ]
   },
   {
-   "id": "sc2-carousel-3d",
+   "id": "sc2-revolve-01",
    "name": "纸卡 3D 轮播",
    "description": "竖版书页卡在 3D 环形轨道上轮换，当前卡转正放大、两侧卡倾斜压暗。源卡 carousel-3d 差异化：改纸感书页卡。",
-   "path": "templates/sc2-carousel-3d",
+   "path": "templates/sc2-revolve-01",
    "category": "杂志拼贴",
    "tags": [
     "3D",
@@ -30855,7 +30855,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/sc2-carousel-3d/sample.webm",
+   "preview": "/renders/sc2-revolve-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "series": "sc2",
@@ -30914,10 +30914,10 @@
    ]
   },
   {
-   "id": "sc2-countdown-arc",
+   "id": "sc2-finalcount-01",
    "name": "倒计时弧线散点",
    "description": "圆弧刻度逐格点亮倒数，到零瞬间弧散成粒子、答案数字砸入。源卡 countdown-arc-scatter 差异化：改荧光绿弧+纸底。",
-   "path": "templates/sc2-countdown-arc",
+   "path": "templates/sc2-finalcount-01",
    "category": "数据可视化",
    "tags": [
     "倒计时",
@@ -30931,7 +30931,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/sc2-countdown-arc/sample.webm",
+   "preview": "/renders/sc2-finalcount-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "series": "sc2",
@@ -31004,10 +31004,10 @@
    ]
   },
   {
-   "id": "sc2-counter-confetti",
+   "id": "sc2-tally-01",
    "name": "计数破阈礼花",
    "description": "大数字快速滚动破整百瞬间，顶部绿黑双色纸屑礼炮交叉喷发。源卡 counter-confetti 差异化：改纸感+绿黑礼花。",
-   "path": "templates/sc2-counter-confetti",
+   "path": "templates/sc2-tally-01",
    "category": "数据可视化",
    "tags": [
     "计数",
@@ -31021,7 +31021,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/sc2-counter-confetti/sample.webm",
+   "preview": "/renders/sc2-tally-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "series": "sc2",
@@ -31087,10 +31087,10 @@
    ]
   },
   {
-   "id": "sc2-list-reveal",
+   "id": "sc2-roster-01",
    "name": "列表逐行显影",
    "description": "纸面列表行先显骨架灰条，逐行显影成真实文字，关键行绿高亮。源卡 list-reveal 差异化：并入书页语言+行尾页码。",
-   "path": "templates/sc2-list-reveal",
+   "path": "templates/sc2-roster-01",
    "category": "信息卡片",
    "tags": [
     "列表",
@@ -31104,7 +31104,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/sc2-list-reveal/sample.webm",
+   "preview": "/renders/sc2-roster-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "series": "sc2",
@@ -31170,10 +31170,10 @@
    ]
   },
   {
-   "id": "sc2-outline-word-fill",
+   "id": "sc2-contour-01",
    "name": "描边字充填",
    "description": "空心描边巨字先立住，荧光绿从底部逐字充填满格。源卡 outline-word-fill 差异化：改荧光绿液面充填。",
-   "path": "templates/sc2-outline-word-fill",
+   "path": "templates/sc2-contour-01",
    "category": "标题与开场",
    "tags": [
     "描边字",
@@ -31187,7 +31187,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/sc2-outline-word-fill/sample.webm",
+   "preview": "/renders/sc2-contour-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "series": "sc2",
@@ -31232,10 +31232,10 @@
    ]
   },
   {
-   "id": "sc2-picker-carousel",
+   "id": "sc2-selector-01",
    "name": "选择器滚筒",
    "description": "纵向滚筒选择器逐格滚过候选词，停在目标词、荧光绿选框咬合锁定。源卡 picker-carousel-feature-cycle 差异化：改纸感滚筒+绿咬合框。",
-   "path": "templates/sc2-picker-carousel",
+   "path": "templates/sc2-selector-01",
    "category": "信息卡片",
    "tags": [
     "选择器",
@@ -31249,7 +31249,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/sc2-picker-carousel/sample.webm",
+   "preview": "/renders/sc2-selector-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "series": "sc2",
@@ -31301,10 +31301,10 @@
    ]
   },
   {
-   "id": "sc2-quad-split",
+   "id": "sc2-quadrant-01",
    "name": "四分屏平行场景",
    "description": "屏幕四分格，四路同主题场景并行演示，当前格绿框高亮轮流聚焦。源卡 quad-split-parallel-scenes 差异化：改纸感四格+绿框轮焦。",
-   "path": "templates/sc2-quad-split",
+   "path": "templates/sc2-quadrant-01",
    "category": "组合",
    "tags": [
     "四分屏",
@@ -31318,7 +31318,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/sc2-quad-split/sample.webm",
+   "preview": "/renders/sc2-quadrant-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "series": "sc2",
@@ -31363,10 +31363,10 @@
    ]
   },
   {
-   "id": "sc2-scanline-focus",
+   "id": "sc2-raster-01",
    "name": "扫描线标注聚焦",
    "description": "页面截图上荧光绿扫描线匀速扫过，扫到关键区停顿、标注线圈出并弹注释签。源卡 scanline-annotate-focus 差异化：改绿线+纸感注释签。",
-   "path": "templates/sc2-scanline-focus",
+   "path": "templates/sc2-raster-01",
    "category": "透明叠加",
    "tags": [
     "扫描线",
@@ -31380,7 +31380,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/sc2-scanline-focus/sample.webm",
+   "preview": "/renders/sc2-raster-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "series": "sc2",
@@ -31432,10 +31432,10 @@
    ]
   },
   {
-   "id": "sc2-typing-code",
+   "id": "sc2-keystroke2-01",
    "name": "纸感打字代码块",
    "description": "墨黑代码块内命令逐字敲入，回车后结果行绿字展开，光标恒亮。源卡 typing-code-block 差异化：并入书页页眉页码。",
-   "path": "templates/sc2-typing-code",
+   "path": "templates/sc2-keystroke2-01",
    "category": "产品演示",
    "tags": [
     "打字",
@@ -31449,7 +31449,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/sc2-typing-code/sample.webm",
+   "preview": "/renders/sc2-keystroke2-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "series": "sc2",
@@ -31501,10 +31501,10 @@
    ]
   },
   {
-   "id": "sc2-value-stagger",
+   "id": "sc2-magnitude-01",
    "name": "数值错落充能",
    "description": "一组数值卡错峰升起，数值从零充能跳到真值，最大者荧光绿描边。源卡 value-stagger-gradient 差异化：改纸感卡+绿描边胜者。",
-   "path": "templates/sc2-value-stagger",
+   "path": "templates/sc2-magnitude-01",
    "category": "数据可视化",
    "tags": [
     "数值",
@@ -31518,7 +31518,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/sc2-value-stagger/sample.webm",
+   "preview": "/renders/sc2-magnitude-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "series": "sc2",
@@ -31563,10 +31563,10 @@
    ]
   },
   {
-   "id": "sc2-word-roll-blur",
+   "id": "sc2-lexicon-01",
    "name": "纵滚模糊词列",
    "description": "词列纵向滚动带动态模糊，当前词清晰定格放大、其余模糊掠过。源卡 vertical-word-roll-blur-cycle 差异化：改纸底黑字+绿定格词。",
-   "path": "templates/sc2-word-roll-blur",
+   "path": "templates/sc2-lexicon-01",
    "category": "标题与开场",
    "tags": [
     "词列",
@@ -31580,7 +31580,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/sc2-word-roll-blur/sample.webm",
+   "preview": "/renders/sc2-lexicon-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "series": "sc2",
@@ -31625,10 +31625,10 @@
    ]
   },
   {
-   "id": "sc2-mosaic-reframe",
+   "id": "sc2-tessell-01",
    "name": "马赛克格重构",
    "description": "画面先呈马赛克格阵列，格块错峰翻面重组成完整信息页。源卡 mosaic-reframe 差异化：改纸感格块+绿缝线。",
-   "path": "templates/sc2-mosaic-reframe",
+   "path": "templates/sc2-tessell-01",
    "category": "转场",
    "tags": [
     "马赛克",
@@ -31642,7 +31642,7 @@
     "mp4"
    ],
    "defaultFormat": "mp4",
-   "preview": "/renders/sc2-mosaic-reframe/sample.webm",
+   "preview": "/renders/sc2-tessell-01/sample.webm",
    "status": "ready",
    "tier": "member",
    "series": "sc2",
@@ -33965,13 +33965,13 @@
    "isNew": true
   },
   {
-   "id": "transition-blur-cut",
+   "id": "softmelt-dissolve",
    "name": "模糊切入",
    "description": "模糊切入 · 6s 过渡模板（bg→fg 两图切换）",
-   "path": "templates/transition-blur-cut",
+   "path": "templates/softmelt-dissolve",
    "category": "过渡/转场",
    "tags": [
-    "transition-blur-cut",
+    "softmelt-dissolve",
     "transition",
     "transition",
     "bg-fg"
@@ -33982,7 +33982,7 @@
     "webm"
    ],
    "defaultFormat": "webm",
-   "preview": "/renders/transition-blur-cut/sample.webm",
+   "preview": "/renders/softmelt-dissolve/sample.webm",
    "status": "ready",
    "tier": "free",
    "no": null,
@@ -34109,13 +34109,13 @@
    "isNew": true
   },
   {
-   "id": "transition-page-turn",
+   "id": "leaf-curl",
    "name": "翻页效果",
    "description": "翻页效果 · 6s 过渡模板（bg→fg 两图切换）",
-   "path": "templates/transition-page-turn",
+   "path": "templates/leaf-curl",
    "category": "过渡/转场",
    "tags": [
-    "transition-page-turn",
+    "leaf-curl",
     "transition",
     "transition",
     "bg-fg"
@@ -34126,7 +34126,7 @@
     "webm"
    ],
    "defaultFormat": "webm",
-   "preview": "/renders/transition-page-turn/sample.webm",
+   "preview": "/renders/leaf-curl/sample.webm",
    "status": "ready",
    "tier": "free",
    "no": null,

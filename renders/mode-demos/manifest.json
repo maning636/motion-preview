@@ -40,13 +40,13 @@
         "coverflow-carousel",
         "hero3d-float-cards",
         "hero3d-tilt-showcase",
-        "shot-spotlight-hero"
+        "shot-footlight-01"
       ],
       "mtimes": {
         "coverflow-carousel": 1786793566.68424,
         "hero3d-float-cards": 1786637826.3119018,
         "hero3d-tilt-showcase": 1786637880.2013488,
-        "shot-spotlight-hero": 1785172670.4599452
+        "shot-footlight-01": 1785172670.4599452
       },
       "pending": [],
       "missing": [],
@@ -56,13 +56,13 @@
       "segs": [
         "transition-raindrop-reveal",
         "transition-raindrop-loop",
-        "shot-circle-iris",
+        "shot-roundel-01",
         "spec-scene-card"
       ],
       "mtimes": {
         "transition-raindrop-reveal": 1786792844.1319692,
         "transition-raindrop-loop": 1786809112.1408274,
-        "shot-circle-iris": 1785182058.2709029,
+        "shot-roundel-01": 1785182058.2709029,
         "spec-scene-card": 1786810151.9784708
       },
       "pending": [],
@@ -88,15 +88,15 @@
     },
     "T05": {
       "segs": [
-        "video-text-mask-reveal",
-        "shot-text-mask",
-        "shot-karaoke-fill",
+        "footage-glyph",
+        "shot-glyph-02",
+        "shot-azlyric-01",
         "karaoke-line"
       ],
       "mtimes": {
-        "video-text-mask-reveal": 1787417741.340961,
-        "shot-text-mask": 1785176733.160963,
-        "shot-karaoke-fill": 1785217772.709184,
+        "footage-glyph": 1787417741.340961,
+        "shot-glyph-02": 1785176733.160963,
+        "shot-azlyric-01": 1785217772.709184,
         "karaoke-line": 1785755996.8665054
       },
       "pending": [],
@@ -110,13 +110,13 @@
         "handdraw-story-player",
         "whiteboard-draw",
         "handwrite-title",
-        "shot-draw-svg-trace"
+        "shot-etch-01"
       ],
       "mtimes": {
         "handdraw-story-player": 1786793038.178944,
         "whiteboard-draw": 1785755565.304981,
         "handwrite-title": 1785755946.6604166,
-        "shot-draw-svg-trace": 1785175422.3457522
+        "shot-etch-01": 1785175422.3457522
       },
       "pending": [
         "lineart-color-wipe-scene",
@@ -130,14 +130,14 @@
     "T07": {
       "segs": [
         "petal-mask-rotate",
-        "shot-circle-iris",
-        "shot-morph-primitive",
+        "shot-roundel-01",
+        "shot-transmute-01",
         "anti-pattern-note"
       ],
       "mtimes": {
         "petal-mask-rotate": 1787408508.8231227,
-        "shot-circle-iris": 1785182058.2709029,
-        "shot-morph-primitive": 1785175378.4883773,
+        "shot-roundel-01": 1785182058.2709029,
+        "shot-transmute-01": 1785175378.4883773,
         "anti-pattern-note": 1786809688.5008855
       },
       "pending": [
@@ -153,13 +153,13 @@
         "parallax-album-intro",
         "toc-sidebar-spotlight",
         "prompt-tuning-bubbles",
-        "shot-depth-parallax"
+        "shot-az70-01"
       ],
       "mtimes": {
         "parallax-album-intro": 1786793174.2971761,
         "toc-sidebar-spotlight": 1786809738.059801,
         "prompt-tuning-bubbles": 1786809532.821202,
-        "shot-depth-parallax": 1785182548.76074
+        "shot-az70-01": 1785182548.76074
       },
       "pending": [],
       "missing": [
@@ -244,13 +244,13 @@
         "hero3d-float-cards",
         "hero3d-tilt-showcase",
         "photo-wall-zoom",
-        "shot-spotlight-hero"
+        "shot-footlight-01"
       ],
       "mtimes": {
         "hero3d-float-cards": 1786637826.3119018,
         "hero3d-tilt-showcase": 1786637880.2013488,
         "photo-wall-zoom": 1785756452.4408605,
-        "shot-spotlight-hero": 1785172670.4599452
+        "shot-footlight-01": 1785172670.4599452
       },
       "pending": [
         "coverflow-carousel",
@@ -261,16 +261,16 @@
     },
     "T14": {
       "segs": [
-        "shot-slow-push",
+        "shot-az33-01",
         "big-type-hero",
         "photo-wall-zoom",
-        "shot-waterfall-wall"
+        "shot-cascade2-01"
       ],
       "mtimes": {
-        "shot-slow-push": 1785217239.7998633,
+        "shot-az33-01": 1785217239.7998633,
         "big-type-hero": 1786634952.6869552,
         "photo-wall-zoom": 1785756452.4408605,
-        "shot-waterfall-wall": 1785212789.115858
+        "shot-cascade2-01": 1785212789.115858
       },
       "pending": [
         "timed-loop-slideshow"
@@ -282,14 +282,14 @@
       "segs": [
         "whiteboard-draw",
         "handwrite-title",
-        "shot-draw-svg-trace",
-        "shot-wireframe-draw"
+        "shot-etch-01",
+        "shot-az67-03"
       ],
       "mtimes": {
         "whiteboard-draw": 1785755565.304981,
         "handwrite-title": 1785755946.6604166,
-        "shot-draw-svg-trace": 1785175422.3457522,
-        "shot-wireframe-draw": 1785220448.2951515
+        "shot-etch-01": 1785175422.3457522,
+        "shot-az67-03": 1785220448.2951515
       },
       "pending": [
         "lineart-color-wipe-scene",
@@ -300,19 +300,19 @@
     },
     "T16": {
       "segs": [
-        "shot-text-mask",
+        "shot-glyph-02",
         "pull-quote-hero",
         "glass-quote-card",
         "big-type-hero"
       ],
       "mtimes": {
-        "shot-text-mask": 1785176733.160963,
+        "shot-glyph-02": 1785176733.160963,
         "pull-quote-hero": 1786639126.1596143,
         "glass-quote-card": 1786637620.9125984,
         "big-type-hero": 1786634952.6869552
       },
       "pending": [
-        "video-text-mask-reveal"
+        "footage-glyph"
       ],
       "missing": [],
       "note": "另有 1 个配套模板待入库，补齐后重跑可加长演示"
@@ -406,14 +406,14 @@
       "segs": [
         "composite-grid",
         "icon-grid",
-        "shot-waterfall-wall",
-        "shot-grid-flash"
+        "shot-cascade2-01",
+        "shot-azgrid-01"
       ],
       "mtimes": {
         "composite-grid": 1786635882.2739394,
         "icon-grid": 1786638082.946823,
-        "shot-waterfall-wall": 1785212789.115858,
-        "shot-grid-flash": 1785212820.5932508
+        "shot-cascade2-01": 1785212789.115858,
+        "shot-azgrid-01": 1785212820.5932508
       },
       "pending": [],
       "missing": [],
@@ -424,13 +424,13 @@
         "myth-fact-swap",
         "cream-myth-fact-swap",
         "versus-frame",
-        "shot-versus-slam"
+        "shot-az39-01"
       ],
       "mtimes": {
         "myth-fact-swap": 1786638675.8417275,
         "cream-myth-fact-swap": 1785141472.3537843,
         "versus-frame": 1786641226.9546647,
-        "shot-versus-slam": 1785217388.385171
+        "shot-az39-01": 1785217388.385171
       },
       "pending": [],
       "missing": [],
@@ -458,13 +458,13 @@
         "chat-thread",
         "neon-chat-bubbles",
         "neon-chat-input",
-        "shot-ai-stream"
+        "shot-neural-01"
       ],
       "mtimes": {
         "chat-thread": 1786635495.784475,
         "neon-chat-bubbles": 1785958058.4456172,
         "neon-chat-input": 1785958052.1584232,
-        "shot-ai-stream": 1785179186.7283826
+        "shot-neural-01": 1785179186.7283826
       },
       "pending": [],
       "missing": [],

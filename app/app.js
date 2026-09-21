@@ -503,7 +503,7 @@ function updateNav() {
 /* ── 首页视图（四段式产品橱窗） ── */
 
 const SHOWCASE_IDS = [
-  "shot-popup-book", "shot-card-flip", "shot-marker-underline",
+  "shot-az55-01", "shot-plate-01", "shot-highlighter-01",
   "neon-phone-wall", "broll-charts-bar",
   "bar-chart-grow", "docu-stat-counter",
   "cream-analogy-frame", "cream-cause-chain",

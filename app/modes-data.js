@@ -115,7 +115,7 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-terminal-typewriter",
+        "id": "shot-azterm-01",
         "name": "终端打字引爆",
         "pending": false
       },
@@ -125,7 +125,7 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-command-palette",
+        "id": "shot-summons-01",
         "name": "命令面板降临",
         "pending": false
       },
@@ -317,12 +317,12 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-spotlight-hero",
+        "id": "shot-footlight-01",
         "name": "聚光灯主角卡",
         "pending": false
       },
       {
-        "id": "shot-segmented-hero",
+        "id": "shot-azsegment-01",
         "name": "分段控件特写",
         "pending": false
       }
@@ -331,7 +331,7 @@ export const MODES = [
       "coverflow-carousel",
       "hero3d-float-cards",
       "hero3d-tilt-showcase",
-      "shot-spotlight-hero"
+      "shot-footlight-01"
     ],
     "preview": "/renders/mode-demos/T02.webm",
     "demo": "/renders/mode-demos/T02.mp4",
@@ -383,7 +383,7 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-circle-iris",
+        "id": "shot-roundel-01",
         "name": "圆心匹配光圈切",
         "pending": false
       },
@@ -401,7 +401,7 @@ export const MODES = [
     "segments": [
       "transition-raindrop-reveal",
       "transition-raindrop-loop",
-      "shot-circle-iris",
+      "shot-roundel-01",
       "spec-scene-card"
     ],
     "preview": "/renders/mode-demos/T03.webm",
@@ -469,12 +469,12 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-karaoke-fill",
+        "id": "shot-azlyric-01",
         "name": "跟读填色",
         "pending": false
       },
       {
-        "id": "shot-voice-waveform",
+        "id": "shot-sonogram-01",
         "name": "实时声纹胶囊",
         "pending": false
       },
@@ -535,7 +535,7 @@ export const MODES = [
     ],
     "templates": [
       {
-        "id": "video-text-mask-reveal",
+        "id": "footage-glyph",
         "name": "视频填充文字开场（模式特效）",
         "pending": false
       },
@@ -545,12 +545,12 @@ export const MODES = [
         "pending": true
       },
       {
-        "id": "shot-text-mask",
+        "id": "shot-glyph-02",
         "name": "文字遮罩开门",
         "pending": false
       },
       {
-        "id": "shot-karaoke-fill",
+        "id": "shot-azlyric-01",
         "name": "跟读填色",
         "pending": false
       },
@@ -565,15 +565,15 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-letterspace",
+        "id": "shot-stretchy-01",
         "name": "字标描画结晶",
         "pending": false
       }
     ],
     "segments": [
-      "video-text-mask-reveal",
-      "shot-text-mask",
-      "shot-karaoke-fill",
+      "footage-glyph",
+      "shot-glyph-02",
+      "shot-azlyric-01",
       "karaoke-line"
     ],
     "preview": "/renders/mode-demos/T05.webm",
@@ -636,12 +636,12 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-draw-svg-trace",
+        "id": "shot-etch-01",
         "name": "描边生长圈注",
         "pending": false
       },
       {
-        "id": "shot-wireframe-draw",
+        "id": "shot-az67-03",
         "name": "蓝图描线实体化",
         "pending": false
       },
@@ -670,7 +670,7 @@ export const MODES = [
       "handdraw-story-player",
       "whiteboard-draw",
       "handwrite-title",
-      "shot-draw-svg-trace"
+      "shot-etch-01"
     ],
     "preview": "/renders/mode-demos/T06.webm",
     "demo": "/renders/mode-demos/T06.mp4",
@@ -732,12 +732,12 @@ export const MODES = [
         "pending": true
       },
       {
-        "id": "shot-circle-iris",
+        "id": "shot-roundel-01",
         "name": "圆心匹配光圈切",
         "pending": false
       },
       {
-        "id": "shot-morph-primitive",
+        "id": "shot-transmute-01",
         "name": "原型变形长卡",
         "pending": false
       },
@@ -754,8 +754,8 @@ export const MODES = [
     ],
     "segments": [
       "petal-mask-rotate",
-      "shot-circle-iris",
-      "shot-morph-primitive",
+      "shot-roundel-01",
+      "shot-transmute-01",
       "anti-pattern-note"
     ],
     "preview": "/renders/mode-demos/T07.webm",
@@ -828,7 +828,7 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-depth-parallax",
+        "id": "shot-az70-01",
         "name": "多层视差滑轨",
         "pending": false
       },
@@ -838,12 +838,12 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-slow-push",
+        "id": "shot-az33-01",
         "name": "慢推压迫切亮",
         "pending": false
       },
       {
-        "id": "shot-spotlight-hero",
+        "id": "shot-footlight-01",
         "name": "聚光灯主角卡",
         "pending": false
       }
@@ -852,7 +852,7 @@ export const MODES = [
       "parallax-album-intro",
       "toc-sidebar-spotlight",
       "prompt-tuning-bubbles",
-      "shot-depth-parallax"
+      "shot-az70-01"
     ],
     "preview": "/renders/mode-demos/T08.webm",
     "demo": "/renders/mode-demos/T08.mp4",
@@ -1232,12 +1232,12 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-karaoke-fill",
+        "id": "shot-azlyric-01",
         "name": "跟读填色",
         "pending": false
       },
       {
-        "id": "shot-voice-waveform",
+        "id": "shot-sonogram-01",
         "name": "实时声纹胶囊",
         "pending": false
       },
@@ -1278,7 +1278,7 @@ export const MODES = [
       {
         "range": "0–15%",
         "name": "氛围亮相",
-        "text": "深色底+主视觉元素入场（shot-brand-ink-open 品牌墨迹开场或 shot-crane-rise 升起镜头）"
+        "text": "深色底+主视觉元素入场（shot-sealmark-02 品牌墨迹开场或 shot-az54-01 升起镜头）"
       },
       {
         "range": "15–70%",
@@ -1293,7 +1293,7 @@ export const MODES = [
       {
         "range": "90–100%",
         "name": "标题落版",
-        "text": "主题大字（big-type-hero/shot-spotlight-hero）+ 日期/口号"
+        "text": "主题大字（big-type-hero/shot-footlight-01）+ 日期/口号"
       }
     ],
     "templates": [
@@ -1323,22 +1323,22 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-spotlight-hero",
+        "id": "shot-footlight-01",
         "name": "聚光灯主角卡",
         "pending": false
       },
       {
-        "id": "shot-segmented-hero",
+        "id": "shot-azsegment-01",
         "name": "分段控件特写",
         "pending": false
       },
       {
-        "id": "shot-crane-rise",
+        "id": "shot-az54-01",
         "name": "升降臂拉升揭示",
         "pending": false
       },
       {
-        "id": "shot-brand-ink-open",
+        "id": "shot-sealmark-02",
         "name": "品牌墨印开场",
         "pending": false
       },
@@ -1352,7 +1352,7 @@ export const MODES = [
       "hero3d-float-cards",
       "hero3d-tilt-showcase",
       "photo-wall-zoom",
-      "shot-spotlight-hero"
+      "shot-footlight-01"
     ],
     "preview": "/renders/mode-demos/T13.webm",
     "demo": "/renders/mode-demos/T13.mp4",
@@ -1374,7 +1374,7 @@ export const MODES = [
       {
         "range": "0–8%",
         "name": "开场定调",
-        "text": "最强的一张图直接出（shot-spotlight-hero 或雨滴/花瓣转场的第一落点）"
+        "text": "最强的一张图直接出（shot-footlight-01 或雨滴/花瓣转场的第一落点）"
       },
       {
         "range": "8–85%",
@@ -1384,7 +1384,7 @@ export const MODES = [
       {
         "range": "85–100%",
         "name": "收尾定格",
-        "text": "最后一张慢下来（shot-slow-push 缓推）+ 标题/落款淡入"
+        "text": "最后一张慢下来（shot-az33-01 缓推）+ 标题/落款淡入"
       }
     ],
     "templates": [
@@ -1394,7 +1394,7 @@ export const MODES = [
         "pending": true
       },
       {
-        "id": "shot-slow-push",
+        "id": "shot-az33-01",
         "name": "慢推压迫切亮",
         "pending": false
       },
@@ -1409,16 +1409,16 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-waterfall-wall",
+        "id": "shot-cascade2-01",
         "name": "页面瀑布墙",
         "pending": false
       }
     ],
     "segments": [
-      "shot-slow-push",
+      "shot-az33-01",
       "big-type-hero",
       "photo-wall-zoom",
-      "shot-waterfall-wall"
+      "shot-cascade2-01"
     ],
     "preview": "/renders/mode-demos/T14.webm",
     "demo": "/renders/mode-demos/T14.mp4",
@@ -1475,17 +1475,17 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-draw-svg-trace",
+        "id": "shot-etch-01",
         "name": "描边生长圈注",
         "pending": false
       },
       {
-        "id": "shot-wireframe-draw",
+        "id": "shot-az67-03",
         "name": "蓝图描线实体化",
         "pending": false
       },
       {
-        "id": "shot-line-boil",
+        "id": "shot-stroke2-01",
         "name": "线条沸腾 hold",
         "pending": false
       },
@@ -1498,8 +1498,8 @@ export const MODES = [
     "segments": [
       "whiteboard-draw",
       "handwrite-title",
-      "shot-draw-svg-trace",
-      "shot-wireframe-draw"
+      "shot-etch-01",
+      "shot-az67-03"
     ],
     "preview": "/renders/mode-demos/T15.webm",
     "demo": "/renders/mode-demos/T15.mp4",
@@ -1521,7 +1521,7 @@ export const MODES = [
       {
         "range": "0–15%",
         "name": "大字开场",
-        "text": "video-text-mask-reveal [待入库] 或 shot-text-mask：主题词蒙版内填氛围视频，字母归位"
+        "text": "footage-glyph [待入库] 或 shot-glyph-02：主题词蒙版内填氛围视频，字母归位"
       },
       {
         "range": "15–70%",
@@ -1541,12 +1541,12 @@ export const MODES = [
     ],
     "templates": [
       {
-        "id": "video-text-mask-reveal",
+        "id": "footage-glyph",
         "name": "视频填充文字开场（模式特效）",
         "pending": true
       },
       {
-        "id": "shot-text-mask",
+        "id": "shot-glyph-02",
         "name": "文字遮罩开门",
         "pending": false
       },
@@ -1576,28 +1576,28 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-karaoke-fill",
+        "id": "shot-azlyric-01",
         "name": "跟读填色",
         "pending": false
       },
       {
-        "id": "shot-word-relay",
+        "id": "shot-lexicon-01",
         "name": "词接力胶片",
         "pending": false
       },
       {
-        "id": "shot-letterspace",
+        "id": "shot-stretchy-01",
         "name": "字标描画结晶",
         "pending": false
       },
       {
-        "id": "shot-scramble-decode",
+        "id": "shot-cipher-01",
         "name": "乱码解码入场",
         "pending": false
       }
     ],
     "segments": [
-      "shot-text-mask",
+      "shot-glyph-02",
       "pull-quote-hero",
       "glass-quote-card",
       "big-type-hero"
@@ -1753,7 +1753,7 @@ export const MODES = [
       {
         "range": "20–80%",
         "name": "逐功能巡礼",
-        "text": "每功能一镜：数据型 glass-stat-card/glass-bar-live、进度型 glass-progress-ring、清单型 glass-pill-list；需要讲结构时 layer-stack-explode 或 shot-exploded-view 爆炸分解"
+        "text": "每功能一镜：数据型 glass-stat-card/glass-bar-live、进度型 glass-progress-ring、清单型 glass-pill-list；需要讲结构时 layer-stack-explode 或 shot-az14-01 爆炸分解"
       },
       {
         "range": "80–92%",
@@ -1833,7 +1833,7 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-exploded-view",
+        "id": "shot-az14-01",
         "name": "爆炸分解视图",
         "pending": false
       }
@@ -1970,12 +1970,12 @@ export const MODES = [
       {
         "range": "0–6%",
         "name": "钩子句",
-        "text": "最有冲击力的一句先出（big-type-hero 或 shot-scramble-decode 乱码解码入场）"
+        "text": "最有冲击力的一句先出（big-type-hero 或 shot-cipher-01 乱码解码入场）"
       },
       {
         "range": "6–85%",
         "name": "逐句排印",
-        "text": "口播逐句驱动：关键词放大/变色/下划线（keyword-sticker、shot-marker-underline、subtitle-highlight），句间用 shot-word-relay 接力或 shot-karaoke-fill 填充"
+        "text": "口播逐句驱动：关键词放大/变色/下划线（keyword-sticker、shot-highlighter-01、subtitle-highlight），句间用 shot-lexicon-01 接力或 shot-azlyric-01 填充"
       },
       {
         "range": "85–95%",
@@ -2010,7 +2010,7 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-karaoke-fill",
+        "id": "shot-azlyric-01",
         "name": "跟读填色",
         "pending": false
       },
@@ -2025,22 +2025,22 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-marker-underline",
+        "id": "shot-highlighter-01",
         "name": "马克笔下划线标题",
         "pending": false
       },
       {
-        "id": "shot-word-relay",
+        "id": "shot-lexicon-01",
         "name": "词接力胶片",
         "pending": false
       },
       {
-        "id": "shot-scramble-decode",
+        "id": "shot-cipher-01",
         "name": "乱码解码入场",
         "pending": false
       },
       {
-        "id": "shot-letterspace",
+        "id": "shot-stretchy-01",
         "name": "字标描画结晶",
         "pending": false
       },
@@ -2116,7 +2116,7 @@ export const MODES = [
       {
         "range": "55–75%",
         "name": "目标达成",
-        "text": "glass-progress-ring 环形进度 / gauge-meter 仪表盘 / shot-gauge-sweep"
+        "text": "glass-progress-ring 环形进度 / gauge-meter 仪表盘 / shot-az46-02"
       },
       {
         "range": "75–90%",
@@ -2156,12 +2156,12 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-odometer",
+        "id": "shot-tumbler-01",
         "name": "里程表数字滚动",
         "pending": false
       },
       {
-        "id": "shot-hit-counter",
+        "id": "shot-az61-01",
         "name": "连招计数命中",
         "pending": false
       },
@@ -2196,7 +2196,7 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-gauge-sweep",
+        "id": "shot-az46-02",
         "name": "仪表盘点火自检",
         "pending": false
       },
@@ -2242,12 +2242,12 @@ export const MODES = [
       {
         "range": "0–6%",
         "name": "数量钩子",
-        "text": "\"351 个模板\"大数字冲击（number-impact / shot-hit-counter 计数滚动）"
+        "text": "\"351 个模板\"大数字冲击（number-impact / shot-az61-01 计数滚动）"
       },
       {
         "range": "6–30%",
         "name": "网格群像",
-        "text": "composite-grid / icon-grid / shot-waterfall-wall / shot-grid-flash 多模板同屏阵列"
+        "text": "composite-grid / icon-grid / shot-cascade2-01 / shot-azgrid-01 多模板同屏阵列"
       },
       {
         "range": "30–80%",
@@ -2257,7 +2257,7 @@ export const MODES = [
       {
         "range": "80–92%",
         "name": "阵列收拢",
-        "text": "独奏镜头回流成阵列（shot-card-flock / shot-domino-cascade 群集动效）"
+        "text": "独奏镜头回流成阵列（shot-plate-02 / shot-az46-01 群集动效）"
       },
       {
         "range": "92–100%",
@@ -2277,12 +2277,12 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-waterfall-wall",
+        "id": "shot-cascade2-01",
         "name": "页面瀑布墙",
         "pending": false
       },
       {
-        "id": "shot-grid-flash",
+        "id": "shot-azgrid-01",
         "name": "九宫闪切吞屏",
         "pending": false
       },
@@ -2297,12 +2297,12 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-card-flock",
+        "id": "shot-plate-02",
         "name": "页卡翻飞坍缩",
         "pending": false
       },
       {
-        "id": "shot-domino-cascade",
+        "id": "shot-az46-01",
         "name": "多米诺连锁入场",
         "pending": false
       },
@@ -2312,7 +2312,7 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-hit-counter",
+        "id": "shot-az61-01",
         "name": "连招计数命中",
         "pending": false
       },
@@ -2330,8 +2330,8 @@ export const MODES = [
     "segments": [
       "composite-grid",
       "icon-grid",
-      "shot-waterfall-wall",
-      "shot-grid-flash"
+      "shot-cascade2-01",
+      "shot-azgrid-01"
     ],
     "preview": "/renders/mode-demos/T22.webm",
     "demo": "/renders/mode-demos/T22.mp4",
@@ -2353,7 +2353,7 @@ export const MODES = [
       {
         "range": "0–6%",
         "name": "对立钩子",
-        "text": "直接抛冲突：\"90% 的人都搞反了\"（shot-versus-slam 对撞入场）"
+        "text": "直接抛冲突：\"90% 的人都搞反了\"（shot-az39-01 对撞入场）"
       },
       {
         "range": "6–80%",
@@ -2388,7 +2388,7 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-versus-slam",
+        "id": "shot-az39-01",
         "name": "对撞开屏",
         "pending": false
       },
@@ -2403,7 +2403,7 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-before-after-slider",
+        "id": "shot-splitview-01",
         "name": "前后对比拉杆",
         "pending": false
       },
@@ -2442,7 +2442,7 @@ export const MODES = [
       "myth-fact-swap",
       "cream-myth-fact-swap",
       "versus-frame",
-      "shot-versus-slam"
+      "shot-az39-01"
     ],
     "preview": "/renders/mode-demos/T23.webm",
     "demo": "/renders/mode-demos/T23.mp4",
@@ -2594,7 +2594,7 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-exploded-view",
+        "id": "shot-az14-01",
         "name": "爆炸分解视图",
         "pending": false
       },
@@ -2635,7 +2635,7 @@ export const MODES = [
       {
         "range": "5–80%",
         "name": "对话推进",
-        "text": "气泡逐条浮出（chat-thread / neon-chat-bubbles），关键句停顿+高亮/红圈；AI 输出场景用 shot-ai-stream 流式打字"
+        "text": "气泡逐条浮出（chat-thread / neon-chat-bubbles），关键句停顿+高亮/红圈；AI 输出场景用 shot-neural-01 流式打字"
       },
       {
         "range": "80–92%",
@@ -2665,7 +2665,7 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-ai-stream",
+        "id": "shot-neural-01",
         "name": "AI 证据流响应",
         "pending": false
       },
@@ -2685,7 +2685,7 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-terminal-typewriter",
+        "id": "shot-azterm-01",
         "name": "终端打字引爆",
         "pending": false
       },
@@ -2700,7 +2700,7 @@ export const MODES = [
         "pending": false
       },
       {
-        "id": "shot-cursor-duet",
+        "id": "shot-az80-01",
         "name": "协作光标双人舞",
         "pending": false
       },
@@ -2719,7 +2719,7 @@ export const MODES = [
       "chat-thread",
       "neon-chat-bubbles",
       "neon-chat-input",
-      "shot-ai-stream"
+      "shot-neural-01"
     ],
     "preview": "/renders/mode-demos/T25.webm",
     "demo": "/renders/mode-demos/T25.mp4",
