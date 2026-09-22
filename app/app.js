@@ -1243,7 +1243,6 @@ function renderPlayground() {
             ${pgState.layers.map((layer, index) => `
               <div class="pg-stage-layer ${pgState.picked === index ? "picked" : ""}" style="width:${pgLayerWidthPct(layer)}%;transform:translate(-50%,-50%)" data-layer="${index}" data-act="move" title="拖动摆位 · 右下角手柄缩放">
                 <iframe sandbox="allow-scripts allow-same-origin" title="${escapeHtml(layer.name)}"></iframe>
-                <span class="pg-stage-label">${escapeHtml(layer.name)} · ${layer.start}s–${layer.end}s</span>
                 <i class="pg-handle" data-act="resize" title="拖动缩放"></i>
               </div>`).join("")}
           </div>
