@@ -1650,3 +1650,12 @@ else if (location.hash === "#modes") renderModes();
 else if (location.hash === "#playground") renderPlayground();
 else if (location.hash === "#new") { state.series = "new"; state.category = ALL_CATEGORY; renderGallery(); }
 else renderHome();
+
+window.addEventListener("hashchange", () => {
+  const h = location.hash;
+  if (h === "#library") renderGallery();
+  else if (h === "#modes") renderModes();
+  else if (h === "#playground") renderPlayground();
+  else if (h === "#new") { state.series = "new"; state.category = ALL_CATEGORY; renderGallery(); }
+  else renderHome();
+});
