@@ -1185,33 +1185,40 @@ function renderPlayground() {
   updateNav();
   stopPlaying();
   tabbar.style.display = "none";
-  const layerRows = pgState.layers.map((layer, index) => {
-    const template = state.catalog.templates.find((t) => t.id === layer.templateId);
-    const varForm = pgState.picked === index && template
-      ? `<div class="pg-vars">${template.schema.filter((s) => !s.hidden).slice(0, 6).map((s) => pgFieldMarkup(s, layer, index)).join("")}</div>`
-      : "";
-    return `
-    <div class="pg-layer ${pgState.picked === index ? "active" : ""}" data-layer="${index}">
-      <div class="pg-layer-head">
-        <strong>${escapeHtml(layer.name)}</strong>
-        <button class="pg-layer-del" type="button" data-del="${index}" aria-label="删除图层">×</button>
+  const PAD_ARROWS = { tl: "↖", tc: "↑", tr: "↗", cl: "←", cc: "●", cr: "→", bl: "↙", bc: "↓", br: "↘" };
+  const layerChips = pgState.layers.map((layer, index) => `
+    <div class="pg-layer pg-chip ${pgState.picked === index ? "active" : ""}" data-layer="${index}" title="点选该层">
+      <span>${escapeHtml(layer.name)}</span>
+      <button class="pg-layer-del" type="button" data-del="${index}" aria-label="删除图层">×</button>
+    </div>`).join("");
+  const picked = pgState.picked != null ? pgState.layers[pgState.picked] : null;
+  const pickedTemplate = picked ? state.catalog.templates.find((t) => t.id === picked.templateId) : null;
+  const controlsZone = picked ? `
+    <div class="pg-con-body">
+      <div class="pg-zone pg-zone-pos">
+        <h4>位置 <span class="pg-zone-sub">方向键</span></h4>
+        <div class="pg-grid3 pg-pad">${PG_POSITIONS.map(([key, label]) => `<button type="button" class="pg-pos ${picked.position === key ? "on" : ""}" data-pos="${pgState.picked}:${key}" title="${label}">${PAD_ARROWS[key]}</button>`).join("")}</div>
+        <div class="pg-row2">
+          <label>横移 <input type="number" min="-45" max="45" step="1" value="${picked.x || 0}" data-dx="${pgState.picked}">%</label>
+          <label>纵移 <input type="number" min="-45" max="45" step="1" value="${picked.y || 0}" data-dy="${pgState.picked}">%</label>
+        </div>
       </div>
-      <div class="pg-grid3">${PG_POSITIONS.map(([key, label]) => `<button type="button" class="pg-pos ${layer.position === key ? "on" : ""}" data-pos="${index}:${key}" title="${label}"></button>`).join("")}</div>
-      <div class="pg-row2">
-        <label>横向 <input type="number" min="-45" max="45" step="1" value="${layer.x || 0}" data-dx="${index}">%</label>
-        <label>纵向 <input type="number" min="-45" max="45" step="1" value="${layer.y || 0}" data-dy="${index}">%</label>
+      <div class="pg-zone pg-zone-size">
+        <h4>大小 · 时间</h4>
+        <div class="pg-row2">
+          <label>缩放 <input type="range" min="20" max="200" step="5" value="${picked.scale}" data-scale="${pgState.picked}"><em data-scale-label="${pgState.picked}">${picked.scale}%</em></label>
+        </div>
+        <div class="pg-row2">
+          <label>入点 <input type="number" min="0" max="${pgState.duration}" step="0.5" value="${picked.start}" data-start="${pgState.picked}">s</label>
+          <label>出点 <input type="number" min="0" max="${pgState.duration}" step="0.5" value="${picked.end}" data-end="${pgState.picked}">s</label>
+        </div>
       </div>
-      <div class="pg-row2">
-        <label>缩放 <input type="range" min="20" max="200" step="5" value="${layer.scale}" data-scale="${index}"><em data-scale-label="${index}">${layer.scale}%</em></label>
+      <div class="pg-zone pg-zone-fx">
+        <h4>运动 · 内容</h4>
+        ${pgMotionMarkup(picked, pgState.picked)}
+        ${pickedTemplate ? `<div class="pg-vars">${pickedTemplate.schema.filter((s) => !s.hidden).slice(0, 6).map((sd) => pgFieldMarkup(sd, picked, pgState.picked)).join("")}</div>` : ""}
       </div>
-      <div class="pg-row2">
-        <label>入点 <input type="number" min="0" max="${pgState.duration}" step="0.5" value="${layer.start}" data-start="${index}">s</label>
-        <label>出点 <input type="number" min="0" max="${pgState.duration}" step="0.5" value="${layer.end}" data-end="${index}">s</label>
-      </div>
-      ${pgMotionMarkup(layer, index)}
-      ${varForm}
-    </div>`;
-  }).join("");
+    </div>` : `<p class="pg-empty-layer">在上方素材带点一个素材，图层会叠到舞台上；这里变成它的操作台。</p>`;
   const baseButtons = PG_BASES.map((base) => `
     <button type="button" class="pg-base ${pgState.base.type === "builtin" && pgState.base.id === base.id ? "on" : ""}" data-base="${base.id}">
       <video muted loop playsinline preload="metadata" src="${base.src}"></video><span>${base.name}</span>
@@ -1239,20 +1246,23 @@ function renderPlayground() {
         <div class="pg-strip" id="pg-list" data-lenis-prevent></div>
       </section>
       <div class="pg-grid2">
-        <aside class="pg-left">
-          <section class="pg-panel">
-            <h3>底片</h3>
+        <aside class="pg-left pg-console">
+          <section class="pg-panel pg-con-base">
+            <h3>底片库</h3>
             <div class="pg-bases">${baseButtons}</div>
             <label class="pg-upload">上传自己的底片（视频 / 图片）<input type="file" id="pg-file" accept="video/*,image/*" hidden></label>
             <p class="pg-upload-name">${pgState.base.type === "upload" ? `已选：${escapeHtml(pgState.base.name)}` : "未上传则用内置氛围底片"}</p>
           </section>
-          <section class="pg-panel">
+          <section class="pg-panel pg-con-layers">
             <h3>图层（${pgState.layers.length}）</h3>
-            <div class="pg-layers" data-lenis-prevent>${layerRows || `<p class="pg-empty-layer">右边素材库点任意一行，动效实时叠到底片上；舞台上可直接拖动、手柄缩放。</p>`}</div>
+            <div class="pg-layer-chips" data-lenis-prevent>${layerChips || `<span class="pg-chip-empty">尚无图层</span>`}</div>
           </section>
-          <section class="pg-panel">
-            <h3>成片时长</h3>
-            <label class="pg-duration">总时长 <input type="number" id="pg-duration" min="3" max="600" step="1" value="${pgState.duration}"> 秒</label>
+          <section class="pg-panel pg-con-controls">
+            <div class="pg-con-head">
+              <h3>操作台</h3>
+              <label class="pg-duration">成片时长 <input type="number" id="pg-duration" min="3" max="600" step="1" value="${pgState.duration}"> 秒</label>
+            </div>
+            ${controlsZone}
           </section>
         </aside>
         <div class="pg-center">
@@ -1434,8 +1444,8 @@ function renderPlayground() {
     pgState.layers[Number(btn.dataset.mclear)].motion = null;
     renderPlayground();
   }));
-  stageContent.querySelectorAll(".pg-layer").forEach((row) => row.addEventListener("click", (event) => {
-    if (event.target.closest("button, input, select")) return;
+  stageContent.querySelectorAll(".pg-layer-chips .pg-layer").forEach((row) => row.addEventListener("click", (event) => {
+    if (event.target.closest("button")) return;
     pgPick(Number(row.dataset.layer), false);
   }));
 
