@@ -823,6 +823,10 @@ const PG_TRANSPARENT_STYLE = `<style id="__hf_transparent_bg__">html,body,#root,
 const pgHtmlCache = new Map();
 const pgGeneration = new Map();
 
+/* 播放时钟：驱动运动轨迹 + 时间段显隐 + 底片同步 */
+const pgClock = { t: 0, playing: false, raf: 0, last: 0 };
+let pgDraw = null;   // { index, points: [[nx,ny]...] }
+
 async function pgFetchTemplate(templateId) {
   if (!pgHtmlCache.has(templateId)) {
     pgHtmlCache.set(templateId, fetch(`./templates/${templateId}/index.html`).then((r) => {
@@ -865,8 +869,7 @@ function pgFitIframes() {
   stageContent.querySelectorAll(".pg-stage-layer").forEach((el) => {
     const iframe = el.querySelector("iframe");
     if (!iframe) return;
-    const scale = el.clientWidth / 1920;
-    iframe.style.transform = `scale(${scale})`;
+    iframe.style.transform = `scale(${el.clientWidth / 1920})`;
   });
 }
 
@@ -874,6 +877,191 @@ function pgScheduleLayer(index, immediate) {
   clearTimeout(pgState["timer" + index]);
   if (immediate) { pgRenderLayerFrame(index); return; }
   pgState["timer" + index] = setTimeout(() => pgRenderLayerFrame(index), 300);
+}
+
+/* ── 运动轨迹（官网同款：直线平移 / 手绘路径 + 时长 + 缓动） ── */
+function pgNormalizeMotion(raw) {
+  if (!raw || typeof raw !== "object") return null;
+  if (raw.type === "path") {
+    if (!Array.isArray(raw.points) || raw.points.length < 2) return null;
+    const pts = [];
+    for (let i = 0; i < raw.points.length && pts.length < 120; i++) {
+      const pt = raw.points[i];
+      if (!Array.isArray(pt) || pt.length !== 2) continue;
+      const nx = Number(pt[0]) || 0;
+      const ny = Number(pt[1]) || 0;
+      const prev = pts[pts.length - 1];
+      if (prev) {
+        const dw = Math.abs(nx - prev[0]);
+        const dh = Math.abs(ny - prev[1]);
+        if (Math.sqrt(dw * dw + dh * dh) < 0.005) continue;
+      }
+      pts.push([nx, ny]);
+    }
+    if (pts.length < 2) return null;
+    return { type: "path", points: pts, secs: Math.max(0.1, Number(raw.secs) || 1), ease: raw.ease === "linear" ? "linear" : "out" };
+  }
+  const dx = Number(raw.dx) || 0;
+  const dy = Number(raw.dy) || 0;
+  if (dx === 0 && dy === 0) return null;
+  return { type: "line", dx, dy, secs: Math.max(0.1, Number(raw.secs) || 1), ease: raw.ease === "linear" ? "linear" : "out" };
+}
+
+function pgMotionOffsetPx(layer, t, stageW, stageH) {
+  const m = layer.motion;
+  if (!m) return { dx: 0, dy: 0 };
+  const p = Math.min(1, Math.max(0, (t - layer.start) / m.secs));
+  if (p <= 0) return { dx: 0, dy: 0 };
+  const ep = m.ease === "linear" ? p : 1 - Math.pow(1 - p, 2);
+  const scaleX = stageW / 1920, scaleY = stageH / 1080;
+  if (m.type === "path" && m.points.length >= 2) {
+    const segLens = [];
+    let total = 0;
+    for (let i = 1; i < m.points.length; i++) {
+      const sx = (m.points[i][0] - m.points[i - 1][0]) * stageW;
+      const sy = (m.points[i][1] - m.points[i - 1][1]) * stageH;
+      const len = Math.sqrt(sx * sx + sy * sy);
+      segLens.push(len);
+      total += len;
+    }
+    if (total < 0.5) return { dx: 0, dy: 0 };
+    const target = ep * total;
+    let acc = 0;
+    for (let i = 0; i < segLens.length; i++) {
+      if (acc + segLens[i] >= target) {
+        const segT = segLens[i] > 0.001 ? (target - acc) / segLens[i] : 0;
+        return {
+          dx: (m.points[i][0] + (m.points[i + 1][0] - m.points[i][0]) * segT) * stageW,
+          dy: (m.points[i][1] + (m.points[i + 1][1] - m.points[i][1]) * segT) * stageH,
+        };
+      }
+      acc += segLens[i];
+    }
+    const last = m.points[m.points.length - 1];
+    return { dx: last[0] * stageW, dy: last[1] * stageH };
+  }
+  return { dx: (m.dx || 0) * ep * scaleX, dy: (m.dy || 0) * ep * scaleY };
+}
+
+/* 把全部层摆到 t 时刻该在的位置（运动 + 时间段显隐） */
+function pgApplyPositions() {
+  const stage = stageContent.querySelector("#pg-stage");
+  if (!stage) { pgClock.playing = false; cancelAnimationFrame(pgClock.raf); return; }
+  const W = stage.clientWidth, H = stage.clientHeight;
+  pgState.layers.forEach((layer, i) => {
+    const el = stage.querySelector(`.pg-stage-layer[data-layer="${i}"]`);
+    if (!el) return;
+    const [ax, ay] = PG_ANCHORS[layer.position] || PG_ANCHORS.cc;
+    const mo = pgMotionOffsetPx(layer, pgClock.t, W, H);
+    el.style.left = `${((ax + (layer.x || 0)) / 100) * W + mo.dx}px`;
+    el.style.top = `${((ay + (layer.y || 0)) / 100) * H + mo.dy}px`;
+    el.style.transform = "translate(-50%,-50%)";
+    el.style.visibility = pgClock.t >= layer.start && pgClock.t <= layer.end ? "visible" : "hidden";
+  });
+  const pathSvg = stage.querySelector("#pg-path-preview");
+  if (pathSvg) {
+    const layer = pgState.layers[pgState.picked];
+    if (layer && layer.motion && layer.motion.type === "path") {
+      const [ax, ay] = PG_ANCHORS[layer.position] || PG_ANCHORS.cc;
+      const bx = ((ax + (layer.x || 0)) / 100) * W;
+      const by = ((ay + (layer.y || 0)) / 100) * H;
+      pathSvg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+      pathSvg.querySelector("polyline").setAttribute("points",
+        layer.motion.points.map(([nx, ny]) => `${(bx + nx * W).toFixed(1)},${(by + ny * H).toFixed(1)}`).join(" "));
+    }
+  }
+}
+
+function pgUpdateClockUI() {
+  const seek = stageContent.querySelector("#pg-seek");
+  const time = stageContent.querySelector("#pg-time");
+  const play = stageContent.querySelector("#pg-play");
+  if (seek) seek.value = String(Math.min(pgState.duration, pgClock.t));
+  if (time) time.textContent = `${pgClock.t.toFixed(1)}s / ${pgState.duration}s`;
+  if (play) play.textContent = pgClock.playing ? "⏸" : "▶";
+}
+
+function pgTick(now) {
+  if (!pgClock.playing) return;
+  const dt = Math.min(0.1, (now - pgClock.last) / 1000);
+  pgClock.last = now;
+  pgClock.t += dt;
+  if (pgClock.t >= pgState.duration) pgClock.t = 0;
+  const stage = stageContent.querySelector("#pg-stage");
+  const base = stage?.querySelector(".pg-base-media");
+  if (base && base.tagName === "VIDEO" && Math.abs(base.currentTime - pgClock.t) > 0.35) {
+    try { base.currentTime = pgClock.t; } catch {}
+  }
+  pgApplyPositions();
+  pgUpdateClockUI();
+  pgClock.raf = requestAnimationFrame(pgTick);
+}
+
+function pgSetPlaying(on) {
+  pgClock.playing = on;
+  pgClock.last = performance.now();
+  const stage = stageContent.querySelector("#pg-stage");
+  const base = stage?.querySelector(".pg-base-media");
+  if (base && base.tagName === "VIDEO") { if (on) { base.play().catch(() => {}); } else base.pause(); }
+  cancelAnimationFrame(pgClock.raf);
+  if (on) pgClock.raf = requestAnimationFrame(pgTick);
+  pgUpdateClockUI();
+}
+
+/* 手绘轨迹 */
+function pgExitDraw() {
+  const ov = stageContent.querySelector("#pg-draw-ov");
+  if (ov) ov.remove();
+  pgDraw = null;
+  stageContent.querySelectorAll(".pg-stage-layer").forEach((el) => { el.style.pointerEvents = ""; });
+}
+function pgCommitDraw() {
+  if (!pgDraw) return;
+  const { index, points } = pgDraw;
+  const layer = pgState.layers[index];
+  pgExitDraw();
+  if (!layer || points.length < 3) return;
+  const stage = stageContent.querySelector("#pg-stage");
+  const r = stage.getBoundingClientRect();
+  const raw = points.map(([px, py]) => [px / r.width, py / r.height]);
+  const motion = pgNormalizeMotion({ type: "path", points: raw, secs: Math.max(0.5, Number(layer.motion?.secs) || 1.5), ease: layer.motion?.ease || "out" });
+  if (motion) layer.motion = motion;
+  renderPlayground();
+}
+function pgStartDraw(index) {
+  pgExitDraw();
+  const stage = stageContent.querySelector("#pg-stage");
+  if (!stage) return;
+  pgDraw = { index, points: [] };
+  const ov = document.createElement("div");
+  ov.id = "pg-draw-ov";
+  ov.innerHTML = `<svg><polyline points=""/></svg>`;
+  stage.append(ov);
+  stageContent.querySelectorAll(".pg-stage-layer").forEach((el) => { el.style.pointerEvents = "none"; });
+  const toLocal = (e) => {
+    const r = stage.getBoundingClientRect();
+    return [e.clientX - r.left, e.clientY - r.top];
+  };
+  ov.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    pgDraw.points = [toLocal(e)];
+    ov.setPointerCapture(e.pointerId);
+    const poly = ov.querySelector("polyline");
+    const move = (ev) => {
+      pgDraw.points.push(toLocal(ev));
+      if (pgDraw.points.length > 400) pgDraw.points = pgDraw.points.filter((_, i) => i % 2 === 0);
+      poly.setAttribute("points", pgDraw.points.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" "));
+    };
+    const up = () => {
+      ov.removeEventListener("pointermove", move);
+      ov.removeEventListener("pointerup", up);
+    };
+    ov.addEventListener("pointermove", move);
+    ov.addEventListener("pointerup", up);
+  });
+  ov.addEventListener("dblclick", (e) => { e.preventDefault(); pgCommitDraw(); });
+  const esc = (e) => { if (e.key === "Escape") { document.removeEventListener("keydown", esc); pgExitDraw(); renderPlayground(); } };
+  document.addEventListener("keydown", esc);
 }
 
 const PG_ANCHORS = {
@@ -888,6 +1076,7 @@ function pgLayerDefaults(template) {
     templateId: template.id, name: template.name, preview: template.preview,
     position: "cc", x: ((n % 5) - 2) * 5, y: ((n % 3) - 1) * 5,
     scale: 100, start: 0, end: Math.min(template.duration || 6, pgState.duration),
+    motion: null,
     values: defaults(template),
   };
 }
@@ -901,16 +1090,12 @@ function pgComposeJson() {
     base: pgState.base.type === "upload"
       ? { type: "upload", name: pgState.base.name, note: "本地文件不出站，请与 compose.json 放在同一目录" }
       : { type: "video", src: pgState.base.src },
-    layers: pgState.layers.map(({ name, preview, ...layer }) => layer),
+    layers: pgState.layers.map(({ name, preview, ...layer }) => ({ ...layer, motion: layer.motion || null })),
   };
 }
 
-function pgLayerStyle(layer) {
-  const [ax, ay] = PG_ANCHORS[layer.position] || PG_ANCHORS.cc;
-  const width = 34 * (Math.max(20, Math.min(200, layer.scale)) / 100);
-  const left = Math.max(0, Math.min(100, ax + (layer.x || 0)));
-  const top = Math.max(0, Math.min(100, ay + (layer.y || 0)));
-  return `left:${left}%;top:${top}%;width:${width}%;transform:translate(-50%,-50%)`;
+function pgLayerWidthPct(layer) {
+  return 34 * (Math.max(20, Math.min(200, layer.scale)) / 100);
 }
 
 function pgSyncPanel() {
@@ -945,6 +1130,36 @@ function pgFieldMarkup(declaration, layer, index) {
   return `<div class="pg-var"><label>${escapeHtml(declaration.label)}</label><input type="${type}" data-var="${index}:${declaration.id}" value="${escapeHtml(String(value))}"></div>`;
 }
 
+function pgMotionMarkup(layer, index) {
+  const m = layer.motion;
+  const isPath = m && m.type === "path";
+  return `
+    <div class="pg-motion ${m ? "" : "off"}" data-motion="${index}">
+      <label class="pg-motion-head"><input type="checkbox" data-mon="${index}" ${m ? "checked" : ""}> 运动轨迹</label>
+      <div class="pg-motion-body">
+        <div class="pg-row2">
+          <label><input type="radio" name="pmmode${index}" value="line" ${!isPath ? "checked" : ""} data-mmode="${index}"> 直线平移</label>
+          <label><input type="radio" name="pmmode${index}" value="path" ${isPath ? "checked" : ""} data-mmode="${index}"> 手绘路径</label>
+        </div>
+        <div class="pg-mline" ${isPath ? "hidden" : ""}>
+          <div class="pg-row2">
+            <label>终点偏移 X <input type="number" step="10" value="${m && !isPath ? m.dx : 0}" data-mdx="${index}"> px</label>
+            <label>Y <input type="number" step="10" value="${m && !isPath ? m.dy : 0}" data-mdy="${index}"> px</label>
+          </div>
+        </div>
+        <div class="pg-mpath" ${!isPath ? "hidden" : ""}>
+          <button type="button" class="button" data-mdraw="${index}">✏️ 在舞台画轨迹</button>
+          ${isPath ? `<button type="button" class="button" data-mclear="${index}">清除轨迹</button>` : ""}
+          <span class="pg-hintline">舞台上按住拖动画线，双击结束，Esc 取消</span>
+        </div>
+        <div class="pg-row2">
+          <label>运动时长 <input type="number" step="0.5" min="0.1" value="${m ? m.secs : 1.5}" data-msecs="${index}"> s</label>
+          <label>缓动 <select data-mease="${index}"><option value="out" ${!m || m.ease !== "linear" ? "selected" : ""}>缓出</option><option value="linear" ${m && m.ease === "linear" ? "selected" : ""}>匀速</option></select></label>
+        </div>
+      </div>
+    </div>`;
+}
+
 function renderPlayground() {
   state.view = "playground";
   updateNav();
@@ -973,6 +1188,7 @@ function renderPlayground() {
         <label>入点 <input type="number" min="0" max="${pgState.duration}" step="0.5" value="${layer.start}" data-start="${index}">s</label>
         <label>出点 <input type="number" min="0" max="${pgState.duration}" step="0.5" value="${layer.end}" data-end="${index}">s</label>
       </div>
+      ${pgMotionMarkup(layer, index)}
       ${varForm}
     </div>`;
   }).join("");
@@ -986,7 +1202,7 @@ function renderPlayground() {
         <div>
           <p class="kicker">PLAYGROUND</p>
           <h2>编辑器试玩器<span class="sec-period">。</span></h2>
-          <p class="pg-desc">挑一条底片，把模板库里的动效叠上去——右边点素材实时上屏（透明叠加），舞台上直接拖动摆位、右下角手柄缩放，左栏微调参数，玩出你的第一条 compose.json。</p>
+          <p class="pg-desc">挑一条底片，把模板库里的动效叠上去——右边点素材实时上屏（透明叠加），舞台上直接拖动摆位、手柄缩放，每层可加直线/手绘运动轨迹，左栏微调参数，玩出你的第一条 compose.json。</p>
         </div>
         <div class="pg-actions">
           <button class="button primary" type="button" id="pg-export">导出 compose.json</button>
@@ -1018,14 +1234,20 @@ function renderPlayground() {
               : pgState.base.type === "upload" && pgState.base.dataUrl
                 ? `<video class="pg-base-media" src="${pgState.base.dataUrl}" muted loop playsinline autoplay></video>`
                 : `<video class="pg-base-media" src="${pgState.base.src}" muted loop playsinline autoplay></video>`}
+            <svg id="pg-path-preview" class="pg-path-preview"><polyline points=""/></svg>
+            <div class="pg-float">
+              <button class="pg-fbtn" type="button" id="pg-play" title="播放 / 暂停">▶</button>
+              <input type="range" id="pg-seek" min="0" max="${pgState.duration}" step="0.1" value="${Math.min(pgState.duration, pgClock.t)}">
+              <span id="pg-time">${pgClock.t.toFixed(1)}s / ${pgState.duration}s</span>
+            </div>
             ${pgState.layers.map((layer, index) => `
-              <div class="pg-stage-layer ${pgState.picked === index ? "picked" : ""}" style="${pgLayerStyle(layer)}" data-layer="${index}" data-act="move" title="拖动摆位 · 右下角手柄缩放">
+              <div class="pg-stage-layer ${pgState.picked === index ? "picked" : ""}" style="width:${pgLayerWidthPct(layer)}%;transform:translate(-50%,-50%)" data-layer="${index}" data-act="move" title="拖动摆位 · 右下角手柄缩放">
                 <iframe sandbox="allow-scripts allow-same-origin" title="${escapeHtml(layer.name)}"></iframe>
                 <span class="pg-stage-label">${escapeHtml(layer.name)} · ${layer.start}s–${layer.end}s</span>
                 <i class="pg-handle" data-act="resize" title="拖动缩放"></i>
               </div>`).join("")}
           </div>
-          <p class="pg-stage-hint">舞台为模板实时渲染、透明叠加在底片上；最终成片按你的清单在本地 HyperFrames 渲染（见下方说明）。</p>
+          <p class="pg-stage-hint">舞台为模板实时渲染、透明叠加在底片上；点 ▶ 播放看运动轨迹与时间段效果；最终成片按清单在本地 HyperFrames 渲染（见下方说明）。</p>
         </div>
         <aside class="pg-right">
           <section class="pg-panel">
@@ -1043,7 +1265,7 @@ function renderPlayground() {
         <div class="pg-about-grid">
           <article class="pg-about-card">
             <strong>试玩器不渲染成片</strong>
-            <p>这里产出的是一份 <code>compose.json</code> 编排清单：底片是谁、叠哪些模板动效、每个动效摆在什么位置、多大、第几秒进第几秒出、文案数据是什么。舞台实时渲染只为确认构图，不是最终画质。</p>
+            <p>这里产出的是一份 <code>compose.json</code> 编排清单：底片是谁、叠哪些模板动效、每个动效摆在什么位置、多大、第几秒进第几秒出、带什么运动轨迹、文案数据是什么。舞台实时渲染只为确认构图，不是最终画质。</p>
           </article>
           <article class="pg-about-card">
             <strong>compose.json 拿回家渲染</strong>
@@ -1051,7 +1273,7 @@ function renderPlayground() {
           </article>
           <article class="pg-about-card">
             <strong>清单长这样</strong>
-            <pre class="pg-sample">${escapeHtml(JSON.stringify({ version: "compose/1", canvas: { width: 1920, height: 1080 }, duration: 15, base: { type: "video", src: "app/assets/bg/01-window-silhouette.mp4" }, layers: [{ templateId: "docu-stat-counter", position: "cc", x: 0, y: 0, scale: 100, start: 0, end: 6, values: { title: "2024 营收", value: 91 } }] }, null, 2))}</pre>
+            <pre class="pg-sample">${escapeHtml(JSON.stringify({ version: "compose/1", canvas: { width: 1920, height: 1080 }, duration: 15, base: { type: "video", src: "app/assets/bg/01-window-silhouette.mp4" }, layers: [{ templateId: "docu-stat-counter", position: "cc", x: 0, y: 0, scale: 100, start: 0, end: 6, motion: { type: "line", dx: 200, dy: 0, secs: 1.2, ease: "out" }, values: { title: "2024 营收", value: 91 } }] }, null, 2))}</pre>
           </article>
         </div>
       </section>
@@ -1080,6 +1302,7 @@ function renderPlayground() {
   stageContent.querySelector("#pg-duration").addEventListener("change", (event) => {
     pgState.duration = Math.max(3, Math.min(600, Number(event.target.value) || 15));
     pgState.layers.forEach((layer) => { layer.end = Math.min(layer.end, pgState.duration); });
+    pgClock.t = Math.min(pgClock.t, pgState.duration);
     renderPlayground();
   });
   stageContent.querySelectorAll("[data-del]").forEach((btn) => btn.addEventListener("click", () => {
@@ -1100,28 +1323,29 @@ function renderPlayground() {
   stageContent.querySelectorAll("[data-dx]").forEach((input) => input.addEventListener("change", () => {
     const layer = pgState.layers[Number(input.dataset.dx)];
     layer.x = Math.max(-45, Math.min(45, Number(input.value) || 0));
-    renderPlayground();
+    pgApplyPositions();
   }));
   stageContent.querySelectorAll("[data-dy]").forEach((input) => input.addEventListener("change", () => {
     const layer = pgState.layers[Number(input.dataset.dy)];
     layer.y = Math.max(-45, Math.min(45, Number(input.value) || 0));
-    renderPlayground();
+    pgApplyPositions();
   }));
   stageContent.querySelectorAll("[data-scale]").forEach((input) => input.addEventListener("input", () => {
     const layer = pgState.layers[Number(input.dataset.scale)];
     layer.scale = Number(input.value);
     const el = stageContent.querySelector(`.pg-stage-layer[data-layer="${input.dataset.scale}"]`);
-    if (el) el.style.cssText = pgLayerStyle(layer);
+    if (el) el.style.width = pgLayerWidthPct(layer) + "%";
     const label = stageContent.querySelector(`[data-scale-label="${input.dataset.scale}"]`);
     if (label) label.textContent = input.value + "%";
+    pgFitIframes();
   }));
   stageContent.querySelectorAll("[data-start]").forEach((input) => input.addEventListener("change", () => {
     pgState.layers[Number(input.dataset.start)].start = Math.max(0, Number(input.value) || 0);
-    renderPlayground();
+    pgApplyPositions();
   }));
   stageContent.querySelectorAll("[data-end]").forEach((input) => input.addEventListener("change", () => {
     pgState.layers[Number(input.dataset.end)].end = Math.max(0, Number(input.value) || 0);
-    renderPlayground();
+    pgApplyPositions();
   }));
   stageContent.querySelectorAll("[data-var]").forEach((input) => input.addEventListener("input", () => {
     const [index, key] = input.dataset.var.split(":");
@@ -1130,17 +1354,78 @@ function renderPlayground() {
     layer.values[key] = decl && decl.type === "number" ? Number(input.value) : input.value;
     pgScheduleLayer(Number(index), false);
   }));
+
+  /* 运动轨迹事件 */
+  stageContent.querySelectorAll("[data-mon]").forEach((cb) => cb.addEventListener("change", () => {
+    const index = Number(cb.dataset.mon);
+    const layer = pgState.layers[index];
+    if (cb.checked) {
+      const mode = stageContent.querySelector(`input[name="pmmode${index}"]:checked`)?.value || "line";
+      const secs = Math.max(0.1, Number(stageContent.querySelector(`[data-msecs="${index}"]`)?.value) || 1.5);
+      const ease = stageContent.querySelector(`[data-mease="${index}"]`)?.value || "out";
+      layer.motion = mode === "line"
+        ? pgNormalizeMotion({ type: "line", dx: Number(stageContent.querySelector(`[data-mdx="${index}"]`)?.value) || 0, dy: Number(stageContent.querySelector(`[data-mdy="${index}"]`)?.value) || 0, secs, ease })
+        : pgNormalizeMotion({ type: "path", points: [[0, 0], [0.1, -0.1]], secs, ease });
+      if (!layer.motion) layer.motion = { type: "line", dx: 0, dy: -80, secs, ease };
+    } else {
+      layer.motion = null;
+    }
+    renderPlayground();
+  }));
+  stageContent.querySelectorAll("[data-mmode]").forEach((radio) => radio.addEventListener("change", () => {
+    if (!radio.checked) return;
+    const index = Number(radio.dataset.mmode);
+    const layer = pgState.layers[index];
+    const secs = Math.max(0.1, Number(stageContent.querySelector(`[data-msecs="${index}"]`)?.value) || 1.5);
+    const ease = stageContent.querySelector(`[data-mease="${index}"]`)?.value || "out";
+    if (radio.value === "line") {
+      layer.motion = pgNormalizeMotion({ type: "line", dx: Number(stageContent.querySelector(`[data-mdx="${index}"]`)?.value) || 0, dy: Number(stageContent.querySelector(`[data-mdy="${index}"]`)?.value) || 0, secs, ease })
+        || { type: "line", dx: 0, dy: -80, secs, ease };
+    } else {
+      layer.motion = pgNormalizeMotion({ type: "path", points: [[0, 0], [0.1, -0.1]], secs, ease });
+    }
+    renderPlayground();
+  }));
+  stageContent.querySelectorAll("[data-mdx],[data-mdy]").forEach((input) => input.addEventListener("change", () => {
+    const index = Number(input.dataset.mdx ?? input.dataset.mdy);
+    const layer = pgState.layers[index];
+    if (!layer.motion || layer.motion.type !== "line") return;
+    layer.motion.dx = Number(stageContent.querySelector(`[data-mdx="${index}"]`)?.value) || 0;
+    layer.motion.dy = Number(stageContent.querySelector(`[data-mdy="${index}"]`)?.value) || 0;
+    pgApplyPositions();
+  }));
+  stageContent.querySelectorAll("[data-msecs]").forEach((input) => input.addEventListener("change", () => {
+    const index = Number(input.dataset.msecs);
+    const layer = pgState.layers[index];
+    if (layer.motion) layer.motion.secs = Math.max(0.1, Number(input.value) || 1.5);
+    pgApplyPositions();
+  }));
+  stageContent.querySelectorAll("[data-mease]").forEach((input) => input.addEventListener("change", () => {
+    const index = Number(input.dataset.mease);
+    const layer = pgState.layers[index];
+    if (layer.motion) layer.motion.ease = input.value === "linear" ? "linear" : "out";
+    pgApplyPositions();
+  }));
+  stageContent.querySelectorAll("[data-mdraw]").forEach((btn) => btn.addEventListener("click", () => {
+    pgPick(Number(btn.dataset.mdraw), false);
+    pgStartDraw(Number(btn.dataset.mdraw));
+  }));
+  stageContent.querySelectorAll("[data-mclear]").forEach((btn) => btn.addEventListener("click", () => {
+    pgState.layers[Number(btn.dataset.mclear)].motion = null;
+    renderPlayground();
+  }));
   stageContent.querySelectorAll(".pg-layer").forEach((row) => row.addEventListener("click", (event) => {
     if (event.target.closest("button, input, select")) return;
     pgPick(Number(row.dataset.layer), false);
   }));
 
-  /* 舞台：拖动摆位 + 手柄缩放（不整页重渲染） */
+  /* 舞台：拖动摆位 + 手柄缩放 */
   const pgStage = stageContent.querySelector("#pg-stage");
   stageContent.querySelectorAll(".pg-stage-layer").forEach((el) => {
     pgScheduleLayer(Number(el.dataset.layer), true);
     const index = Number(el.dataset.layer);
     el.addEventListener("pointerdown", (event) => {
+      if (pgDraw) return;
       event.preventDefault();
       const act = event.target.dataset.act || "move";
       pgPick(index, true);
@@ -1159,16 +1444,17 @@ function renderPlayground() {
         if (act === "move") {
           layer.x = Math.max(-45, Math.min(45, origX + dx));
           layer.y = Math.max(-45, Math.min(45, origY + dy));
+          pgApplyPositions();
         } else {
           const d = (e.clientX - startX) / rect.width;
           layer.scale = Math.max(20, Math.min(200, Math.round((origScale * (1 + d * 2)) / 5) * 5));
+          el.style.width = pgLayerWidthPct(layer) + "%";
           const slider = stageContent.querySelector(`[data-scale="${index}"]`);
           const label = stageContent.querySelector(`[data-scale-label="${index}"]`);
           if (slider) slider.value = layer.scale;
           if (label) label.textContent = layer.scale + "%";
+          pgFitIframes();
         }
-        el.style.cssText = pgLayerStyle(layer);
-        pgFitIframes();
       };
       const onUp = () => {
         el.removeEventListener("pointermove", onMove);
@@ -1187,8 +1473,17 @@ function renderPlayground() {
       el.addEventListener("pointerup", onUp);
     });
   });
-  requestAnimationFrame(pgFitIframes);
-  window.addEventListener("resize", () => { clearTimeout(pgFitTimer); pgFitTimer = setTimeout(pgFitIframes, 120); });
+
+  /* 播放时钟 */
+  stageContent.querySelector("#pg-play").addEventListener("click", () => pgSetPlaying(!pgClock.playing));
+  stageContent.querySelector("#pg-seek").addEventListener("input", (event) => {
+    pgClock.t = Number(event.target.value) || 0;
+    pgApplyPositions();
+    pgUpdateClockUI();
+  });
+
+  requestAnimationFrame(() => { pgApplyPositions(); pgFitIframes(); pgUpdateClockUI(); });
+  window.addEventListener("resize", () => { clearTimeout(pgFitTimer); pgFitTimer = setTimeout(() => { pgApplyPositions(); pgFitIframes(); }, 120); });
 
   /* 顶栏：导出 */
   stageContent.querySelector("#pg-export").addEventListener("click", () => {
@@ -1211,8 +1506,10 @@ function renderPlayground() {
     setTimeout(() => { button.textContent = "复制 JSON"; }, 1600);
   });
   stageContent.querySelector("#pg-clear").addEventListener("click", () => {
+    pgSetPlaying(false);
     pgState.layers = [];
     pgState.picked = null;
+    pgClock.t = 0;
     renderPlayground();
   });
 
