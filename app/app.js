@@ -1127,7 +1127,15 @@ function pgScrollLayerIntoView(index) {
 }
 
 function pgPick(index, scroll) {
+  const changed = pgState.picked !== index;
   pgState.picked = index;
+  if (changed) {
+    const consoleEl = stageContent.querySelector(".pg-console-h");
+    if (consoleEl) {
+      consoleEl.innerHTML = pgConsoleMarkup();
+      pgWireConsole();
+    }
+  }
   pgSyncPanel();
   if (scroll) pgScrollLayerIntoView(index);
 }
@@ -1192,11 +1200,8 @@ function pgMotionMarkup(layer, index) {
     </div>`;
 }
 
-function renderPlayground() {
-  state.view = "playground";
-  updateNav();
-  stopPlaying();
-  tabbar.style.display = "none";
+
+function pgConsoleMarkup() {
   const PAD_ARROWS = { tl: "↖", tc: "↑", tr: "↗", cl: "←", cc: "●", cr: "→", bl: "↙", bc: "↓", br: "↘" };
   const layerChips = pgState.layers.map((layer, index) => `
     <div class="pg-layer pg-chip ${pgState.picked === index ? "active" : ""}" data-layer="${index}" title="点选该层">
@@ -1236,59 +1241,7 @@ function renderPlayground() {
         ${pickedTemplate ? `<div class="pg-vars">${pickedTemplate.schema.filter((s) => !s.hidden).slice(0, 6).map((sd) => pgFieldMarkup(sd, picked, pgState.picked)).join("")}</div>` : ""}
       </div>
     </div>` : `<p class="pg-empty-layer">在上方素材带点一个素材，图层会叠到舞台上；这里变成它的操作台。</p>`;
-  const baseButtons = PG_BASES.map((base) => `
-    <button type="button" class="pg-base ${pgState.base.type === "builtin" && pgState.base.id === base.id ? "on" : ""}" data-base="${base.id}">
-      <video muted loop playsinline preload="metadata" src="${base.src}"></video><span>${base.name}</span>
-    </button>`).join("");
-  stageContent.innerHTML = `
-    <div class="pg-wrap">
-      <header class="pg-head">
-        <div>
-          <p class="kicker">PLAYGROUND</p>
-          <h2>编辑器试玩器<span class="sec-period">。</span></h2>
-          <p class="pg-desc">挑一条底片，把模板库里的动效叠上去——右边点素材实时上屏（透明叠加），舞台上直接拖动摆位、手柄缩放，每层可加直线/手绘运动轨迹，左栏微调参数，玩出你的第一条 compose.json。</p>
-        </div>
-        <div class="pg-actions">
-          <button class="button primary" type="button" id="pg-export">导出 compose.json</button>
-          <button class="button" type="button" id="pg-copy">复制 JSON</button>
-          <button class="button" type="button" id="pg-clear">清空图层</button>
-        </div>
-      </header>
-      <div class="pg-main">
-        <section class="pg-panel pg-con-base">
-          <h3>底片</h3>
-          <div class="pg-bases">${baseButtons}</div>
-          <label class="pg-upload">上传底片<input type="file" id="pg-file" accept="video/*,image/*" hidden></label>
-          <p class="pg-upload-name">${pgState.base.type === "upload" ? escapeHtml(pgState.base.name) : "内置氛围底片"}</p>
-        </section>
-        <div class="pg-center">
-          <div class="pg-stage" id="pg-stage">
-            ${pgState.base.type === "upload" && pgState.base.dataUrl && pgState.base.kind === "image"
-              ? `<img class="pg-base-media" src="${pgState.base.dataUrl}" alt="底片">`
-              : pgState.base.type === "upload" && pgState.base.dataUrl
-                ? `<video class="pg-base-media" src="${pgState.base.dataUrl}" muted loop playsinline autoplay></video>`
-                : `<video class="pg-base-media" src="${pgState.base.src}" muted loop playsinline autoplay></video>`}
-            <svg id="pg-path-preview" class="pg-path-preview"><polyline points=""/></svg>
-            <div class="pg-float">
-              <button class="pg-fbtn" type="button" id="pg-play" title="播放 / 暂停">▶</button>
-              <input type="range" id="pg-seek" min="0" max="${pgState.duration}" step="0.1" value="${Math.min(pgState.duration, pgClock.t)}">
-              <span id="pg-time">${pgClock.t.toFixed(1)}s / ${pgState.duration}s</span>
-            </div>
-            ${pgState.layers.map((layer, index) => `
-              <div class="pg-stage-layer ${pgState.picked === index ? "picked" : ""}" style="width:${pgLayerWidthPct(layer)}%;transform:translate(-50%,-50%)" data-layer="${index}" data-act="move" title="拖动摆位 · 右下角手柄缩放">
-                <iframe sandbox="allow-scripts allow-same-origin" title="${escapeHtml(layer.name)}"></iframe>
-                <i class="pg-handle" data-act="resize" title="拖动缩放"></i>
-              </div>`).join("")}
-          </div>
-        </div>
-        <aside class="pg-right">
-          <section class="pg-panel">
-            <h3>素材库</h3>
-            <input type="search" id="pg-filter" placeholder="搜模板名 / 分类 / 标签" value="${escapeHtml(pgState.filter)}">
-            <div class="pg-list" id="pg-list" data-lenis-prevent></div>
-          </section>
-        </aside>
-        <section class="pg-console-h">
+  return `
         <div class="pg-con-head">
           <h3>操作台</h3>
           <span class="pg-con-hint">舞台为模板实时渲染、透明叠加在底片上，点 ▶ 播放预览效果；选中图层后在本条操控：方向键定位置 · 滑杆定大小 · 运动内容随层切换；Delete 键删除选中层</span>
@@ -1300,57 +1253,10 @@ function renderPlayground() {
             <div class="pg-layer-chips" data-lenis-prevent>${layerChips || `<span class="pg-chip-empty">尚无图层，右侧素材库点一行上屏</span>`}</div>
           </div>
           ${controlsZone}
-        </div>
-        </section>
-      </div>
-      <section class="pg-about">
-        <div class="howto-head">
-          <p class="kicker">WHAT IS THIS</p>
-          <h2>这是什么<span class="sec-period">。</span></h2>
-        </div>
-        <div class="pg-about-grid">
-          <article class="pg-about-card">
-            <strong>试玩器不渲染成片</strong>
-            <p>这里产出的是一份 <code>compose.json</code> 编排清单：底片是谁、叠哪些模板动效、每个动效摆在什么位置、多大、第几秒进第几秒出、带什么运动轨迹、文案数据是什么。舞台实时渲染只为确认构图，不是最终画质。</p>
-          </article>
-          <article class="pg-about-card">
-            <strong>compose.json 拿回家渲染</strong>
-            <p>把 JSON 下载下来，连同你的底片素材一起交给本地渲染管线（HyperFrames），就能按清单逐层渲染、自动叠加、直出成片。模板源文件在 GitHub 仓库 <a href="${GITHUB_REPO}" target="_blank" rel="noreferrer">motion-prompts</a> 全部开源。</p>
-          </article>
-          <article class="pg-about-card">
-            <strong>清单长这样</strong>
-            <pre class="pg-sample">${escapeHtml(JSON.stringify({ version: "compose/1", canvas: { width: 1920, height: 1080 }, duration: 15, base: { type: "video", src: "app/assets/bg/01-window-silhouette.mp4" }, layers: [{ templateId: "docu-stat-counter", position: "cc", x: 0, y: 0, scale: 100, start: 0, end: 6, motion: { type: "line", dx: 200, dy: 0, secs: 1.2, ease: "out" }, values: { title: "2024 营收", value: 91 } }] }, null, 2))}</pre>
-          </article>
-        </div>
-      </section>
-      <footer class="site-footer">
-        <span>编辑器试玩器 · 产出 compose.json 编排清单 · 本地 HyperFrames 渲染出片</span>
-        <span>模板与 Skill 获取方式见首页「关注我们」</span>
-      </footer>
-    </div>`;
+        </div>`;
+}
 
-  /* 左侧面板全部事件 */
-  stageContent.querySelectorAll("[data-base]").forEach((btn) => btn.addEventListener("click", () => {
-    const base = PG_BASES.find((b) => b.id === btn.dataset.base);
-    pgState.base = { type: "builtin", id: base.id, src: base.src, name: base.name };
-    renderPlayground();
-  }));
-  stageContent.querySelector("#pg-file").addEventListener("change", (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      pgState.base = { type: "upload", name: file.name, dataUrl: reader.result, kind: file.type.startsWith("image") ? "image" : "video" };
-      renderPlayground();
-    };
-    reader.readAsDataURL(file);
-  });
-  stageContent.querySelector("#pg-duration").addEventListener("change", (event) => {
-    pgState.duration = Math.max(3, Math.min(600, Number(event.target.value) || 15));
-    pgState.layers.forEach((layer) => { layer.end = Math.min(layer.end, pgState.duration); });
-    pgClock.t = Math.min(pgClock.t, pgState.duration);
-    renderPlayground();
-  });
+function pgWireConsole() {
   stageContent.querySelectorAll("[data-del]").forEach((btn) => btn.addEventListener("click", () => {
     const index = Number(btn.dataset.del);
     pgGeneration.set(index, (pgGeneration.get(index) || 0) + 1);
@@ -1487,6 +1393,116 @@ function renderPlayground() {
     if (event.target.closest("button")) return;
     pgPick(Number(row.dataset.layer), false);
   }));
+}
+
+function renderPlayground() {
+  state.view = "playground";
+  updateNav();
+  stopPlaying();
+  tabbar.style.display = "none";
+  const baseButtons = PG_BASES.map((base) => `
+    <button type="button" class="pg-base ${pgState.base.type === "builtin" && pgState.base.id === base.id ? "on" : ""}" data-base="${base.id}">
+      <video muted loop playsinline preload="metadata" src="${base.src}"></video><span>${base.name}</span>
+    </button>`).join("");
+  stageContent.innerHTML = `
+    <div class="pg-wrap">
+      <header class="pg-head">
+        <div>
+          <p class="kicker">PLAYGROUND</p>
+          <h2>编辑器试玩器<span class="sec-period">。</span></h2>
+          <p class="pg-desc">挑一条底片，把模板库里的动效叠上去——右边点素材实时上屏（透明叠加），舞台上直接拖动摆位、手柄缩放，每层可加直线/手绘运动轨迹，左栏微调参数，玩出你的第一条 compose.json。</p>
+        </div>
+        <div class="pg-actions">
+          <button class="button primary" type="button" id="pg-export">导出 compose.json</button>
+          <button class="button" type="button" id="pg-copy">复制 JSON</button>
+          <button class="button" type="button" id="pg-clear">清空图层</button>
+        </div>
+      </header>
+      <div class="pg-main">
+        <section class="pg-panel pg-con-base">
+          <h3>底片</h3>
+          <div class="pg-bases">${baseButtons}</div>
+          <label class="pg-upload">上传底片<input type="file" id="pg-file" accept="video/*,image/*" hidden></label>
+          <p class="pg-upload-name">${pgState.base.type === "upload" ? escapeHtml(pgState.base.name) : "内置氛围底片"}</p>
+        </section>
+        <div class="pg-center">
+          <div class="pg-stage" id="pg-stage">
+            ${pgState.base.type === "upload" && pgState.base.dataUrl && pgState.base.kind === "image"
+              ? `<img class="pg-base-media" src="${pgState.base.dataUrl}" alt="底片">`
+              : pgState.base.type === "upload" && pgState.base.dataUrl
+                ? `<video class="pg-base-media" src="${pgState.base.dataUrl}" muted loop playsinline autoplay></video>`
+                : `<video class="pg-base-media" src="${pgState.base.src}" muted loop playsinline autoplay></video>`}
+            <svg id="pg-path-preview" class="pg-path-preview"><polyline points=""/></svg>
+            <div class="pg-float">
+              <button class="pg-fbtn" type="button" id="pg-play" title="播放 / 暂停">▶</button>
+              <input type="range" id="pg-seek" min="0" max="${pgState.duration}" step="0.1" value="${Math.min(pgState.duration, pgClock.t)}">
+              <span id="pg-time">${pgClock.t.toFixed(1)}s / ${pgState.duration}s</span>
+            </div>
+            ${pgState.layers.map((layer, index) => `
+              <div class="pg-stage-layer ${pgState.picked === index ? "picked" : ""}" style="width:${pgLayerWidthPct(layer)}%;transform:translate(-50%,-50%)" data-layer="${index}" data-act="move" title="拖动摆位 · 右下角手柄缩放">
+                <iframe sandbox="allow-scripts allow-same-origin" title="${escapeHtml(layer.name)}"></iframe>
+                <i class="pg-handle" data-act="resize" title="拖动缩放"></i>
+              </div>`).join("")}
+          </div>
+        </div>
+        <aside class="pg-right">
+          <section class="pg-panel">
+            <h3>素材库</h3>
+            <input type="search" id="pg-filter" placeholder="搜模板名 / 分类 / 标签" value="${escapeHtml(pgState.filter)}">
+            <div class="pg-list" id="pg-list" data-lenis-prevent></div>
+          </section>
+        </aside>
+        <section class="pg-console-h">${pgConsoleMarkup()}</section>
+      </div>
+      <section class="pg-about">
+        <div class="howto-head">
+          <p class="kicker">WHAT IS THIS</p>
+          <h2>这是什么<span class="sec-period">。</span></h2>
+        </div>
+        <div class="pg-about-grid">
+          <article class="pg-about-card">
+            <strong>试玩器不渲染成片</strong>
+            <p>这里产出的是一份 <code>compose.json</code> 编排清单：底片是谁、叠哪些模板动效、每个动效摆在什么位置、多大、第几秒进第几秒出、带什么运动轨迹、文案数据是什么。舞台实时渲染只为确认构图，不是最终画质。</p>
+          </article>
+          <article class="pg-about-card">
+            <strong>compose.json 拿回家渲染</strong>
+            <p>把 JSON 下载下来，连同你的底片素材一起交给本地渲染管线（HyperFrames），就能按清单逐层渲染、自动叠加、直出成片。模板源文件在 GitHub 仓库 <a href="${GITHUB_REPO}" target="_blank" rel="noreferrer">motion-prompts</a> 全部开源。</p>
+          </article>
+          <article class="pg-about-card">
+            <strong>清单长这样</strong>
+            <pre class="pg-sample">${escapeHtml(JSON.stringify({ version: "compose/1", canvas: { width: 1920, height: 1080 }, duration: 15, base: { type: "video", src: "app/assets/bg/01-window-silhouette.mp4" }, layers: [{ templateId: "docu-stat-counter", position: "cc", x: 0, y: 0, scale: 100, start: 0, end: 6, motion: { type: "line", dx: 200, dy: 0, secs: 1.2, ease: "out" }, values: { title: "2024 营收", value: 91 } }] }, null, 2))}</pre>
+          </article>
+        </div>
+      </section>
+      <footer class="site-footer">
+        <span>编辑器试玩器 · 产出 compose.json 编排清单 · 本地 HyperFrames 渲染出片</span>
+        <span>模板与 Skill 获取方式见首页「关注我们」</span>
+      </footer>
+    </div>`;
+
+  /* 左侧面板全部事件 */
+  stageContent.querySelectorAll("[data-base]").forEach((btn) => btn.addEventListener("click", () => {
+    const base = PG_BASES.find((b) => b.id === btn.dataset.base);
+    pgState.base = { type: "builtin", id: base.id, src: base.src, name: base.name };
+    renderPlayground();
+  }));
+  stageContent.querySelector("#pg-file").addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      pgState.base = { type: "upload", name: file.name, dataUrl: reader.result, kind: file.type.startsWith("image") ? "image" : "video" };
+      renderPlayground();
+    };
+    reader.readAsDataURL(file);
+  });
+  stageContent.querySelector("#pg-duration").addEventListener("change", (event) => {
+    pgState.duration = Math.max(3, Math.min(600, Number(event.target.value) || 15));
+    pgState.layers.forEach((layer) => { layer.end = Math.min(layer.end, pgState.duration); });
+    pgClock.t = Math.min(pgClock.t, pgState.duration);
+    renderPlayground();
+  });
+  pgWireConsole();
 
   /* 舞台：拖动摆位 + 手柄缩放 */
   const pgStage = stageContent.querySelector("#pg-stage");
