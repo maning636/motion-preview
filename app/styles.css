@@ -583,3 +583,11 @@ body.modes-full-page { height: auto; overflow: auto; }
 @media (max-width: 1100px) {
   .pg-con-body-h { overflow-x: auto; }
 }
+
+/* ── 试玩器 v13：视频区钉死 900px，多余宽度由左右两栏吸收 ── */
+.pg-main { grid-template-columns: minmax(210px, 1fr) minmax(600px, 900px) minmax(280px, 1fr); }
+.pg-con-base .pg-bases { grid-template-columns: repeat(auto-fit, minmax(76px, 1fr)); }
+@media (max-width: 1480px) {
+  .pg-main { grid-template-columns: 200px minmax(0, 1fr) 270px; }
+  .pg-con-base .pg-bases { grid-template-columns: 1fr 1fr; }
+}
