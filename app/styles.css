@@ -572,3 +572,14 @@ body.modes-full-page { height: auto; overflow: auto; }
 
 /* v11 方向键点动手感 */
 .pg-pad .pg-pos:active { transform: scale(.92); background: rgba(74,222,128,.25); }
+
+/* ── 试玩器 v12：全宽布局（底片/素材库顶到屏幕两缘，操作台通栏，无横滚） ── */
+.pg-wrap { max-width: none; padding: 26px 20px 60px; }
+.pg-main { grid-template-columns: 210px minmax(0, 1fr) 280px; grid-template-areas: "base stage lib" "console console console"; }
+.pg-con-body-h { overflow-x: visible; }
+.pg-con-body-h .pg-zone-fx { min-width: 0; }
+.pg-zone-fx .pg-vars { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+.pg-zone-size { width: 300px; }
+@media (max-width: 1100px) {
+  .pg-con-body-h { overflow-x: auto; }
+}
