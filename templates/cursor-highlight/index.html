@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"startX","type":"number","label":"起始 X 坐标","default":200},{"id":"startY","type":"number","label":"起始 Y 坐标","default":300},{"id":"endX","type":"number","label":"结束 X 坐标","default":960},{"id":"endY","type":"number","label":"结束 Y 坐标","default":540},{"id":"pulseColor","type":"color","label":"波纹色","default":"#00FF00"},{"id":"background","type":"color","label":"背景色","default":"#12100E"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+
+@font-face {
+  font-family: 'MiSans SemiBold';
+  src: url('../_fonts/MiSansSemiBold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'MEBHeiHeiTi';
+  src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype');
+  font-weight: 100 1000;
+  font-weight: normal;
+  font-style: normal;
+}
+
+*{ box-sizing: border-box;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      html, body{ margin: 0; width: 1920px; height: 1080px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      #root{ position: relative; width: 1920px; height: 1080px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .scene{ position: absolute; inset: 0; width: 100%; height: 100%; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .cursor{ position: absolute; width: 32px; height: 32px; z-index: 10;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .cursor svg{ width: 100%; height: 100%; fill: #F4EFE7;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .ripple{ position: absolute; border-radius: 50%; border: 2px solid var(--pulse); transform: translate(-50%, -50%); pointer-events: none;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1920" data-height="1080">
+      <section id="scene" class="scene clip" data-start="0" data-duration="4" data-track-index="1">
+        <div class="cursor" id="cursor">
+          <svg viewBox="0 0 24 24"><path d="M3 3l7.07 16.97 2.51-7.39 7.39-2.51L3 3z"/></svg>
+        </div>
+        <div class="ripple" id="ripple"></div>
+      </section>
+    </div>
+    <script>
+      const fallback = { startX: 200, startY: 300, endX: 960, endY: 540, pulseColor: "#00FF00", background: "#12100E" };
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : fallback;
+      document.documentElement.style.setProperty("--background", v.background ?? "#12100E");
+      const root = document.getElementById("root");
+      root.style.backgroundColor = v.background;
+      root.style.setProperty("--pulse", v.pulseColor);
+
+      const cursor = document.getElementById("cursor");
+      const ripple = document.getElementById("ripple");
+      const sx = Number(v.startX) || 200;
+      const sy = Number(v.startY) || 300;
+      const ex = Number(v.endX) || 960;
+      const ey = Number(v.endY) || 540;
+      cursor.style.left = sx + "px";
+      cursor.style.top = sy + "px";
+      ripple.style.left = ex + "px";
+      ripple.style.top = ey + "px";
+      ripple.style.width = "0px";
+      ripple.style.height = "0px";
+      ripple.style.opacity = 0;
+
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo(cursor, { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out" }, 0.1);
+      tl.to(cursor, { left: ex, top: ey, duration: 0.9, ease: "power2.inOut" }, 0.5);
+      tl.to(ripple, { width: 120, height: 120, opacity: 0.6, duration: 0.4, ease: "power2.out" }, 1.25);
+      tl.to(ripple, { width: 280, height: 280, opacity: 0, duration: 0.8, ease: "power2.out" }, 1.55);
+      tl.to(cursor, { scale: 0.9, duration: 0.15, ease: "power2.in", yoyo: true, repeat: 1 }, 1.25);
+      tl.to(".scene", { opacity: 0, duration: 0.3, ease: "power2.in" }, 3.7);
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

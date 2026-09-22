@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "ch0", "type": "string", "label": "首章标题", "default": "自媒体流水线"}, {"id": "ch1", "type": "string", "label": "章1标题", "default": "找选题"}, {"id": "ch2", "type": "string", "label": "章2标题", "default": "做内容"}, {"id": "ch3", "type": "string", "label": "章3标题", "default": "出成片"}, {"id": "accent", "type": "color", "label": "强调色", "default": "#00FF00"}, {"id": "background", "type": "color", "label": "背景色", "default": "#0A0A0F"}, {"id": "foreground", "type": "color", "label": "文字色", "default": "#F4F4F2"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+@font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html, body{ width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F); }
+#root{ position:relative; width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F);
+  color:var(--fg,#F4F4F2); font-family:'MEBHeiHeiTi','PingFang SC','Microsoft YaHei',sans-serif; }
+.num{ font-family:'MiSans SemiBold','PingFang SC',sans-serif; }
+
+.ch{ position:absolute; inset:0; transform:translateY(1080px); }
+.ch .ttl{ position:absolute; left:150px; top:140px; font-size:72px; color:rgba(255,255,255,.95); }
+.ch .win{ position:absolute; left:560px; top:340px; width:800px; height:480px; border-radius:18px;
+  background:rgba(20,20,27,.92); border:1px solid rgba(255,255,255,.18); }
+.ch .win i{ display:block; height:14px; border-radius:7px; background:rgba(255,255,255,.22); margin:34px 44px 0; }
+.ch .win b{ display:block; height:22px; width:40%; border-radius:11px; background:rgba(255,255,255,.85); margin:44px 44px 0; }
+.ch .deco{ position:absolute; left:0; right:0; top:880px; height:56px; background:rgba(255,255,255,.28); }
+.ch .deco2{ position:absolute; left:0; right:0; top:960px; height:24px; background:rgba(255,255,255,.18); }
+.ch .seam{ position:absolute; left:0; right:0; top:0; height:40px; opacity:0;
+  background:linear-gradient(rgba(0,0,0,.30),transparent); }
+#ch0{ transform:translateY(0); }
+
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1920" data-height="1080">
+<div class="ch" id="ch0" style="background:#17171F"><div class="seam"></div><div class="ttl" id="t0"></div><div class="win"><b></b><i></i><i style="width:72%"></i><i style="width:55%"></i><i style="width:64%"></i></div><div class="deco"></div><div class="deco2"></div></div><div class="ch" id="ch1" style="background:#0E7A4A"><div class="seam"></div><div class="ttl" id="t1"></div><div class="win"><b></b><i></i><i style="width:72%"></i><i style="width:55%"></i><i style="width:64%"></i></div><div class="deco"></div><div class="deco2"></div></div><div class="ch" id="ch2" style="background:#1E6FA8"><div class="seam"></div><div class="ttl" id="t2"></div><div class="win"><b></b><i></i><i style="width:72%"></i><i style="width:55%"></i><i style="width:64%"></i></div><div class="deco"></div><div class="deco2"></div></div><div class="ch" id="ch3" style="background:#A8224E"><div class="seam"></div><div class="ttl" id="t3"></div><div class="win"><b></b><i></i><i style="width:72%"></i><i style="width:55%"></i><i style="width:64%"></i></div><div class="deco"></div><div class="deco2"></div></div>
+    </div>
+    <script>
+      const FB = {"ch0": "自媒体流水线", "ch1": "找选题", "ch2": "做内容", "ch3": "出成片", "accent": "#00FF00", "background": "#0A0A0F", "foreground": "#F4F4F2"};
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : FB;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4F4F2");
+      document.documentElement.style.setProperty("--background", v.background ?? "#0A0A0F");
+const $=(s)=>document.querySelector(s);
+const de=document.documentElement;
+de.style.setProperty('--accent',v.accent||'#00FF00');
+de.style.setProperty('--bg',v.background||'#0A0A0F');
+de.style.setProperty('--fg',v.foreground||'#F4F4F2');
+const F=(f)=>f/30; // 30fps: 帧→秒
+window.__timelines=window.__timelines||{};
+const tl=gsap.timeline({paused:true});
+
+for(let i=0;i<4;i++) $('#t'+i).textContent=v['ch'+i]||'';
+// 每章整料 translateY：新章 +1080→0 顶入，旧章 0→-1080 被顶出，同速同缓动
+const PUSH=[[18,1],[55,2],[92,3]];
+PUSH.forEach(([f,i])=>{
+  tl.to('#ch'+i,{y:0,duration:F(30),ease:'power4.out'},F(f));
+  tl.to('#ch'+(i-1),{y:-1080,duration:F(30),ease:'power4.out'},F(f));
+  // 接缝阴影：推入期间压在旧章上，落定归零
+  tl.set('#ch'+i+' .seam',{opacity:1},F(f));
+  tl.to('#ch'+i+' .seam',{opacity:0,duration:F(6)},F(f+30));
+  // 旧章出画后卸载
+  tl.set('#ch'+(i-1),{display:'none'},F(f+31));
+});
+tl.to({},{duration:F(28)},F(122)); // 章内真静止
+
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

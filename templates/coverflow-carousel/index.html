@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "title", "type": "string", "label": "标题", "default": "每日一影 · 片头轮转"}, {"id": "img1", "type": "image", "label": "卡图1", "default": "./placeholder-1.png"}, {"id": "img2", "type": "image", "label": "卡图2", "default": "./placeholder-2.png"}, {"id": "img3", "type": "image", "label": "卡图3", "default": "./placeholder-3.png"}, {"id": "img4", "type": "image", "label": "卡图4", "default": "./placeholder-4.png"}, {"id": "img5", "type": "image", "label": "卡图5", "default": "./placeholder-5.png"}, {"id": "img6", "type": "image", "label": "卡图6", "default": "./placeholder-6.png"}, {"id": "focusIndex", "type": "number", "label": "定格卡序号（1-12）", "default": 7}, {"id": "glowColor", "type": "color", "label": "定格光晕色", "default": "#FFC83D"}, {"id": "duration", "type": "number", "label": "总时长(秒)", "default": 6}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      *{ box-sizing: border-box; margin: 0; padding: 0; }
+      html, body{ width: 1920px; height: 1080px; overflow: hidden; }
+      #root{ position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+      @font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+      @font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+      #root{ background: #060706; font-family: 'MEBHeiHeiTi', 'PingFang SC', sans-serif; color: #F2F5F2; }
+      .cf-bg{ position: absolute; inset: 0;
+        background: radial-gradient(1200px 700px at 50% 40%, color-mix(in srgb, var(--accent) 6%, transparent), transparent 60%),
+          radial-gradient(rgba(255,255,255,.09) 1px, transparent 1.6px); background-size: auto, 90px 90px; }
+      .cf-title{ position: absolute; left: 0; right: 0; top: 66px; text-align: center; z-index: 500; }
+      .cf-title .en{ font-family: 'MiSans SemiBold', sans-serif; font-size: 26px; letter-spacing: .5em; color: #8A978C; }
+      .cf-title h1{ margin-top: 12px; font-size: 46px; font-weight: 800; letter-spacing: .12em; }
+      .cf-stage{ position: absolute; inset: 0; perspective: 1500px; z-index: 2; }
+      .cf-world{ position: absolute; left: 50%; top: 47%; width: 0; height: 0; transform-style: preserve-3d; }
+      .cf-card{ position: absolute; width: 340px; height: 510px; margin: -255px 0 0 -170px; border-radius: 14px;
+        overflow: hidden; background: #101210; box-shadow: 0 30px 70px rgba(0,0,0,.55); }
+      .cf-card img{ width: 100%; height: 100%; object-fit: cover; display: block; }
+      .cf-glow{ position: absolute; left: 50%; top: 47%; width: 620px; height: 700px; margin: -350px 0 0 -310px;
+        background: radial-gradient(ellipse at center, var(--glow, #FFC83D) 0%, transparent 62%);
+        opacity: 0; pointer-events: none; mix-blend-mode: screen; z-index: 1; }
+      .cf-vig{ position: absolute; inset: 0; pointer-events: none; z-index: 390;
+        background: radial-gradient(ellipse at center, transparent 44%, rgba(0,0,0,.8) 100%); opacity: 0; }
+
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920" data-height="1080">
+      <div class="cf-bg"></div>
+      <div class="cf-title" id="titleWrap"><div class="en">COVERFLOW · ONE RULE</div><h1 id="title"></h1></div>
+      <div class="cf-glow" id="glow"></div>
+      <div class="cf-stage"><div class="cf-world" id="world"></div></div>
+      <div class="cf-vig" id="vig"></div>
+
+    </div>
+    <script>
+      const fallback = {"title": "每日一影 · 片头轮转", "img1": "./placeholder-1.png", "img2": "./placeholder-2.png", "img3": "./placeholder-3.png", "img4": "./placeholder-4.png", "img5": "./placeholder-5.png", "img6": "./placeholder-6.png", "focusIndex": 7, "glowColor": "#FFC83D", "duration": 6};
+      const V = Object.assign({}, fallback, (window.__hyperframes?.getVariables?.() || {}));
+      const $ = (id) => document.getElementById(id);
+      const split = (s) => String(s ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const countTo = (el, target, at, dur = 1.0, dec = 0, wobble = false) => {
+        const o = { n: 0 };
+        tl.to(o, { n: Number(String(target).replace(/,/g, "")) || 0, duration: dur,
+          ease: wobble ? "back.out(1.6)" : "power2.out",
+          onUpdate: () => { el.textContent = dec ? o.n.toFixed(dec) : Math.round(o.n).toLocaleString("en-US"); } }, at);
+      };
+      document.documentElement.style.setProperty("--glow", V.glowColor ?? "#FFC83D");
+      $("title").textContent = V.title;
+      const imgs = [V.img1, V.img2, V.img3, V.img4, V.img5, V.img6];
+      const N = 12, XGAP = 160;
+      const world = $("world"), cards = [];
+      for (let i = 0; i < N; i++) {
+        const c = document.createElement("div");
+        c.className = "cf-card";
+        const im = document.createElement("img");
+        im.src = imgs[i % imgs.length];
+        im.alt = "";
+        c.appendChild(im);
+        world.appendChild(c);
+        cards.push(c);
+      }
+      const FI = Math.max(0, Math.min(N - 1, (Number(V.focusIndex) || 7) - 1));
+      let pos = 0, focus = 0;
+      const clampNum = (x, a, b) => Math.max(a, Math.min(b, x));
+      // 四联映射同一条规则：离中心距离 d 同时决定角度/大小/明暗/纵深
+      const layout = () => {
+        for (let i = 0; i < N; i++) {
+          const el = cards[i], d = i - pos, ad = Math.abs(d);
+          if (ad > 4.5) { el.style.display = "none"; continue; }
+          el.style.display = "block";
+          const rot = clampNum(-d * 25, -55, 55);
+          let sc = Math.max(0.72, 1.16 - ad * 0.17);
+          const z = Math.min(ad, 5) * -130;
+          let br = Math.max(0.38, 1 - ad * 0.18);
+          if (focus > 0) {
+            if (ad < 0.5) sc *= 1 + 0.12 * focus;
+            else br *= 1 - 0.5 * focus;
+          }
+          el.style.transform = `translate3d(${d * XGAP}px, 0, ${z}px) rotateY(${rot}deg) scale(${sc})`;
+          el.style.filter = `brightness(${br})`;
+          el.style.zIndex = String(200 - Math.round(ad * 10));
+        }
+        $("glow").style.opacity = String(focus * 0.95);
+        $("vig").style.opacity = String(focus * 0.9);
+      };
+      layout();
+      const spin = { p: 0 };
+      tl.fromTo("#titleWrap", { opacity: 0, y: -16 }, { opacity: 1, y: 0, duration: 0.6 }, 0);
+      tl.to(spin, { p: FI, duration: 2.5, ease: "power4.out",
+        onUpdate: () => { pos = spin.p; layout(); } }, 0.4);
+      const fk = { f: 0 };
+      tl.to(fk, { f: 1, duration: 0.9, ease: "power2.out",
+        onUpdate: () => { focus = fk.f; layout(); } }, 3.0);
+      window.__timelines.main = tl;
+
+    </script>
+  </body>
+</html>

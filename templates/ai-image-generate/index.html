@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1920, height=1080">
+<title>AI 图片生成</title>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+</head>
+<body style="margin:0;padding:0;background:#0f0f0f;width:1920px;height:1080px;overflow:hidden;font-family:'PingFang SC','Microsoft YaHei',sans-serif;">
+<div data-composition-id="ai-image-generate" data-duration="6" data-no-timeline
+     data-composition-variables='[{"id":"title","label":"标题","type":"text","default":"AI 图片生成"},{"id":"desc","label":"描述","type":"text","default":"图片从模糊到清晰"}]'
+     style="width:1920px;height:1080px;position:relative;overflow:hidden;background:linear-gradient(135deg,#0f0f0f 0%,#1a1a2e 100%);">
+
+  <!-- 装饰背景 -->
+  <div id="bg-glow" style="position:absolute;top:-200px;right:-200px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,#6366f122 0%,transparent 70%);"></div>
+  <div id="bg-grid" style="position:absolute;inset:0;background-image:linear-gradient(#6366f108 1px,transparent 1px),linear-gradient(90deg,#6366f108 1px,transparent 1px);background-size:60px 60px;opacity:0.5;"></div>
+
+  <!-- 主内容区 -->
+  <div id="main-content" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;width:1400px;">
+
+    <!-- 图标/标识 -->
+    <div id="icon-badge" style="display:inline-flex;align-items:center;justify-content:center;width:100px;height:100px;border-radius:24px;background:#6366f1;margin-bottom:40px;box-shadow:0 0 60px #6366f166;">
+      <span style="font-size:48px;color:#fff;font-weight:bold;">AI</span>
+    </div>
+
+    <!-- 标题 -->
+    <h1 id="title-text" style="font-size:72px;font-weight:800;color:#fff;margin:0 0 20px;letter-spacing:2px;">AI 图片生成</h1>
+
+    <!-- 描述 -->
+    <p id="desc-text" style="font-size:32px;color:#888;margin:0 0 50px;">图片从模糊到清晰</p>
+
+    <!-- 演示内容区 -->
+    <div id="demo-area" style="display:flex;justify-content:center;gap:20px;flex-wrap:wrap;">
+      <div style="width:300px;height:200px;border-radius:16px;background:linear-gradient(135deg,#6366f144,#6366f111);border:1px solid #6366f155;display:flex;align-items:center;justify-content:center;">
+      <span style="font-size:48px;">🖼️</span>
+    </div>
+    </div>
+  </div>
+
+  <!-- 底部进度条 -->
+  <div id="progress-bar" style="position:absolute;bottom:0;left:0;width:0;height:6px;background:#6366f1;"></div>
+
+  <!-- 底部标签 -->
+  <div id="footer-tag" style="position:absolute;bottom:20px;left:40px;font-size:18px;color:#444;letter-spacing:1px;">Talking Studio · ai-image-generate</div>
+</div>
+
+<script>
+window.__timelines = window.__timelines || {};
+(function() {
+  const tl = gsap.timeline({ paused: true });
+  const accent = "#6366f1";
+
+  // 入场
+  tl.from("#icon-badge", { scale: 0, rotation: -180, duration: 0.6, ease: "back.out(1.7)" }, 0);
+  tl.from("#title-text", { y: 60, opacity: 0, duration: 0.5, ease: "power3.out" }, 0.2);
+  tl.from("#desc-text", { y: 30, opacity: 0, duration: 0.5, ease: "power3.out" }, 0.4);
+  tl.from("#demo-area > *", { y: 40, opacity: 0, duration: 0.4, stagger: 0.1, ease: "power2.out" }, 0.6);
+
+  // 持续微动
+  tl.to("#icon-badge", { scale: 1.05, duration: 1.5, ease: "sine.inOut", yoyo: true, repeat: -1 }, 1.5);
+
+  // 进度条
+  tl.fromTo("#progress-bar", { width: 0 }, { width: "100%", duration: 6, ease: "none" }, 0);
+
+  // 背景光晕漂移
+  tl.to("#bg-glow", { x: -100, y: 50, duration: 6, ease: "sine.inOut" }, 0);
+
+  window.__timelines["ai-image-generate"] = tl;
+})();
+</script>
+</body>
+</html>

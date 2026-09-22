@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "title", "type": "string", "label": "标题", "default": "四种发布节奏对比"}, {"id": "cells", "type": "string", "label": "四格（标题|内容，逗号分隔）", "default": "日更|流量稳但易枯竭,隔日更|质量与频率平衡,周更|深度内容适用,专题连更|本周主推节奏"}, {"id": "duration", "type": "number", "label": "总时长(秒)", "default": 6}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      *{ box-sizing: border-box; margin: 0; padding: 0; }
+      html, body{ width: 1920px; height: 1080px; overflow: hidden; }
+      #root{ position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+      .mono{ font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace; }
+      #root{ background: #FCFBF6; font-family: 'Noto Sans SC', 'PingFang SC', sans-serif; color: #1D1D20;
+        background-image: linear-gradient(rgba(29,29,32,.045) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(29,29,32,.045) 1px, transparent 1px); background-size: 64px 64px; }
+      .b-head{ position: absolute; left: 140px; top: 100px; }
+      .b-head h1{ font-size: 64px; font-weight: 900; letter-spacing: .02em; }
+      .b-under{ width: 440px; height: 20px; margin-top: 12px; background: #1E7A46;
+        border-radius: 10px; transform-origin: left center; }
+      .b-grid{ position: absolute; left: 140px; right: 140px; top: 290px; bottom: 110px;
+        display: grid; grid-template-columns: repeat(2, 1fr); gap: 44px 48px; }
+      .cell{ position: relative; background: #FFE98A; border-radius: 6px; padding: 40px 44px;
+        box-shadow: 7px 8px 0 rgba(29,29,32,.14); }
+      .cell::before{ content: ""; position: absolute; left: 50%; top: -15px; width: 110px; height: 30px;
+        margin-left: -55px; background: rgba(255,255,255,.6); transform: rotate(-2deg);
+        border-left: 1px solid rgba(29,29,32,.08); border-right: 1px solid rgba(29,29,32,.08); }
+      .cell .ct{ font-size: 38px; font-weight: 900; margin-bottom: 14px; }
+      .cell .cc{ font-size: 27px; font-weight: 600; line-height: 1.45; color: #3A3733; word-break: break-all; }
+      .cell:last-child{ background: #DFF2C0; }
+      .cell:last-child .ct::before{ content: "★ "; color: #1E7A46; }
+
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920" data-height="1080">
+      <div class="b-head"><h1 id="title"></h1><div class="b-under" id="under"></div></div>
+      <div class="b-grid" id="grid"></div>
+
+    </div>
+    <script>
+      const fallback = {"title": "四种发布节奏对比", "cells": "日更|流量稳但易枯竭,隔日更|质量与频率平衡,周更|深度内容适用,专题连更|本周主推节奏", "duration": 6};
+      const V = Object.assign({}, fallback, (window.__hyperframes?.getVariables?.() || {}));
+      const $ = (id) => document.getElementById(id);
+      const split = (s) => String(s ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const countTo = (el, target, at, dur = 1.0, dec = 0, wobble = false) => {
+        const o = { n: 0 };
+        tl.to(o, { n: Number(String(target).replace(/,/g, "")) || 0, duration: dur,
+          ease: wobble ? "back.out(1.6)" : "power2.out",
+          onUpdate: () => { el.textContent = dec ? o.n.toFixed(dec) : Math.round(o.n).toLocaleString("en-US"); } }, at);
+      };
+      $("title").textContent = V.title;
+      const cells = split(V.cells).slice(0, 4);
+      const rots = [-2.5, 2, -1.5, 2.5];
+      const grid = $("grid");
+      cells.forEach((txt, i) => {
+        const [ct, cc] = txt.split("|").map((x) => (x ?? "").trim());
+        const d = document.createElement("div");
+        d.className = "cell";
+        d.innerHTML = `<div class="ct"></div><div class="cc"></div>`;
+        d.querySelector(".ct").textContent = ct ?? txt;
+        d.querySelector(".cc").textContent = cc ?? "";
+        grid.appendChild(d);
+      });
+      tl.fromTo("#title", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 0.1);
+      tl.fromTo("#under", { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease: "power3.out" }, 0.35);
+      document.querySelectorAll(".cell").forEach((el, i) => {
+        tl.fromTo(el, { scale: 0.5, opacity: 0, rotation: rots[i] + 12 },
+          { scale: 1, opacity: 1, rotation: rots[i], duration: 0.5, ease: "back.out(2.6)" }, 0.7 + i * 0.22);
+      });
+      const last = grid.lastElementChild;
+      if (last) {
+        const tLast = 0.7 + (cells.length - 1) * 0.22 + 0.55;
+        tl.to(last, { scale: 1.04, duration: 0.22, ease: "power2.out" }, tLast);
+        tl.to(last, { scale: 1, duration: 0.26, ease: "power2.inOut" }, tLast + 0.22);
+      }
+      window.__timelines.main = tl;
+
+    </script>
+  </body>
+</html>

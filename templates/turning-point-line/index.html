@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"title","type":"string","label":"标题","default":"增长真正的拐点"},{"id":"subtitle","type":"string","label":"副标题","default":"不是换工具，而是把流程模板化之后"},{"id":"pointLabel","type":"string","label":"拐点标签","default":"模板化开始"},{"id":"caption","type":"string","label":"结论","default":"拐点出现后，内容生产从单次项目变成可复用系统。"},{"id":"accent","type":"color","label":"强调色","default":"#00FF00"},{"id":"foreground","type":"color","label":"文字色","default":"#F4EFE7"},{"id":"exportMode","type":"enum","label":"导出模式","default":"transparent","hidden":true,"options":[{"value":"transparent","label":"透明背景"},{"value":"mp4","label":"剪映 MP4 深色底"}]}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+@font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+
+*{ box-sizing: border-box; }
+html, body{ margin:0; width:1920px; height:1080px; overflow:hidden; background: var(--background, #0A0A0B); }
+#root{ position:relative; width:1920px; height:1080px; overflow:hidden; background: var(--background, #0A0A0B); color: var(--foreground, #F5F5F4);
+  font-family:'MEBHeiHeiTi','PingFang SC','Microsoft YaHei',sans-serif; }
+.scene{ position:absolute; inset:0; padding:72px 88px; }
+.gridbg{ position:absolute; inset:0; pointer-events:none;
+  background-image: radial-gradient(rgba(255,255,255,.05) 1px, transparent 1.5px); background-size:48px 48px; }
+.chip{ display:inline-flex; align-items:center; gap:10px; padding:8px 16px; border:1px solid #2A2A2E; border-radius:999px;
+  font-size:18px; letter-spacing:.16em; color:#9CA3AF; text-transform:uppercase; white-space:nowrap; }
+.chip b{ color:var(--accent,#00FF00); font-weight:700; letter-spacing:.05em; }
+.num{ font-family:'MiSans SemiBold','PingFang SC',sans-serif; font-weight:700; }
+.wipe{ clip-path: inset(0 100% 0 0); }
+</style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920" data-height="1080">
+      <section id="scene" class="scene" data-start="0" data-duration="6" data-track-index="1">
+
+        <div class="gridbg"></div>
+        <header style="position:relative;z-index:2;">
+          <span class="chip"><b>POINT</b>拐点</span>
+          <h1 id="title" class="num" style="margin:18px 0 6px;font-size:52px;"></h1>
+          <p id="subtitle" style="margin:0;font-size:24px;color:#9CA3AF;"></p>
+        </header>
+        <svg viewBox="0 0 1744 560" style="position:absolute;left:88px;top:330px;width:1744px;height:560px;overflow:visible;">
+          <path id="curve" d="M0 420 C 300 420, 420 400, 560 380 C 760 340, 900 200, 1100 140 C 1300 80, 1500 60, 1744 40"
+            fill="none" stroke="var(--accent,#00FF00)" stroke-width="6" stroke-linecap="round"/>
+          <circle id="dot" cx="560" cy="380" r="12" fill="#0A0A0B" stroke="var(--accent,#00FF00)" stroke-width="5" opacity="0"/>
+          <circle id="ring" cx="560" cy="380" r="14" fill="none" stroke="var(--accent,#00FF00)" stroke-width="3" opacity="0"/>
+        </svg>
+        <span class="chip" id="pointLabel" style="position:absolute;left:560px;top:640px;opacity:0;border-color:var(--accent,#00FF00);"><b></b></span>
+        <p id="caption" style="position:absolute;left:88px;bottom:70px;max-width:1100px;font-size:26px;line-height:1.7;color:#D4D4D8;border-left:4px solid var(--accent,#00FF00);padding-left:22px;opacity:0;"></p>
+
+      </section>
+    </div>
+    <script>
+      const fallback = {"title": "增长真正的拐点", "subtitle": "不是换工具，而是把流程模板化之后", "pointLabel": "模板化开始", "caption": "拐点出现后，内容生产从单次项目变成可复用系统。", "accent": "#00FF00", "foreground": "#F4EFE7", "exportMode": "transparent"};
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : fallback;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4EFE7");
+      document.documentElement.style.setProperty("--accent", v.accent ?? "#00FF00");
+      const $ = (id) => document.getElementById(id);
+      const split = (s) => String(s ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const DUR = 6;
+      const countTo = (el, target, at, dur = 1.1, dec = 0) => {
+        const o = { n: 0 };
+        tl.to(o, { n: Number(target) || 0, duration: dur, ease: "power2.out",
+          onUpdate: () => { el.textContent = dec ? o.n.toFixed(dec) : Math.round(o.n).toLocaleString("en-US"); } }, at);
+      };
+
+      $("title").textContent = v.title; $("subtitle").textContent = v.subtitle;
+      $("pointLabel").innerHTML = "<b>" + v.pointLabel + "</b>"; $("caption").textContent = v.caption;
+      const curve = $("curve"), len = curve.getTotalLength();
+      curve.style.strokeDasharray = len; curve.style.strokeDashoffset = len;
+      tl.fromTo("header", { clipPath: "inset(0 100% 0 0)" }, { clipPath: "inset(0 0% 0 0)", duration: 0.6, ease: "power3.out" }, 0.1);
+      tl.to(curve, { strokeDashoffset: 0, duration: 2.4, ease: "power2.inOut" }, 0.5);
+      tl.fromTo("#dot", { opacity: 0, scale: 0.3, transformOrigin: "center" }, { opacity: 1, scale: 1, duration: 0.4, ease: "back.out(3)" }, 1.35);
+      tl.fromTo("#ring", { opacity: 0.9, attr: { r: 14 } }, { opacity: 0, attr: { r: 56 }, duration: 1.1, ease: "power1.out", repeat: 1 }, 1.5);
+      tl.to("#pointLabel", { opacity: 1, y: -8, duration: 0.4 }, 1.7);
+      tl.to("#caption", { opacity: 1, x: 0, duration: 0.5 }, 2.6);
+      tl.to(".scene", { opacity: 0, duration: 0.5 }, DUR - 0.6);
+
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

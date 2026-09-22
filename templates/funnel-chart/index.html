@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"title","type":"string","label":"标题","default":"用户转化漏斗"},{"id":"subtitle","type":"string","label":"副标题","default":"从曝光到付费的 4 个关键阶段"},{"id":"stages","type":"string","label":"阶段名（逗号分隔，4 个）","default":"曝光,点击,注册,付费"},{"id":"rates","type":"string","label":"转化率（逗号分隔，4 个）","default":"100%,32%,12%,3.5%"},{"id":"accent","type":"color","label":"强调色","default":"#00FF00"},{"id":"background","type":"color","label":"背景色","default":"#12100E"},{"id":"foreground","type":"color","label":"文字色","default":"#F4EFE7"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+
+@font-face {
+  font-family: 'MiSans SemiBold';
+  src: url('../_fonts/MiSansSemiBold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'MEBHeiHeiTi';
+  src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype');
+  font-weight: 100 1000;
+  font-weight: normal;
+  font-style: normal;
+}
+
+*{ box-sizing: border-box;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      html, body{ margin: 0; width: 1920px; height: 1080px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      #root{ position: relative; width: 1920px; height: 1080px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .scene{ position: absolute; inset: 0; width: 100%; height: 100%; padding: 96px 112px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .header{ margin-bottom: 50px;font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .title{ margin: 0; font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 64px; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }
+      .subtitle{ margin: 12px 0 0; font-family: 'MEBHeiHeiTi', sans-serif; font-size: 24px; font-weight: 400; opacity: 0.55; }
+      .funnel{ display: flex; flex-direction: column; align-items: center; gap: 8px; margin-top: 40px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .layer{ position: relative; display: flex; align-items: center; justify-content: center; height: 100px; border: 2px solid rgba(244,239,231,0.18); background: rgba(244,239,231,0.06);font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .layer.accent{ background: color-mix(in srgb, var(--accent) 12%, transparent); border-color: var(--accent);font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .layer-name{ position: absolute; left: 24px; font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 24px; font-weight: 700; }
+      .layer-rate{ position: absolute; right: 24px; font-family: 'MEBHeiHeiTi', sans-serif; font-size: 18px; font-weight: 600; color: var(--accent); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920" data-height="1080">
+      <section id="scene" class="scene clip" data-start="0" data-duration="6" data-track-index="1">
+        <div class="header">
+          <h1 class="title" id="title"></h1>
+          <p class="subtitle" id="subtitle"></p>
+        </div>
+        <div class="funnel" id="funnel"></div>
+      </section>
+    </div>
+    <script>
+      const fallback = { title: "用户转化漏斗", subtitle: "从曝光到付费的 4 个关键阶段", stages: "曝光,点击,注册,付费", rates: "100%,32%,12%,3.5%", accent: "#00FF00", background: "#12100E", foreground: "#F4EFE7" };
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : fallback;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4EFE7");
+      document.documentElement.style.setProperty("--background", v.background ?? "#12100E");
+      const root = document.getElementById("root");
+      root.style.backgroundColor = v.background;
+      root.style.color = v.foreground;
+      root.style.setProperty("--accent", v.accent);
+      document.getElementById("title").textContent = v.title;
+      document.getElementById("subtitle").textContent = v.subtitle;
+      const stages = String(v.stages).split(",").map(s => s.trim()).filter(Boolean);
+      const rates = String(v.rates).split(",").map(s => s.trim()).filter(Boolean);
+      const widths = [720, 560, 400, 240];
+      const funnel = document.getElementById("funnel");
+      stages.forEach((stage, i) => {
+        const layer = document.createElement("div");
+        layer.className = "layer" + (i === stages.length - 1 ? " accent" : "");
+        layer.style.width = widths[i] + "px";
+        layer.innerHTML = `<span class="layer-name">${stage}</span><span class="layer-rate">${rates[i] || ""}</span>`;
+        funnel.appendChild(layer);
+      });
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo(".title", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.1);
+      tl.fromTo(".subtitle", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.25);
+      document.querySelectorAll(".layer").forEach((layer, i) => {
+        tl.fromTo(layer, { opacity: 0, scaleX: 0.8, scaleY: 0.5, transformOrigin: "center top" }, { opacity: 1, scaleX: 1, scaleY: 1, duration: 0.55, ease: "power2.out" }, 0.5 + i * 0.2);
+      });
+      tl.to(".scene", { opacity: 0, y: -16, duration: 0.5, ease: "power2.in" }, 5.3);
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

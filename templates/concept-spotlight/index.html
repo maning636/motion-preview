@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"label","type":"string","label":"标签","default":"核心概念"},{"id":"term","type":"string","label":"概念名","default":"提示词工程"},{"id":"definition","type":"string","label":"解释","default":"不是把问题说复杂，而是把目标、约束和判断标准说清楚。"},{"id":"note","type":"string","label":"补充说明","default":"适合解释术语 / 方法 / 心智模型"},{"id":"accent","type":"color","label":"强调色","default":"#00FF00"},{"id":"foreground","type":"color","label":"文字色","default":"#F4EFE7"},{"id":"exportMode","type":"enum","label":"导出模式","default":"transparent","hidden":true,"options":[{"value":"transparent","label":"透明背景"},{"value":"mp4","label":"剪映 MP4 深色底"}]}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+@font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+
+*{ box-sizing: border-box; }
+html, body{ margin:0; width:1920px; height:1080px; overflow:hidden; background: var(--background, #0A0A0B); }
+#root{ position:relative; width:1920px; height:1080px; overflow:hidden; background: var(--background, #0A0A0B); color: var(--foreground, #F5F5F4);
+  font-family:'MEBHeiHeiTi','PingFang SC','Microsoft YaHei',sans-serif; }
+.scene{ position:absolute; inset:0; padding:72px 88px; }
+.gridbg{ position:absolute; inset:0; pointer-events:none;
+  background-image: radial-gradient(rgba(255,255,255,.05) 1px, transparent 1.5px); background-size:48px 48px; }
+.chip{ display:inline-flex; align-items:center; gap:10px; padding:8px 16px; border:1px solid #2A2A2E; border-radius:999px;
+  font-size:18px; letter-spacing:.16em; color:#9CA3AF; text-transform:uppercase; white-space:nowrap; }
+.chip b{ color:var(--accent,#00FF00); font-weight:700; letter-spacing:.05em; }
+.num{ font-family:'MiSans SemiBold','PingFang SC',sans-serif; font-weight:700; }
+.wipe{ clip-path: inset(0 100% 0 0); }
+</style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1920" data-height="1080">
+      <section id="scene" class="scene" data-start="0" data-duration="5" data-track-index="1">
+
+        <div id="glow" style="position:absolute;left:50%;top:50%;width:900px;height:900px;transform:translate(-50%,-50%) scale(.2);border-radius:50%;background:radial-gradient(circle,color-mix(in srgb, var(--accent) 16%, transparent),transparent 65%);opacity:0;"></div>
+        <div class="gridbg"></div>
+        <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;">
+          <span class="chip" id="label"></span>
+          <h1 id="term" class="num" style="margin:0;font-size:150px;letter-spacing:.3em;color:var(--accent,#00FF00);"></h1>
+          <p id="definition" style="max-width:1000px;text-align:center;font-size:32px;line-height:1.8;color:#D4D4D8;margin:10px 0 0;"></p>
+          <span class="chip" id="note" style="margin-top:22px;"></span>
+        </div>
+
+      </section>
+    </div>
+    <script>
+      const fallback = {"label": "核心概念", "term": "提示词工程", "definition": "不是把问题说复杂，而是把目标、约束和判断标准说清楚。", "note": "适合解释术语 / 方法 / 心智模型", "accent": "#00FF00", "foreground": "#F4EFE7", "exportMode": "transparent"};
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : fallback;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4EFE7");
+      document.documentElement.style.setProperty("--accent", v.accent ?? "#00FF00");
+      const $ = (id) => document.getElementById(id);
+      const split = (s) => String(s ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const DUR = 5;
+      const countTo = (el, target, at, dur = 1.1, dec = 0) => {
+        const o = { n: 0 };
+        tl.to(o, { n: Number(target) || 0, duration: dur, ease: "power2.out",
+          onUpdate: () => { el.textContent = dec ? o.n.toFixed(dec) : Math.round(o.n).toLocaleString("en-US"); } }, at);
+      };
+
+      $("label").textContent = v.label; $("term").textContent = v.term;
+      $("definition").textContent = v.definition; $("note").textContent = v.note;
+      tl.to("#glow", { opacity: 1, scale: 1, duration: 1.4, ease: "power2.out" }, 0.2);
+      tl.fromTo("#label", { y: -30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5 }, 0.3);
+      tl.fromTo("#term", { letterSpacing: ".6em", opacity: 0 }, { letterSpacing: ".05em", opacity: 1, duration: 1.1, ease: "power3.out" }, 0.5);
+      tl.fromTo("#definition", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.6 }, 1.5);
+      tl.fromTo("#note", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 2.0);
+      tl.to(".scene", { opacity: 0, duration: 0.5 }, DUR - 0.6);
+
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

@@ -817,6 +817,65 @@ const pgState = {
   filter: "",
 };
 
+/* 实时渲染舞台层：与官网工作站同款机制（fetch 模板 → 注入变量/透明/播放 → srcdoc iframe） */
+const PG_VIDEO_ONLY = new Set(["footage-glyph"]);   // 大媒体模板不上舞台
+const PG_TRANSPARENT_STYLE = `<style id="__hf_transparent_bg__">html,body,#root,[data-composition-id],[data-composition-variables],[data-composition-duration],[data-composition-fps]{background:transparent!important;background-color:transparent!important;background-image:none!important}</style>`;
+const pgHtmlCache = new Map();
+const pgGeneration = new Map();
+
+async function pgFetchTemplate(templateId) {
+  if (!pgHtmlCache.has(templateId)) {
+    pgHtmlCache.set(templateId, fetch(`./templates/${templateId}/index.html`).then((r) => {
+      if (!r.ok) throw new Error("模板加载失败：" + templateId);
+      return r.text();
+    }).catch((e) => { pgHtmlCache.delete(templateId); throw e; }));
+  }
+  return pgHtmlCache.get(templateId);
+}
+
+function pgBuildSrcdoc(html, variables) {
+  const varsScript = `<script>window.__hyperframes={getVariables:function(){return ${JSON.stringify(variables)};}};window.__renderExport=true;</script>`;
+  let doc = html;
+  const player = `<script>window.addEventListener("load",function(){var tls=Object.values(window.__timelines||{});tls.forEach(function(tl){try{tl.repeat(-1);tl.repeatDelay(0.4);tl.play(0);}catch(e){}});});</script>`;
+  if (/<head[^>]*>/i.test(doc)) {
+    doc = doc.replace(/<head[^>]*>/i, (m) => m + varsScript);
+    doc = /<\/head>/i.test(doc) ? doc.replace(/<\/head>/i, PG_TRANSPARENT_STYLE + "</head>") : doc;
+  } else {
+    doc = varsScript + doc;
+    if (!/<style[^>]*>/i.test(doc)) doc = doc.replace(varsScript, varsScript + PG_TRANSPARENT_STYLE);
+  }
+  return /<\/body>/i.test(doc) ? doc.replace(/<\/body>/i, player + "</body>") : doc + player;
+}
+
+function pgRenderLayerFrame(index) {
+  const layer = pgState.layers[index];
+  const el = stageContent.querySelector(`.pg-stage-layer[data-layer="${index}"] iframe`);
+  if (!layer || !el) return;
+  const mine = (pgGeneration.get(index) || 0) + 1;
+  pgGeneration.set(index, mine);
+  const variables = { ...layer.values, exportMode: "transparent" };
+  pgFetchTemplate(layer.templateId).then((html) => {
+    if (pgGeneration.get(index) !== mine) return;
+    el.srcdoc = pgBuildSrcdoc(html, variables);
+  }).catch(() => {});
+}
+
+let pgFitTimer = null;
+function pgFitIframes() {
+  stageContent.querySelectorAll(".pg-stage-layer").forEach((el) => {
+    const iframe = el.querySelector("iframe");
+    if (!iframe) return;
+    const scale = el.clientWidth / 1920;
+    iframe.style.transform = `scale(${scale})`;
+  });
+}
+
+function pgScheduleLayer(index, immediate) {
+  clearTimeout(pgState["timer" + index]);
+  if (immediate) { pgRenderLayerFrame(index); return; }
+  pgState["timer" + index] = setTimeout(() => pgRenderLayerFrame(index), 300);
+}
+
 const PG_ANCHORS = {
   tl: [8, 10], tc: [50, 10], tr: [92, 10],
   cl: [8, 50], cc: [50, 50], cr: [92, 50],
@@ -827,7 +886,7 @@ function pgLayerDefaults(template) {
   const n = pgState.layers.length;
   return {
     templateId: template.id, name: template.name, preview: template.preview,
-    position: "cc", x: ((n % 5) - 2) * 6, y: ((n % 3) - 1) * 6,
+    position: "cc", x: ((n % 5) - 2) * 5, y: ((n % 3) - 1) * 5,
     scale: 100, start: 0, end: Math.min(template.duration || 6, pgState.duration),
     values: defaults(template),
   };
@@ -872,12 +931,31 @@ function pgPick(index, scroll) {
   }
 }
 
+function pgFieldMarkup(declaration, layer, index) {
+  if (declaration.hidden) return "";
+  const value = layer.values[declaration.id];
+  if (declaration.type === "color") {
+    return `<div class="pg-var"><label>${escapeHtml(declaration.label)}</label><input type="color" data-var="${index}:${declaration.id}" value="${escapeHtml(String(value))}"></div>`;
+  }
+  if (declaration.type === "enum") {
+    const options = declaration.options.map((o) => `<option value="${escapeHtml(o.value)}" ${o.value === value ? "selected" : ""}>${escapeHtml(o.label)}</option>`).join("");
+    return `<div class="pg-var"><label>${escapeHtml(declaration.label)}</label><select data-var="${index}:${declaration.id}">${options}</select></div>`;
+  }
+  const type = declaration.type === "number" ? "number" : "text";
+  return `<div class="pg-var"><label>${escapeHtml(declaration.label)}</label><input type="${type}" data-var="${index}:${declaration.id}" value="${escapeHtml(String(value))}"></div>`;
+}
+
 function renderPlayground() {
   state.view = "playground";
   updateNav();
   stopPlaying();
   tabbar.style.display = "none";
-  const layerRows = pgState.layers.map((layer, index) => `
+  const layerRows = pgState.layers.map((layer, index) => {
+    const template = state.catalog.templates.find((t) => t.id === layer.templateId);
+    const varForm = pgState.picked === index && template
+      ? `<div class="pg-vars">${template.schema.filter((s) => !s.hidden).slice(0, 6).map((s) => pgFieldMarkup(s, layer, index)).join("")}</div>`
+      : "";
+    return `
     <div class="pg-layer ${pgState.picked === index ? "active" : ""}" data-layer="${index}">
       <div class="pg-layer-head">
         <strong>${escapeHtml(layer.name)}</strong>
@@ -885,13 +963,19 @@ function renderPlayground() {
       </div>
       <div class="pg-grid3">${PG_POSITIONS.map(([key, label]) => `<button type="button" class="pg-pos ${layer.position === key ? "on" : ""}" data-pos="${index}:${key}" title="${label}"></button>`).join("")}</div>
       <div class="pg-row2">
+        <label>横向 <input type="number" min="-45" max="45" step="1" value="${layer.x || 0}" data-dx="${index}">%</label>
+        <label>纵向 <input type="number" min="-45" max="45" step="1" value="${layer.y || 0}" data-dy="${index}">%</label>
+      </div>
+      <div class="pg-row2">
         <label>缩放 <input type="range" min="20" max="200" step="5" value="${layer.scale}" data-scale="${index}"><em data-scale-label="${index}">${layer.scale}%</em></label>
       </div>
       <div class="pg-row2">
         <label>入点 <input type="number" min="0" max="${pgState.duration}" step="0.5" value="${layer.start}" data-start="${index}">s</label>
         <label>出点 <input type="number" min="0" max="${pgState.duration}" step="0.5" value="${layer.end}" data-end="${index}">s</label>
       </div>
-    </div>`).join("");
+      ${varForm}
+    </div>`;
+  }).join("");
   const baseButtons = PG_BASES.map((base) => `
     <button type="button" class="pg-base ${pgState.base.type === "builtin" && pgState.base.id === base.id ? "on" : ""}" data-base="${base.id}">
       <video muted loop playsinline preload="metadata" src="${base.src}"></video><span>${base.name}</span>
@@ -902,7 +986,7 @@ function renderPlayground() {
         <div>
           <p class="kicker">PLAYGROUND</p>
           <h2>编辑器试玩器<span class="sec-period">。</span></h2>
-          <p class="pg-desc">挑一条底片，把模板库里的动效叠上去——右边点素材上屏，舞台上直接拖动摆位、右下角手柄缩放，左栏卡时间段，玩出你的第一条 compose.json。</p>
+          <p class="pg-desc">挑一条底片，把模板库里的动效叠上去——右边点素材实时上屏（透明叠加），舞台上直接拖动摆位、右下角手柄缩放，左栏微调参数，玩出你的第一条 compose.json。</p>
         </div>
         <div class="pg-actions">
           <button class="button primary" type="button" id="pg-export">导出 compose.json</button>
@@ -920,7 +1004,7 @@ function renderPlayground() {
           </section>
           <section class="pg-panel">
             <h3>图层（${pgState.layers.length}）</h3>
-            <div class="pg-layers">${layerRows || `<p class="pg-empty-layer">右边素材库点任意一行，动效就叠到底片上；舞台上可直接拖动、手柄缩放。</p>`}</div>
+            <div class="pg-layers" data-lenis-prevent>${layerRows || `<p class="pg-empty-layer">右边素材库点任意一行，动效实时叠到底片上；舞台上可直接拖动、手柄缩放。</p>`}</div>
           </section>
           <section class="pg-panel">
             <h3>成片时长</h3>
@@ -936,18 +1020,18 @@ function renderPlayground() {
                 : `<video class="pg-base-media" src="${pgState.base.src}" muted loop playsinline autoplay></video>`}
             ${pgState.layers.map((layer, index) => `
               <div class="pg-stage-layer ${pgState.picked === index ? "picked" : ""}" style="${pgLayerStyle(layer)}" data-layer="${index}" data-act="move" title="拖动摆位 · 右下角手柄缩放">
-                <video muted loop playsinline autoplay preload="metadata" src="${assetUrl(layer.preview)}"></video>
+                <iframe sandbox="allow-scripts allow-same-origin" title="${escapeHtml(layer.name)}"></iframe>
                 <span class="pg-stage-label">${escapeHtml(layer.name)} · ${layer.start}s–${layer.end}s</span>
                 <i class="pg-handle" data-act="resize" title="拖动缩放"></i>
               </div>`).join("")}
           </div>
-          <p class="pg-stage-hint">预览为模板样片实时叠放，只示意位置与大小；真实动效按你的参数渲染在本地 HyperFrames 完成（见下方说明）。</p>
+          <p class="pg-stage-hint">舞台为模板实时渲染、透明叠加在底片上；最终成片按你的清单在本地 HyperFrames 渲染（见下方说明）。</p>
         </div>
         <aside class="pg-right">
           <section class="pg-panel">
             <h3>素材库</h3>
             <input type="search" id="pg-filter" placeholder="搜模板名 / 分类 / 标签" value="${escapeHtml(pgState.filter)}">
-            <div class="pg-list" id="pg-list"></div>
+            <div class="pg-list" id="pg-list" data-lenis-prevent></div>
           </section>
         </aside>
       </div>
@@ -958,8 +1042,8 @@ function renderPlayground() {
         </div>
         <div class="pg-about-grid">
           <article class="pg-about-card">
-            <strong>试玩器不渲染视频</strong>
-            <p>这里产出的是一份 <code>compose.json</code> 编排清单：底片是谁、叠哪些模板动效、每个动效摆在什么位置、多大、第几秒进第几秒出。舞台上的叠放预览用来确认构图，不是成片。</p>
+            <strong>试玩器不渲染成片</strong>
+            <p>这里产出的是一份 <code>compose.json</code> 编排清单：底片是谁、叠哪些模板动效、每个动效摆在什么位置、多大、第几秒进第几秒出、文案数据是什么。舞台实时渲染只为确认构图，不是最终画质。</p>
           </article>
           <article class="pg-about-card">
             <strong>compose.json 拿回家渲染</strong>
@@ -977,7 +1061,7 @@ function renderPlayground() {
       </footer>
     </div>`;
 
-  /* 左侧：底片 / 图层 / 时长 */
+  /* 左侧面板全部事件 */
   stageContent.querySelectorAll("[data-base]").forEach((btn) => btn.addEventListener("click", () => {
     const base = PG_BASES.find((b) => b.id === btn.dataset.base);
     pgState.base = { type: "builtin", id: base.id, src: base.src, name: base.name };
@@ -999,21 +1083,35 @@ function renderPlayground() {
     renderPlayground();
   });
   stageContent.querySelectorAll("[data-del]").forEach((btn) => btn.addEventListener("click", () => {
-    pgState.layers.splice(Number(btn.dataset.del), 1);
+    const index = Number(btn.dataset.del);
+    pgGeneration.set(index, (pgGeneration.get(index) || 0) + 1);
+    pgState.layers.splice(index, 1);
     pgState.picked = null;
     renderPlayground();
   }));
   stageContent.querySelectorAll("[data-pos]").forEach((btn) => btn.addEventListener("click", () => {
     const [index, key] = btn.dataset.pos.split(":");
-    pgState.layers[Number(index)].position = key;
-    pgState.layers[Number(index)].x = 0;
-    pgState.layers[Number(index)].y = 0;
+    const layer = pgState.layers[Number(index)];
+    layer.position = key;
+    layer.x = 0;
+    layer.y = 0;
+    renderPlayground();
+  }));
+  stageContent.querySelectorAll("[data-dx]").forEach((input) => input.addEventListener("change", () => {
+    const layer = pgState.layers[Number(input.dataset.dx)];
+    layer.x = Math.max(-45, Math.min(45, Number(input.value) || 0));
+    renderPlayground();
+  }));
+  stageContent.querySelectorAll("[data-dy]").forEach((input) => input.addEventListener("change", () => {
+    const layer = pgState.layers[Number(input.dataset.dy)];
+    layer.y = Math.max(-45, Math.min(45, Number(input.value) || 0));
     renderPlayground();
   }));
   stageContent.querySelectorAll("[data-scale]").forEach((input) => input.addEventListener("input", () => {
-    pgState.layers[Number(input.dataset.scale)].scale = Number(input.value);
+    const layer = pgState.layers[Number(input.dataset.scale)];
+    layer.scale = Number(input.value);
     const el = stageContent.querySelector(`.pg-stage-layer[data-layer="${input.dataset.scale}"]`);
-    if (el) el.style.cssText = pgLayerStyle(pgState.layers[Number(input.dataset.scale)]);
+    if (el) el.style.cssText = pgLayerStyle(layer);
     const label = stageContent.querySelector(`[data-scale-label="${input.dataset.scale}"]`);
     if (label) label.textContent = input.value + "%";
   }));
@@ -1025,14 +1123,22 @@ function renderPlayground() {
     pgState.layers[Number(input.dataset.end)].end = Math.max(0, Number(input.value) || 0);
     renderPlayground();
   }));
+  stageContent.querySelectorAll("[data-var]").forEach((input) => input.addEventListener("input", () => {
+    const [index, key] = input.dataset.var.split(":");
+    const layer = pgState.layers[Number(index)];
+    const decl = (state.catalog.templates.find((t) => t.id === layer.templateId) || { schema: [] }).schema.find((s) => s.id === key);
+    layer.values[key] = decl && decl.type === "number" ? Number(input.value) : input.value;
+    pgScheduleLayer(Number(index), false);
+  }));
   stageContent.querySelectorAll(".pg-layer").forEach((row) => row.addEventListener("click", (event) => {
-    if (event.target.closest("button, input")) return;
+    if (event.target.closest("button, input, select")) return;
     pgPick(Number(row.dataset.layer), false);
   }));
 
-  /* 舞台：拖动摆位 + 手柄缩放（不整页重渲染，视频不断播） */
+  /* 舞台：拖动摆位 + 手柄缩放（不整页重渲染） */
   const pgStage = stageContent.querySelector("#pg-stage");
   stageContent.querySelectorAll(".pg-stage-layer").forEach((el) => {
+    pgScheduleLayer(Number(el.dataset.layer), true);
     const index = Number(el.dataset.layer);
     el.addEventListener("pointerdown", (event) => {
       event.preventDefault();
@@ -1062,17 +1168,27 @@ function renderPlayground() {
           if (label) label.textContent = layer.scale + "%";
         }
         el.style.cssText = pgLayerStyle(layer);
+        pgFitIframes();
       };
       const onUp = () => {
         el.removeEventListener("pointermove", onMove);
         el.removeEventListener("pointerup", onUp);
         el.classList.remove("dragging");
-        if (!moved) pgPick(index, false);
+        if (moved) {
+          const dxInput = stageContent.querySelector(`[data-dx="${index}"]`);
+          const dyInput = stageContent.querySelector(`[data-dy="${index}"]`);
+          if (dxInput) dxInput.value = Math.round(layer.x);
+          if (dyInput) dyInput.value = Math.round(layer.y);
+        } else {
+          pgPick(index, false);
+        }
       };
       el.addEventListener("pointermove", onMove);
       el.addEventListener("pointerup", onUp);
     });
   });
+  requestAnimationFrame(pgFitIframes);
+  window.addEventListener("resize", () => { clearTimeout(pgFitTimer); pgFitTimer = setTimeout(pgFitIframes, 120); });
 
   /* 顶栏：导出 */
   stageContent.querySelector("#pg-export").addEventListener("click", () => {
@@ -1100,20 +1216,21 @@ function renderPlayground() {
     renderPlayground();
   });
 
-  /* 右侧：素材库（整行点击 = 上屏，只挂一个监听防重复） */
+  /* 右侧：素材库（整行点击 = 上屏） */
   const list = stageContent.querySelector("#pg-list");
   const filterInput = stageContent.querySelector("#pg-filter");
   function renderPgList() {
     const needle = pgState.filter.trim().toLowerCase();
     const pool = state.catalog.templates
       .filter((t) => t.status === "ready")
+      .filter((t) => !PG_VIDEO_ONLY.has(t.id))
       .filter((t) => !needle || JSON.stringify(t).toLowerCase().includes(needle))
       .slice(0, 60);
     list.innerHTML = pool.map((t) => `
       <div class="pg-item" data-add="${t.id}" role="button" tabindex="0">
         <video muted loop playsinline preload="none" data-src="${assetUrl(t.preview)}"></video>
         <div class="pg-item-info"><strong>${escapeHtml(t.name)}</strong><span>${escapeHtml(t.category)} · ${t.duration}s</span></div>
-        <button class="pg-add" type="button" tabindex="-1">＋</button>
+        <button class="pg-add" type="button" tabindex="-1" aria-label="加为图层"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
       </div>`).join("") || `<p class="pg-empty-layer">没有匹配的模板。</p>`;
     list.querySelectorAll(".pg-item").forEach((item) => {
       const video = item.querySelector("video");

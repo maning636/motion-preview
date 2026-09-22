@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "title", "type": "string", "label": "标题", "default": "让下划线听见音乐"}, {"id": "accent", "type": "color", "label": "强调色", "default": "#00FF00"}, {"id": "background", "type": "color", "label": "背景色", "default": "#0A0A0F"}, {"id": "foreground", "type": "color", "label": "文字色", "default": "#F4F4F2"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+@font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html, body{ width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F); }
+#root{ position:relative; width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F);
+  color:var(--fg,#F4F4F2); font-family:'MEBHeiHeiTi','PingFang SC','Microsoft YaHei',sans-serif; }
+.num{ font-family:'MiSans SemiBold','PingFang SC',sans-serif; }
+
+#stage{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+#col{ width:720px; }
+#cap{ font-size:20px; letter-spacing:6px; opacity:.45; margin-bottom:18px; font-family:'MiSans SemiBold',sans-serif; }
+h2{ font-size:64px; font-weight:900; }
+#uline{ position:relative; margin-top:26px; width:720px; height:96px; }
+#line{ position:absolute; left:0; bottom:0; width:720px; height:8px; border-radius:4px; background:var(--accent); }
+#bars{ position:absolute; left:0; bottom:0; width:720px; height:96px; display:none; }
+.bar{ position:absolute; bottom:0; background:var(--accent); border-radius:2px 2px 0 0; }
+
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="4.7" data-width="1920" data-height="1080">
+
+<div id="stage"><div id="col">
+  <div id="cap">CHAPTER 03 · 副歌起</div>
+  <h2 id="t2"></h2>
+  <div id="uline"><div id="line"></div><div id="bars"></div></div>
+</div></div>
+
+    </div>
+    <script>
+      const FB = {"title": "让下划线听见音乐", "accent": "#00FF00", "background": "#0A0A0F", "foreground": "#F4F4F2"};
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : FB;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4F4F2");
+      document.documentElement.style.setProperty("--background", v.background ?? "#0A0A0F");
+const $=(s)=>document.querySelector(s);
+const de=document.documentElement;
+de.style.setProperty('--accent',v.accent||'#00FF00');
+de.style.setProperty('--bg',v.background||'#0A0A0F');
+de.style.setProperty('--fg',v.foreground||'#F4F4F2');
+const F=(f)=>f/30; // 30fps: 帧→秒
+window.__timelines=window.__timelines||{};
+const tl=gsap.timeline({paused:true});
+
+$('#t2').textContent=v.title||'';
+const bars=$('#bars'), line=$('#line');
+const N=28, AMP=92, W=720;
+const els=[];
+for(let i=0;i<N;i++){const b=document.createElement('div');b.className='bar';bars.appendChild(b);els.push(b);}
+function hash(i,s){const x=Math.sin(i*12.9898+s*78.233)*43758.5453;return x-Math.floor(x);}
+function env(i){return 1-0.55*(i/(N-1));} // 低频高/高频矮包络
+function spec(i,f){
+  const s=Math.floor(f/4); // 每 4 帧换挡
+  return Math.abs(Math.sin(i*0.7+f*0.31))*(0.55+0.45*hash(i,s))*env(i)*AMP;
+}
+const T0=10, SPLIT=8, DANCE=64, GATHER=12;
+const TG=T0+SPLIT, TE=TG+DANCE, TD=TE+GATHER;
+function eo(p){return 1-Math.pow(1-p,3);}
+const sim={f:0};
+function paint(){
+  const f=sim.f;
+  // 非跳动段条件挂载整条直线（像素级静止靠根本不渲染条组）
+  if(f<T0||f>=TD){bars.style.display='none';line.style.display='block';return;}
+  bars.style.display='block';line.style.display='none';
+  let ramp=1, gap=6;
+  if(f<TG){const e=eo((f-T0)/SPLIT);ramp=e;gap=6*e;}
+  else if(f>TE){const e=eo((f-TE)/GATHER);ramp=1-e;gap=6*(1-e);}
+  const bw=(W-(N-1)*gap)/N;
+  for(let i=0;i<N;i++){
+    const h=Math.max(0.5, spec(i,Math.min(f,TE))*ramp);
+    const b=els[i];
+    b.style.left=(i*(bw+gap))+'px';
+    b.style.width=bw.toFixed(2)+'px';
+    b.style.height=h.toFixed(1)+'px';
+  }
+}
+paint();
+tl.to(sim,{f:141,duration:F(141),ease:'none',onUpdate:paint},0);
+
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

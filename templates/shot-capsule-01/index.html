@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "stem", "type": "string", "label": "句干", "default": "一个 AI 工具，帮你"}, {"id": "pills", "type": "string", "label": "轮换词（逗号分隔）", "default": "写文案,配音频,剪视频,做封面,发全平台"}, {"id": "outro", "type": "string", "label": "收束句", "default": "全部搞定。"}, {"id": "accent", "type": "color", "label": "强调色", "default": "#00FF00"}, {"id": "background", "type": "color", "label": "背景色", "default": "#0A0A0F"}, {"id": "foreground", "type": "color", "label": "文字色", "default": "#F4F4F2"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+@font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html, body{ width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F); }
+#root{ position:relative; width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F);
+  color:var(--fg,#F4F4F2); font-family:'MEBHeiHeiTi','PingFang SC','Microsoft YaHei',sans-serif; }
+.num{ font-family:'MiSans SemiBold','PingFang SC',sans-serif; }
+
+#line{ position:absolute; left:220px; top:460px; height:160px; font-size:96px; color:var(--fg); white-space:nowrap; }
+#stem{ position:absolute; left:0; top:0; }
+#slot{ position:absolute; top:0; height:160px; }
+.pill{ position:absolute; top:6px; left:0; white-space:nowrap; font-size:84px; color:#061106;
+  background:var(--accent); border-radius:999px; padding:12px 44px; opacity:0; }
+#fin{ position:absolute; top:0; left:0; font-size:96px; color:var(--fg); opacity:0; white-space:nowrap; }
+
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920" data-height="1080">
+<div id="line"><span id="stem"></span><span id="slot"></span></div>
+    </div>
+    <script>
+      const FB = {"stem": "一个 AI 工具，帮你", "pills": "写文案,配音频,剪视频,做封面,发全平台", "outro": "全部搞定。", "accent": "#00FF00", "background": "#0A0A0F", "foreground": "#F4F4F2"};
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : FB;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4F4F2");
+      document.documentElement.style.setProperty("--background", v.background ?? "#0A0A0F");
+const $=(s)=>document.querySelector(s);
+const de=document.documentElement;
+de.style.setProperty('--accent',v.accent||'#00FF00');
+de.style.setProperty('--bg',v.background||'#0A0A0F');
+de.style.setProperty('--fg',v.foreground||'#F4F4F2');
+const F=(f)=>f/30; // 30fps: 帧→秒
+window.__timelines=window.__timelines||{};
+const tl=gsap.timeline({paused:true});
+
+$('#stem').textContent=v.stem||'';
+const pills=(v.pills||'').split(/[,，]/).map(s=>s.trim()).filter(Boolean);
+const slot=$('#slot');
+// 句干钉死：槽位固定在句干右侧（等宽估算 96px/字 + 20px 隙）
+slot.style.left=($('#stem').textContent.length*96+20)+'px';
+const els=pills.map(w=>{
+  const p=document.createElement('span'); p.className='pill'; p.textContent=w; slot.appendChild(p); return p;
+});
+const fin=document.createElement('span'); fin.id='fin'; fin.textContent=v.outro||''; slot.appendChild(fin);
+const BEAT=21, t0=12;
+els.forEach((p,i)=>{
+  const tin=F(t0+i*BEAT);
+  tl.fromTo(p,{opacity:0,y:120,filter:'blur(14px)'},{opacity:1,y:0,filter:'blur(0px)',duration:F(8),ease:'power3.out'},tin);
+  if(i<els.length-1){
+    tl.to(p,{opacity:0,y:-130,filter:'blur(10px)',duration:F(8),ease:'power2.in'},tin+F(BEAT)); // 旧的上飞加速逃走
+  }
+});
+// 收束：末 pill 上飞，结论 back(1.4) 过冲落位（全片唯一过冲）
+const tout=F(t0+(els.length-1)*BEAT+BEAT);
+tl.to(els[els.length-1],{opacity:0,y:-130,filter:'blur(10px)',duration:F(7),ease:'power2.in'},tout);
+tl.fromTo(fin,{opacity:0,y:90},{opacity:1,y:0,duration:F(14),ease:'back.out(1.4)'},tout+F(3));
+const holdStart=t0+els.length*BEAT+17;
+tl.to({},{duration:Math.max(1,(180-holdStart))/30},F(holdStart)); // 完整句静置 ≥45f
+
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

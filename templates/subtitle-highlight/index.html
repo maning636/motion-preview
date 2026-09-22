@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"speaker","type":"string","label":"说话人","default":"主持人"},{"id":"subtitle","type":"string","label":"字幕","default":"真正决定效果的，不是模型参数，而是你的提示词工程。"},{"id":"highlight","type":"string","label":"高亮词","default":"提示词工程"},{"id":"accent","type":"color","label":"强调色","default":"#00FF00"},{"id":"foreground","type":"color","label":"文字色","default":"#F4EFE7"},{"id":"exportMode","type":"enum","label":"导出模式","default":"transparent","hidden":true,"options":[{"value":"transparent","label":"透明背景"},{"value":"mp4","label":"剪映 MP4 深色底"}]}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+
+@font-face {
+  font-family: 'MiSans SemiBold';
+  src: url('../_fonts/MiSansSemiBold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'MEBHeiHeiTi';
+  src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype');
+  font-weight: 100 1000;
+  font-weight: normal;
+  font-style: normal;
+}
+
+html[data-export-mode="mp4"] body, html[data-export-mode="mp4"] #root{ background: #12100E !important;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      *{ box-sizing: border-box;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      html, body{ margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--background, transparent);font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      body{ font-family: 'MEBHeiHeiTi', sans-serif; }
+      #root{ position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--background, #12100E); color: var(--foreground);font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .scene{ position: absolute; inset: 0; display: flex; align-items: flex-end; justify-content: center; padding: 0 120px 120px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .bar{ position: relative; max-width: 1400px; padding: 30px 48px 28px; border-radius: 16px; background: rgba(18,16,14,0.82); border: 2px solid color-mix(in srgb, var(--accent) 38%, transparent); backdrop-filter: blur(18px);font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .speaker{ position: absolute; left: 24px; top: -14px; padding: 4px 14px; background: var(--accent); color: #12100E; font-size: 18px; font-weight: 800; border-radius: 4px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .subtitle{ margin: 0; font-size: 38px; font-weight: 700; line-height: 1.35; letter-spacing: -0.02em;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .highlight{ color: var(--accent);font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1920" data-height="1080">
+      <section id="scene" class="scene clip" data-start="0" data-duration="5" data-track-index="1">
+        <div class="bar">
+          <div class="speaker" id="speaker"></div>
+          <p class="subtitle" id="subtitle"></p>
+        </div>
+      </section>
+    </div>
+    <script>
+      const fallback = { speaker: "主持人", subtitle: "真正决定效果的，不是模型参数，而是你的提示词工程。", highlight: "提示词工程", accent: "#00FF00", foreground: "#F4EFE7" };
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : fallback;
+      document.documentElement.dataset.exportMode = v.exportMode || "transparent";
+      document.documentElement.style.setProperty("--accent", v.accent);
+      document.documentElement.style.setProperty("--foreground", v.foreground);
+      document.getElementById("speaker").textContent = v.speaker;
+      const hl = v.highlight || "";
+      const subtitleEl = document.getElementById("subtitle");
+      if (hl && v.subtitle.includes(hl)) {
+        subtitleEl.innerHTML = v.subtitle.replace(hl, `<span class="highlight">${hl}</span>`);
+      } else {
+        subtitleEl.textContent = v.subtitle;
+      }
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo(".bar", { opacity: 0, y: 50 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.1);
+      tl.fromTo(".speaker", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, 0.35);
+      tl.fromTo(".subtitle", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.45);
+      if (subtitleEl.querySelector(".highlight")) {
+        tl.fromTo(".highlight", { opacity: 0.3, scale: 0.98 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(2)" }, 1.1);
+      }
+      tl.to(".scene", { opacity: 0, y: -16, duration: 0.4, ease: "power2.in" }, 4.4);
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

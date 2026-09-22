@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "kicker", "type": "string", "label": "顶部小字", "default": "核心功能"}, {"id": "targetTitle", "type": "string", "label": "目标卡标题", "default": "智能剪辑引擎"}, {"id": "targetText", "type": "string", "label": "目标卡描述", "default": "一条时间轴，自动完成粗剪"}, {"id": "accent", "type": "color", "label": "强调色", "default": "#00FF00"}, {"id": "background", "type": "color", "label": "背景色", "default": "#0A0A0F"}, {"id": "foreground", "type": "color", "label": "文字色", "default": "#F4F4F2"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+@font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html, body{ width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F); }
+#root{ position:relative; width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F);
+  color:var(--fg,#F4F4F2); font-family:'MEBHeiHeiTi','PingFang SC','Microsoft YaHei',sans-serif; }
+.num{ font-family:'MiSans SemiBold','PingFang SC',sans-serif; }
+
+#cam{ position:absolute; inset:0; }
+.kick{ position:absolute; left:90px; top:70px; font-size:30px; letter-spacing:14px; color:rgba(255,255,255,.55); }
+.pcard{ position:absolute; width:420px; height:300px; border-radius:18px; background:#15151C;
+  border:1px solid rgba(255,255,255,.09); padding:26px; }
+.pcard .pt{ height:18px; width:56%; border-radius:9px; background:rgba(255,255,255,.24); margin-bottom:16px; }
+.pcard .pl{ height:12px; border-radius:6px; background:rgba(255,255,255,.12); margin-bottom:10px; }
+.pcard.tz{ background:#1B1B26; border:1px solid var(--accent); }
+.pcard.tz .pt{ background:var(--accent); }
+.tzt{ position:absolute; left:26px; bottom:64px; font-size:34px; color:var(--fg); }
+.tzx{ position:absolute; left:26px; bottom:26px; font-size:20px; color:rgba(255,255,255,.6); }
+
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="3" data-width="1920" data-height="1080">
+<div id="cam"><div class="kick" id="k"></div><div class="pcard" style="left:160px;top:180px"><div class="pt"></div><div class="pl"></div><div class="pl" style="width:72%"></div><div class="pl" style="width:48%"></div></div><div class="pcard" style="left:740px;top:180px"><div class="pt"></div><div class="pl"></div><div class="pl" style="width:72%"></div><div class="pl" style="width:48%"></div></div><div class="pcard tz" style="left:1320px;top:180px"><div class="pt"></div><div class="pl"></div><div class="pl" style="width:72%"></div><div class="tzt">智能剪辑引擎</div><div class="tzx">一条时间轴，自动完成粗剪</div></div><div class="pcard" style="left:160px;top:560px"><div class="pt"></div><div class="pl"></div><div class="pl" style="width:72%"></div><div class="pl" style="width:48%"></div></div><div class="pcard" style="left:740px;top:560px"><div class="pt"></div><div class="pl"></div><div class="pl" style="width:72%"></div><div class="pl" style="width:48%"></div></div><div class="pcard" style="left:1320px;top:560px"><div class="pt"></div><div class="pl"></div><div class="pl" style="width:72%"></div><div class="pl" style="width:48%"></div></div></div>
+    </div>
+    <script>
+      const FB = {"kicker": "核心功能", "targetTitle": "智能剪辑引擎", "targetText": "一条时间轴，自动完成粗剪", "accent": "#00FF00", "background": "#0A0A0F", "foreground": "#F4F4F2"};
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : FB;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4F4F2");
+      document.documentElement.style.setProperty("--background", v.background ?? "#0A0A0F");
+const $=(s)=>document.querySelector(s);
+const de=document.documentElement;
+de.style.setProperty('--accent',v.accent||'#00FF00');
+de.style.setProperty('--bg',v.background||'#0A0A0F');
+de.style.setProperty('--fg',v.foreground||'#F4F4F2');
+const F=(f)=>f/30; // 30fps: 帧→秒
+window.__timelines=window.__timelines||{};
+const tl=gsap.timeline({paused:true});
+
+$('#k').textContent=v.kicker||'';
+$('.tzt').textContent=v.targetTitle||'';$('.tzx').textContent=v.targetText||'';
+// 目标卡(1320,180) 中心 (1530,330)：前 hold 30f 建全景 → 6f 急推 2.6x → 撞停震屏 6f → 后 hold
+const cam=$('#cam');
+tl.set(cam,{transformOrigin:'1530px 330px'},0);
+tl.fromTo(cam,{scale:1},{scale:1.015,duration:F(30),ease:'sine.inOut'},0);           // 全景微漂保活
+tl.to(cam,{scale:2.6,duration:F(6),ease:'power2.in'},F(30));                          // 急推（撞停款，无回弹）
+// 震屏：amp 14px·e^(-i/1.8)，6f 收干，种子确定
+let seed=11;const rnd=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};
+for(let i=0;i<6;i++){
+  const amp=14*Math.exp(-i/1.8);
+  tl.set(cam,{x:(rnd()<.5?-1:1)*amp*(0.6+rnd()*0.4), y:(rnd()<.5?-1:1)*amp*(0.6+rnd()*0.4)},F(36)+F(i));
+}
+tl.set(cam,{x:0,y:0},F(42));
+tl.to({},{duration:F(48)},F(42)); // 后 hold ≥45f 读特写
+
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "accent", "type": "color", "label": "强调色", "default": "#00FF00"}, {"id": "background", "type": "color", "label": "背景色", "default": "#0A0A0F"}, {"id": "foreground", "type": "color", "label": "文字色", "default": "#F4F4F2"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+@font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html, body{ width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F); }
+#root{ position:relative; width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F);
+  color:var(--fg,#F4F4F2); font-family:'MEBHeiHeiTi','PingFang SC','Microsoft YaHei',sans-serif; }
+.num{ font-family:'MiSans SemiBold','PingFang SC',sans-serif; }
+
+.scene{ position:absolute; inset:0; }
+#old{ background:#101219; padding:150px 160px; }
+#old .k{ font-size:22px; letter-spacing:8px; opacity:.4; font-family:'MiSans SemiBold',sans-serif; }
+#old h2{ margin-top:26px; font-size:88px; font-weight:900; }
+#old .l{ margin-top:36px; height:14px; border-radius:7px; background:color-mix(in srgb, var(--fg) 20%, transparent); width:52%; }
+#new{ background:#14161F; padding:150px 160px; }
+#new .k{ font-size:22px; letter-spacing:8px; color:var(--accent); font-family:'MiSans SemiBold',sans-serif; }
+#new h2{ margin-top:26px; font-size:88px; font-weight:900; }
+#new h2 em{ color:var(--accent); font-style:normal; }
+#new .l{ margin-top:36px; height:14px; border-radius:7px; background:color-mix(in srgb, var(--fg) 20%, transparent); width:56%; }
+
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="4.5" data-width="1920" data-height="1080">
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <filter id="inkf" x="-40%" y="-40%" width="180%" height="180%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" seed="7" result="nz"/>
+      <feDisplacementMap id="inkdisp" in="SourceGraphic" in2="nz" scale="60"/>
+    </filter>
+    <mask id="inkmask">
+      <circle id="inkc" cx="700" cy="500" r="0" fill="#fff" filter="url(#inkf)"/>
+    </mask>
+  </defs>
+</svg>
+<div class="scene" id="old">
+  <div class="k">CHAPTER 01</div><h2>旧章节的内容</h2>
+  <div class="l"></div><div class="l" style="width:40%"></div>
+</div>
+<div class="scene" id="new">
+  <div class="k">CHAPTER 02</div><h2>新章节<em>洇</em>出来了</h2>
+  <div class="l"></div><div class="l" style="width:44%"></div>
+</div>
+
+    </div>
+    <script>
+      const FB = {"accent": "#00FF00", "background": "#0A0A0F", "foreground": "#F4F4F2"};
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : FB;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4F4F2");
+      document.documentElement.style.setProperty("--background", v.background ?? "#0A0A0F");
+const $=(s)=>document.querySelector(s);
+const de=document.documentElement;
+de.style.setProperty('--accent',v.accent||'#00FF00');
+de.style.setProperty('--bg',v.background||'#0A0A0F');
+de.style.setProperty('--fg',v.foreground||'#F4F4F2');
+const F=(f)=>f/30; // 30fps: 帧→秒
+window.__timelines=window.__timelines||{};
+const tl=gsap.timeline({paused:true});
+
+const inkc=$('#inkc'), disp=$('#inkdisp'), newSc=$('#new');
+newSc.style.mask='url(#inkmask)';
+newSc.style.webkitMask='url(#inkmask)';
+const sim={f:0};
+function paint(){
+  const f=sim.f;
+  const p=Math.min(1,f/98);
+  const eq=1-(1-p)*(1-p);                    // out-quad
+  const env=f<78?1:Math.max(0,(98-f)/20);    // 扰动末 20f 衰减归零
+  const r=1450*eq*(1+0.08*Math.sin(0.32*f)*env);
+  inkc.setAttribute('r',Math.max(0,r));
+  disp.setAttribute('scale',(60+100*p).toFixed(1));
+}
+paint();
+tl.to(sim,{f:98,duration:F(98),ease:'none',onUpdate:paint},F(2));
+// 洇满摘罩（feTurbulence 亚像素抖动，不摘永不真静止）
+tl.set(newSc,{mask:'none',webkitMask:'none'},F(102));
+// 收尾真静止（补齐到 135f）
+tl.to({},{duration:F(33)},F(102));
+
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

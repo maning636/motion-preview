@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "title", "type": "string", "label": "卡片标题", "default": "高速移入"}, {"id": "accent", "type": "color", "label": "强调色", "default": "#00FF00"}, {"id": "background", "type": "color", "label": "背景色", "default": "#0A0A0F"}, {"id": "foreground", "type": "color", "label": "文字色", "default": "#F4F4F2"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+@font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html, body{ width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F); }
+#root{ position:relative; width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F);
+  color:var(--fg,#F4F4F2); font-family:'MEBHeiHeiTi','PingFang SC','Microsoft YaHei',sans-serif; }
+.num{ font-family:'MiSans SemiBold','PingFang SC',sans-serif; }
+
+.card{ position:absolute; left:280px; top:340px; width:420px; height:400px; border-radius:20px;
+  background:#141824; border:1px solid color-mix(in srgb, var(--fg) 16%, transparent);
+  padding:34px 36px; will-change:transform,opacity; }
+.card h3{ font-size:44px; font-weight:900; }
+.card .k{ font-size:18px; letter-spacing:5px; color:var(--accent);
+  font-family:'MiSans SemiBold',sans-serif; margin-bottom:14px; }
+.card .r{ height:14px; border-radius:7px; margin-top:22px; background:color-mix(in srgb, var(--fg) 15%, transparent); }
+.ghost{ opacity:0; }
+#main{ z-index:5; }
+
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="4.0" data-width="1920" data-height="1080">
+
+<div class="card ghost" id="g4"><div class="k">SMEAR 04</div><h3></h3><div class="r" style="width:70%"></div><div class="r" style="width:52%"></div></div>
+<div class="card ghost" id="g3"><div class="k">SMEAR 03</div><h3></h3><div class="r" style="width:70%"></div><div class="r" style="width:52%"></div></div>
+<div class="card ghost" id="g2"><div class="k">SMEAR 02</div><h3></h3><div class="r" style="width:70%"></div><div class="r" style="width:52%"></div></div>
+<div class="card ghost" id="g1"><div class="k">SMEAR 01</div><h3></h3><div class="r" style="width:70%"></div><div class="r" style="width:52%"></div></div>
+<div class="card" id="main"><div class="k">SMEAR 00</div><h3></h3><div class="r" style="width:70%"></div><div class="r" style="width:52%"></div></div>
+
+    </div>
+    <script>
+      const FB = {"title": "高速移入", "accent": "#00FF00", "background": "#0A0A0F", "foreground": "#F4F4F2"};
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : FB;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4F4F2");
+      document.documentElement.style.setProperty("--background", v.background ?? "#0A0A0F");
+const $=(s)=>document.querySelector(s);
+const de=document.documentElement;
+de.style.setProperty('--accent',v.accent||'#00FF00');
+de.style.setProperty('--bg',v.background||'#0A0A0F');
+de.style.setProperty('--fg',v.foreground||'#F4F4F2');
+const F=(f)=>f/30; // 30fps: 帧→秒
+window.__timelines=window.__timelines||{};
+const tl=gsap.timeline({paused:true});
+
+document.querySelectorAll('.card h3').forEach(h=>h.textContent=v.title||'');
+// posAt(f) 纯函数：12f inOut-cubic 冲 900px×1.03 过冲 + 6f 回弹落位
+const DIST=900, A=30, MOVE=12, SETTLE=6, LAND=A+MOVE+SETTLE;
+function io(p){return p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;}
+function eo(p){return 1-Math.pow(1-p,3);}
+function posAt(f){
+  if(f<A)return 0;
+  if(f<A+MOVE)return DIST*1.03*io((f-A)/MOVE);
+  if(f<LAND)return DIST*(1.03+(1-1.03)*eo((f-A-MOVE)/SETTLE));
+  return DIST;
+}
+const main=$('#main');
+const ghosts=[$('#g1'),$('#g2'),$('#g3'),$('#g4')];
+const GB=[.45,.30,.18,.09];
+const sim={f:0};
+function paint(){
+  const f=sim.f;
+  main.style.transform='translateX('+posAt(f)+'px)';
+  const vel=posAt(f)-posAt(f-1);
+  const gate=Math.max(0,Math.min(1,(vel-25)/35)); // v>25px/f 才出分身，[25,60] 渐入
+  const cv=Math.max(0,Math.min(1,(f-(LAND-3))/3)); // 落位前 3f 收拢
+  ghosts.forEach((g,k)=>{
+    const lag=2*(k+1)*(1-cv);
+    g.style.transform='translateX('+posAt(f-lag)+'px)';
+    g.style.opacity=(GB[k]*gate*(1-cv)).toFixed(3);
+  });
+}
+paint();
+tl.to(sim,{f:120,duration:F(120),ease:'none',onUpdate:paint},0);
+
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

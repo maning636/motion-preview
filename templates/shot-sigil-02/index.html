@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "wordmark", "type": "string", "label": "字标", "default": "BLOOM"}, {"id": "accent", "type": "color", "label": "强调色", "default": "#00FF00"}, {"id": "background", "type": "color", "label": "背景色", "default": "#0A0A0F"}, {"id": "foreground", "type": "color", "label": "文字色", "default": "#F4F4F2"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+@font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html, body{ width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F); }
+#root{ position:relative; width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F);
+  color:var(--fg,#F4F4F2); font-family:'MEBHeiHeiTi','PingFang SC','Microsoft YaHei',sans-serif; }
+.num{ font-family:'MiSans SemiBold','PingFang SC',sans-serif; }
+
+#icon{ position:absolute; left:880px; top:460px; width:160px; height:160px; border-radius:38px;
+  background:var(--accent); transform-origin:50% 78%; will-change:transform; z-index:5; }
+#icon::after{ content:''; position:absolute; left:48px; top:48px; width:64px; height:64px;
+  border-radius:50%; background:#0A0A0A; }
+.icoGhost{ position:absolute; left:880px; top:460px; width:160px; height:160px; border-radius:38px;
+  background:var(--accent); opacity:0; filter:blur(6px); transform-origin:50% 78%; }
+#mark{ position:absolute; left:960px; top:540px; width:0; height:0; opacity:0; z-index:5; }
+.petal{ position:absolute; left:-15px; top:-76px; width:30px; height:76px; border-radius:50%;
+  background:var(--accent); transform-origin:50% 100%; }
+#word{ position:absolute; left:1010px; top:470px; display:flex; }
+.wm{ font-size:130px; font-weight:900; color:var(--fg); opacity:0; will-change:transform,filter; }
+
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="4.3" data-width="1920" data-height="1080">
+
+<div class="icoGhost" id="g1"></div>
+<div class="icoGhost" id="g2"></div>
+<div id="icon"></div>
+<div id="mark"><div class="petal" id="p0"></div><div class="petal" id="p1"></div><div class="petal" id="p2"></div><div class="petal" id="p3"></div><div class="petal" id="p4"></div></div>
+<div id="word"></div>
+
+    </div>
+    <script>
+      const FB = {"wordmark": "BLOOM", "accent": "#00FF00", "background": "#0A0A0F", "foreground": "#F4F4F2"};
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : FB;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4F4F2");
+      document.documentElement.style.setProperty("--background", v.background ?? "#0A0A0F");
+const $=(s)=>document.querySelector(s);
+const de=document.documentElement;
+de.style.setProperty('--accent',v.accent||'#00FF00');
+de.style.setProperty('--bg',v.background||'#0A0A0F');
+de.style.setProperty('--fg',v.foreground||'#F4F4F2');
+const F=(f)=>f/30; // 30fps: 帧→秒
+window.__timelines=window.__timelines||{};
+const tl=gsap.timeline({paused:true});
+
+const WM=(v.wordmark||'BLOOM');
+const word=$('#word');
+const letters=WM.split('').map(c=>{
+  const s=document.createElement('span'); s.className='wm'; s.textContent=c;
+  word.appendChild(s); return s;
+});
+const icon=$('#icon'), mark=$('#mark');
+// anticipation 蓄力晃：-12/+14/-18/0，幅度递增
+tl.to(icon,{rotation:-12,duration:F(7),ease:'sine.inOut'},F(12));
+tl.to(icon,{rotation:14,duration:F(7),ease:'sine.inOut'},F(19));
+tl.to(icon,{rotation:-18,duration:F(7),ease:'sine.inOut'},F(26));
+tl.to(icon,{rotation:0,duration:F(5),ease:'sine.inOut'},F(33));
+// 翻扁：12f 加速 scaleX→0.04，双层残影滞后 2f/4f
+tl.to(icon,{scaleX:0.04,duration:F(12),ease:'power3.in'},F(38));
+[['#g1',0.22,2],['#g2',0.14,4]].forEach(([g,op,dl])=>{
+  tl.set(g,{opacity:op},F(38+dl));
+  tl.to(g,{scaleX:0.04,duration:F(12),ease:'power3.in'},F(38+dl));
+  tl.set(g,{opacity:0},F(50+dl));
+});
+// 最薄帧实体交换：icon 隐、mark 现，花瓣从闭合竖线 spring 张开
+tl.set(icon,{opacity:0},F(50));
+tl.set(mark,{opacity:1},F(50));
+for(let i=0;i<5;i++){
+  const p=document.getElementById('p'+i);
+  const ang=-90+i*72;
+  tl.fromTo(p,{rotation:-90,scaleY:0.5,scaleX:0.2},
+    {rotation:ang,scaleY:1,scaleX:1,duration:F(16),ease:'back.out(1.4)'},F(50));
+}
+// mark 左移让位，wordmark 逐字由大变小落位（scale+blur 联动）
+tl.to(mark,{x:-250,duration:F(16),ease:'power2.inOut'},F(70));
+letters.forEach((s,i)=>{
+  tl.fromTo(s,{opacity:0,scale:2.2,filter:'blur(12px)'},
+    {opacity:1,scale:1,filter:'blur(0px)',duration:F(10),ease:'power2.out'},F(74+i*3));
+});
+tl.to({},{duration:F(30)},F(100));
+
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

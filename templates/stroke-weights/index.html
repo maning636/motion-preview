@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"title","type":"string","label":"标题","default":"图标描边规范"},{"id":"subtitle","type":"string","label":"副标题","default":"4 档 stroke weight 示例"},{"id":"weights","type":"string","label":"描边值（逗号分隔，4 个）","default":"1,1.5,2,3"},{"id":"accent","type":"color","label":"强调色","default":"#00FF00"},{"id":"background","type":"color","label":"背景色","default":"#12100E"},{"id":"foreground","type":"color","label":"文字色","default":"#F4EFE7"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+
+@font-face {
+  font-family: 'MiSans SemiBold';
+  src: url('../_fonts/MiSansSemiBold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'MEBHeiHeiTi';
+  src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype');
+  font-weight: 100 1000;
+  font-weight: normal;
+  font-style: normal;
+}
+
+*{ box-sizing: border-box;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      html, body{ margin: 0; width: 1920px; height: 1080px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      #root{ position: relative; width: 1920px; height: 1080px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .scene{ position: absolute; inset: 0; width: 100%; height: 100%; padding: 96px 112px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .header{ margin-bottom: 60px;font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .title{ margin: 0; font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 64px; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }
+      .subtitle{ margin: 12px 0 0; font-family: 'MEBHeiHeiTi', sans-serif; font-size: 24px; font-weight: 400; opacity: 0.55; }
+      .grid{ display: flex; align-items: center; justify-content: center; gap: 80px; margin-top: 80px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .col{ display: flex; flex-direction: column; align-items: center; gap: 24px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .icon-box{ width: 220px; height: 220px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(244,239,231,0.12); border-radius: 20px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .icon-box svg{ width: 120px; height: 120px; stroke: currentColor; fill: none;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .label{ font-family: 'MEBHeiHeiTi', sans-serif; font-size: 20px; font-weight: 600; opacity: 0.75; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1920" data-height="1080">
+      <section id="scene" class="scene clip" data-start="0" data-duration="5" data-track-index="1">
+        <div class="header">
+          <h1 class="title" id="title"></h1>
+          <p class="subtitle" id="subtitle"></p>
+        </div>
+        <div class="grid" id="grid"></div>
+      </section>
+    </div>
+    <script>
+      const fallback = { title: "图标描边规范", subtitle: "4 档 stroke weight 示例", weights: "1,1.5,2,3", accent: "#00FF00", background: "#12100E", foreground: "#F4EFE7" };
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : fallback;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4EFE7");
+      document.documentElement.style.setProperty("--background", v.background ?? "#12100E");
+      const root = document.getElementById("root");
+      root.style.backgroundColor = v.background;
+      root.style.color = v.foreground;
+      root.style.setProperty("--accent", v.accent);
+      document.getElementById("title").textContent = v.title;
+      document.getElementById("subtitle").textContent = v.subtitle;
+      const weights = String(v.weights).split(",").map(s => parseFloat(s.trim())).filter(n => !isNaN(n));
+      const iconD = "M12 2a10 10 0 1 0 0 20a10 10 0 0 0 0 -20M12 6v8l4 4";
+      const grid = document.getElementById("grid");
+      weights.forEach((w, i) => {
+        const col = document.createElement("div");
+        col.className = "col";
+        col.innerHTML = `<div class="icon-box"><svg viewBox="0 0 24 24" style="stroke-width:${w}"><path d="${iconD}"/></svg></div><div class="label">${w}px</div>`;
+        grid.appendChild(col);
+      });
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo(".title", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.1);
+      tl.fromTo(".subtitle", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.25);
+      document.querySelectorAll(".col").forEach((col, i) => {
+        tl.fromTo(col, { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.5, ease: "power2.out" }, 0.45 + i * 0.12);
+      });
+      tl.to(".scene", { opacity: 0, y: -16, duration: 0.4, ease: "power2.in" }, 4.4);
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

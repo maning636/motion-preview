@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "text", "type": "string", "label": "金句正文", "default": "不是选错专业毁一生，是没有这三种能力才会被淘汰"}, {"id": "caption", "type": "string", "label": "底部小字", "default": "与你共勉"}, {"id": "pace", "type": "number", "label": "高亮速度（字/秒）", "default": 8}, {"id": "startAt", "type": "number", "label": "第几秒开始高亮（语音 cue）", "default": 1}, {"id": "markerColor", "type": "color", "label": "高亮色", "default": "#00FF00"}, {"id": "duration", "type": "number", "label": "总时长（秒）", "default": 7}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+@font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html, body{ width:1920px; height:1080px; overflow:hidden; background: var(--background, #0A0A0F); }
+#root{ position:relative; width:1920px; height:1080px; overflow:hidden; background: var(--background, #0A0A0F);
+  color: var(--foreground, #F4F4F2); font-family:'MEBHeiHeiTi','PingFang SC',sans-serif; }
+.line{ position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); max-width:1560px;
+  text-align:center; font-family:'MiSans SemiBold'; font-weight:700; font-size:72px; line-height:1.6; }
+.kc{ position:relative; padding:0 4px; white-space:nowrap; }
+.kc .hl{ position:absolute; left:0; right:0; top:10%; bottom:6%; background:var(--marker,#00FF00);
+  transform:scaleX(0); transform-origin:left center; z-index:-1; border-radius:6px; }
+.kc.on{ color:#0A0A0F; }
+.kcap{ position:absolute; left:0; right:0; bottom:100px; text-align:center; font-size:34px;
+  letter-spacing:.3em; color:rgba(255,255,255,.4); opacity:0; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="7" data-width="1920" data-height="1080">
+<div class="line" id="line"></div>
+<div class="kcap" id="cap"></div>
+    </div>
+    <script>
+      const FB = {"text": "不是选错专业毁一生，是没有这三种能力才会被淘汰", "caption": "与你共勉", "pace": 8, "startAt": 1, "markerColor": "#00FF00", "duration": 7};
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : FB;
+const $=(s)=>document.querySelector(s);
+const F=(f)=>f/30;
+const DUR=+v.duration>0?+v.duration:7;
+$('[data-composition-id]').setAttribute('data-duration',String(DUR));
+document.documentElement.style.setProperty('--marker',v.markerColor||'#00FF00');
+$('#cap').textContent=v.caption||'';
+
+const line=$('#line');
+const spans=[];
+for(const c of (v.text||'')){
+  const s=document.createElement('span');s.className='kc';
+  s.innerHTML='<span class="hl"></span><span class="g">'+c+'</span>';
+  line.appendChild(s); spans.push(s);
+}
+
+window.__timelines=window.__timelines||{};
+const tl=gsap.timeline({paused:true});
+
+const pace=Math.max(1,+v.pace||8);
+const start=Math.max(0,+v.startAt||0);
+tl.fromTo(line,{opacity:0,y:30},{opacity:1,y:0,duration:F(14),ease:'power3.out'},0);
+spans.forEach((s,i)=>{
+  const at=start+i/pace;
+  tl.to(s.querySelector('.hl'),{scaleX:1,duration:.12,ease:'power1.out'},at);
+  tl.to(s,{onStart:()=>s.classList.add('on'),duration:.01},at);
+});
+tl.to('#cap',{opacity:1,duration:F(12),ease:'power2.out'},start+spans.length/pace+F(6));
+
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"label","type":"string","label":"小标签","default":"核心概念"},{"id":"keyword","type":"string","label":"关键词","default":"Agent"},{"id":"position","type":"enum","label":"位置","default":"top-right","options":[{"value":"top-left","label":"左上"},{"value":"top-right","label":"右上"},{"value":"bottom-left","label":"左下"},{"value":"bottom-right","label":"右下"}]},{"id":"accent","type":"color","label":"强调色","default":"#00FF00"},{"id":"foreground","type":"color","label":"文字色","default":"#F4EFE7"},{"id":"exportMode","type":"enum","label":"导出模式","default":"transparent","hidden":true,"options":[{"value":"transparent","label":"透明背景"},{"value":"mp4","label":"剪映 MP4 深色底"}]}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+
+@font-face {
+  font-family: 'MiSans SemiBold';
+  src: url('../_fonts/MiSansSemiBold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'MEBHeiHeiTi';
+  src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype');
+  font-weight: 100 1000;
+  font-weight: normal;
+  font-style: normal;
+}
+
+html[data-export-mode="mp4"] body, html[data-export-mode="mp4"] #root{ background: #12100E !important;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      *{ box-sizing: border-box;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      html, body{ margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--background, transparent);font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      body{ font-family: 'MEBHeiHeiTi', sans-serif; }
+      #root{ position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--background, #12100E); color: var(--foreground);font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .scene{ position: absolute; inset: 0; padding: 96px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .sticker{ position: absolute; display: flex; align-items: center; gap: 18px; padding: 18px 28px; background: rgba(18,16,14,0.85); border: 2px solid var(--accent); border-radius: 12px; backdrop-filter: blur(14px);font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .sticker::before{ content: ""; width: 6px; height: 100%; position: absolute; left: 0; top: 0; background: var(--accent); border-radius: 12px 0 0 12px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .label{ font-size: 14px; font-weight: 700; opacity: 0.6; letter-spacing: 0.1em;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .keyword{ font-size: 36px; font-weight: 800; color: var(--accent);font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .top-left{ top: 96px; left: 96px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .top-right{ top: 96px; right: 96px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .bottom-left{ bottom: 96px; left: 96px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .bottom-right{ bottom: 96px; right: 96px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1920" data-height="1080">
+      <section id="scene" class="scene clip" data-start="0" data-duration="4" data-track-index="1">
+        <div class="sticker top-right" id="sticker">
+          <div>
+            <div class="label" id="label"></div>
+            <div class="keyword" id="keyword"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <script>
+      const fallback = { label: "核心概念", keyword: "Agent", position: "top-right", accent: "#00FF00", foreground: "#F4EFE7" };
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : fallback;
+      document.documentElement.dataset.exportMode = v.exportMode || "transparent";
+      document.documentElement.style.setProperty("--accent", v.accent);
+      document.documentElement.style.setProperty("--foreground", v.foreground);
+      document.getElementById("label").textContent = v.label;
+      document.getElementById("keyword").textContent = v.keyword;
+      const sticker = document.getElementById("sticker");
+      sticker.classList.remove("top-right");
+      sticker.classList.add(v.position || "top-right");
+      const from = { top: "y:-80", bottom: "y:80", left: "x:-80", right: "x:80" };
+      const axis = v.position.includes("left") ? "x" : "x";
+      const dir = v.position.includes("left") ? -80 : 80;
+      const ydir = v.position.includes("top") ? -80 : 80;
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo(sticker, { opacity: 0, x: dir, y: ydir, scale: 0.9 }, { opacity: 1, x: 0, y: 0, scale: 1, duration: 0.55, ease: "back.out(1.8)" }, 0.1);
+      tl.to(".scene", { opacity: 0, scale: 0.95, duration: 0.35, ease: "power2.in" }, 3.4);
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

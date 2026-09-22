@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "title", "type": "string", "label": "标题", "default": "同一个坑，两种写法"}, {"id": "wrong", "type": "string", "label": "错误文案", "default": "让两圈花瓣各自错开旋转——蒙版接缝直接穿帮"}, {"id": "correct", "type": "string", "label": "正确文案", "default": "内外两圈同角同速，一次转完——窗口扫过，景物钉在原地"}, {"id": "img1", "type": "image", "label": "错误示范图（可选）", "default": "./placeholder-1.png"}, {"id": "img2", "type": "image", "label": "正确做法图（可选）", "default": "./placeholder-2.png"}, {"id": "accent", "type": "color", "label": "正确侧强调色", "default": "#00FF00"}, {"id": "duration", "type": "number", "label": "总时长(秒)", "default": 6}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      *{ box-sizing: border-box; margin: 0; padding: 0; }
+      html, body{ width: 1920px; height: 1080px; overflow: hidden; }
+      #root{ position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+      @font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+      @font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+      #root{ background: #0E100F; font-family: 'MEBHeiHeiTi', 'PingFang SC', sans-serif; color: #EDF2EE; }
+      .mono{ font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace; }
+      .corner{ position: absolute; width: 34px; height: 34px; border: 3px solid var(--ac, #00FF00); }
+      .c-tl{ left: -3px; top: -3px; border-right: none; border-bottom: none; }
+      .c-tr{ right: -3px; top: -3px; border-left: none; border-bottom: none; }
+      .c-bl{ left: -3px; bottom: -3px; border-right: none; border-top: none; }
+      .c-br{ right: -3px; bottom: -3px; border-left: none; border-top: none; }
+      .tc{ position: absolute; right: 90px; top: 84px; text-align: right; font-family: 'IBM Plex Mono', monospace;
+        font-size: 20px; letter-spacing: .22em; color: rgba(237,242,238,.5); line-height: 1.9; z-index: 6; }
+      .apn-head{ position: absolute; left: 90px; top: 76px; z-index: 6; }
+      .apn-kicker{ font-size: 20px; letter-spacing: .3em; color: #FF5147; }
+      .apn-title{ margin-top: 14px; font-size: 62px; font-weight: 900; }
+      .apn-card{ position: absolute; top: 290px; width: 830px; height: 660px; border-radius: 18px; z-index: 4;
+        overflow: hidden; }
+      .apn-card.bad{ left: 90px; background: #171110; border: 1.5px solid rgba(255,81,71,.45); }
+      .apn-card.good{ right: 90px; background: #0F1710; border: 1.5px solid color-mix(in srgb, var(--accent) 45%, transparent); }
+      .apn-strip{ height: 8px; transform: scaleX(0); transform-origin: 0 50%; }
+      .bad .apn-strip{ background: #FF5147; }
+      .good .apn-strip{ background: var(--ac); transform-origin: 100% 50%; }
+      .apn-imgw{ position: relative; height: 250px; margin: 26px 30px 0; overflow: hidden; border-radius: 10px;
+        background: #0B0D0C; }
+      .apn-imgw img{ width: 100%; height: 100%; object-fit: cover; display: block; opacity: .85; }
+      .apn-stamp{ position: absolute; right: 22px; top: 22px; width: 92px; height: 92px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center; font-size: 52px; font-weight: 900;
+        background: rgba(10,12,10,.8); z-index: 2; }
+      .bad .apn-stamp{ border: 5px solid #FF5147; color: #FF5147; }
+      .good .apn-stamp{ border: 5px solid var(--ac); color: var(--ac); }
+      .apn-lab{ margin: 24px 30px 0; font-size: 20px; letter-spacing: .3em; }
+      .bad .apn-lab{ color: #FF5147; }
+      .good .apn-lab{ color: var(--ac); }
+      .apn-txt{ margin: 14px 30px 0; font-size: 33px; line-height: 1.55; font-weight: 700; }
+
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920" data-height="1080">
+      <div class="apn-head"><div class="apn-kicker mono">ANTI-PATTERN · 反例警示</div><div class="apn-title" id="title"></div></div>
+      <div class="tc mono">✗ vs ✓<br>对照拆解</div>
+      <div class="apn-card bad" id="bad">
+        <div class="apn-strip"></div>
+        <div class="apn-imgw"><img id="imgBad" alt=""><div class="apn-stamp">✗</div></div>
+        <div class="apn-lab mono">错误示范 · WRONG</div>
+        <div class="apn-txt" id="wrongTxt"></div>
+      </div>
+      <div class="apn-card good" id="good">
+        <div class="apn-strip"></div>
+        <div class="apn-imgw"><img id="imgGood" alt=""><div class="apn-stamp">✓</div></div>
+        <div class="apn-lab mono">正确做法 · RIGHT</div>
+        <div class="apn-txt" id="rightTxt"></div>
+      </div>
+
+    </div>
+    <script>
+      const fallback = {"title": "同一个坑，两种写法", "wrong": "让两圈花瓣各自错开旋转——蒙版接缝直接穿帮", "correct": "内外两圈同角同速，一次转完——窗口扫过，景物钉在原地", "img1": "./placeholder-1.png", "img2": "./placeholder-2.png", "accent": "#00FF00", "duration": 6};
+      const V = Object.assign({}, fallback, (window.__hyperframes?.getVariables?.() || {}));
+      const $ = (id) => document.getElementById(id);
+      const split = (s) => String(s ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const countTo = (el, target, at, dur = 1.0, dec = 0, wobble = false) => {
+        const o = { n: 0 };
+        tl.to(o, { n: Number(String(target).replace(/,/g, "")) || 0, duration: dur,
+          ease: wobble ? "back.out(1.6)" : "power2.out",
+          onUpdate: () => { el.textContent = dec ? o.n.toFixed(dec) : Math.round(o.n).toLocaleString("en-US"); } }, at);
+      };
+      document.documentElement.style.setProperty("--ac", V.accent ?? "#00FF00");
+      $("title").textContent = V.title;
+      $("wrongTxt").textContent = V.wrong;
+      $("rightTxt").textContent = V.correct;
+      if (V.img1) $("imgBad").src = V.img1;
+      if (V.img2) $("imgGood").src = V.img2;
+      tl.fromTo([".apn-head", ".tc"], { opacity: 0, y: 18 }, { opacity: 1, y: 0, duration: 0.5, stagger: 0.1 }, 0.1);
+      tl.fromTo("#bad", { opacity: 0, x: -80 }, { opacity: 1, x: 0, duration: 0.6, ease: "power3.out" }, 0.35);
+      tl.fromTo("#good", { opacity: 0, x: 80 }, { opacity: 1, x: 0, duration: 0.6, ease: "power3.out" }, 0.45);
+      tl.to("#bad .apn-strip", { scaleX: 1, duration: 0.5, ease: "power3.out" }, 0.8);
+      tl.to("#good .apn-strip", { scaleX: 1, duration: 0.5, ease: "power3.out" }, 0.9);
+      tl.fromTo("#bad .apn-stamp", { scale: 0, rotation: -18 }, { scale: 1, rotation: 0, duration: 0.45, ease: "back.out(2.2)" }, 1.0);
+      tl.fromTo("#good .apn-stamp", { scale: 0, rotation: 18 }, { scale: 1, rotation: 0, duration: 0.45, ease: "back.out(2.2)" }, 1.15);
+      tl.fromTo([".apn-lab", ".apn-txt"], { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.08 }, 1.25);
+      window.__timelines.main = tl;
+
+    </script>
+  </body>
+</html>

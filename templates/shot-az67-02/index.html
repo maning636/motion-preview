@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "title", "type": "string", "label": "标题", "default": "套准这一拍"}, {"id": "accent", "type": "color", "label": "强调色", "default": "#C8860A"}, {"id": "background", "type": "color", "label": "纸底色", "default": "#F4EFE4"}, {"id": "foreground", "type": "color", "label": "墨色", "default": "#221F1A"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+@font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html, body{ width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F); }
+#root{ position:relative; width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F);
+  color:var(--fg,#F4F4F2); font-family:'MEBHeiHeiTi','PingFang SC','Microsoft YaHei',sans-serif; }
+.num{ font-family:'MiSans SemiBold','PingFang SC',sans-serif; }
+
+#stage{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+#stack{ position:relative; will-change:transform; }
+.plate{ font-size:150px; font-weight:900; white-space:nowrap; mix-blend-mode:multiply; will-change:transform; }
+#pA{ color:#9A937F; position:absolute; left:0; top:0; }
+#pB{ color:#221F1A; position:relative; }
+
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="4" data-width="1920" data-height="1080">
+<div id="stage"><div id="stack"><div class="plate" id="pA"></div><div class="plate" id="pB"></div></div></div>
+    </div>
+    <script>
+      const FB = {"title": "套准这一拍", "accent": "#C8860A", "background": "#F4EFE4", "foreground": "#221F1A"};
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : FB;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#221F1A");
+      document.documentElement.style.setProperty("--background", v.background ?? "#F4EFE4");
+const $=(s)=>document.querySelector(s);
+const de=document.documentElement;
+de.style.setProperty('--accent',v.accent||'#00FF00');
+de.style.setProperty('--bg',v.background||'#0A0A0F');
+de.style.setProperty('--fg',v.foreground||'#F4F4F2');
+const F=(f)=>f/30; // 30fps: 帧→秒
+window.__timelines=window.__timelines||{};
+const tl=gsap.timeline({paused:true});
+
+$('#pA').textContent=v.title||'';$('#pB').textContent=v.title||'';
+const pA=$('#pA'), pB=$('#pB'), stack=$('#stack');
+// 8f 撞入撞停（命中帧即裂版）
+tl.fromTo(stack,{y:-460},{y:0,duration:F(8),ease:'power3.in'},F(4));
+// 裂版衰减震荡：offset = A·cos(2πt/18)·exp(-t/60)，两版反向，x 为主 y 少量
+const sim={t:0};
+function paint(){
+  const t=sim.t;
+  let ax=0,ay=0,bx=0,by=0;
+  if(t<60){                                  // f12 起裂，到 f72 硬切
+    const osc=Math.cos(2*Math.PI*t/18)*Math.exp(-t/60);
+    ax=16*osc; ay=7*osc; bx=-16*osc; by=-7*osc;
+  }
+  pA.style.transform='translate('+ax+'px,'+ay+'px)';
+  pB.style.transform='translate('+bx+'px,'+by+'px)';
+}
+paint();
+tl.to(sim,{t:60,duration:F(60),ease:'none',onUpdate:paint},F(12));
+// f72 硬切套准 + 4f scale 1.03→1 脉冲（盖章）
+tl.fromTo(stack,{scale:1.03},{scale:1,duration:F(4),ease:'power2.out'},F(72));
+// 收尾真静止（补齐到 120f）
+tl.to({},{duration:F(44)},F(76));
+
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

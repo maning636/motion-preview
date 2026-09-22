@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "words", "type": "string", "label": "词组(逗号分隔)", "default": "我们把,复杂的,工作,交给,简单工具"}, {"id": "accent", "type": "color", "label": "强调色", "default": "#00FF00"}, {"id": "background", "type": "color", "label": "背景色", "default": "#0A0A0F"}, {"id": "foreground", "type": "color", "label": "文字色", "default": "#F4F4F2"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+@font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html, body{ width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F); }
+#root{ position:relative; width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F);
+  color:var(--fg,#F4F4F2); font-family:'MEBHeiHeiTi','PingFang SC','Microsoft YaHei',sans-serif; }
+.num{ font-family:'MiSans SemiBold','PingFang SC',sans-serif; }
+
+#stage{ position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
+#line{ display:flex; gap:44px; }
+.w{ position:relative; font-size:96px; font-weight:900; }
+.w .base{ color:color-mix(in srgb, var(--fg) 22%, transparent); }
+.w .fill{ position:absolute; left:0; top:0; color:var(--fg); clip-path:inset(0 100% 0 0); }
+.w .ul{ position:absolute; left:0; bottom:-18px; height:8px; width:0; background:var(--accent);
+  border-radius:4px; opacity:0; }
+
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="5.0" data-width="1920" data-height="1080">
+<div id="stage"><div id="line"></div></div>
+    </div>
+    <script>
+      const FB = {"words": "我们把,复杂的,工作,交给,简单工具", "accent": "#00FF00", "background": "#0A0A0F", "foreground": "#F4F4F2"};
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : FB;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4F4F2");
+      document.documentElement.style.setProperty("--background", v.background ?? "#0A0A0F");
+const $=(s)=>document.querySelector(s);
+const de=document.documentElement;
+de.style.setProperty('--accent',v.accent||'#00FF00');
+de.style.setProperty('--bg',v.background||'#0A0A0F');
+de.style.setProperty('--fg',v.foreground||'#F4F4F2');
+const F=(f)=>f/30; // 30fps: 帧→秒
+window.__timelines=window.__timelines||{};
+const tl=gsap.timeline({paused:true});
+
+const WORDS=(v.words||'我们把,复杂的,工作,交给,简单工具').split(',');
+const line=$('#line');
+const items=WORDS.map(w=>{
+  const box=document.createElement('span'); box.className='w';
+  box.innerHTML='<span class="base"></span><span class="fill"></span><span class="ul"></span>';
+  box.querySelector('.base').textContent=w;
+  box.querySelector('.fill').textContent=w;
+  line.appendChild(box);
+  return {fill:box.querySelector('.fill'), ul:box.querySelector('.ul')};
+});
+// 词级时间表：逐词 [start,end]，词间留 3f 换气
+const T0=15, DURW=24, GAP=3;
+const sim={f:0};
+function paint(){
+  const f=sim.f;
+  items.forEach((it,i)=>{
+    const a=T0+i*(DURW+GAP), b=a+DURW;
+    const p=Math.max(0,Math.min(1,(f-a)/(b-a)));
+    it.fill.style.clipPath='inset(0 '+((1-p)*100).toFixed(1)+'% 0 0)';
+    const active=(p>0&&p<1)?1:0;
+    it.ul.style.opacity=active;
+    it.ul.style.width=(p*100).toFixed(1)+'%';
+  });
+}
+paint();
+tl.to(sim,{f:150,duration:F(150),ease:'none',onUpdate:paint},0);
+
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

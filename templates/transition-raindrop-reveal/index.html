@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "img1", "type": "image", "label": "当前图（转场前）", "default": "./placeholder-1.png"}, {"id": "img2", "type": "image", "label": "新图（扩散揭示）", "default": "./placeholder-2.png"}, {"id": "dropX", "type": "number", "label": "落点X（画面宽%）", "default": 62}, {"id": "dropY", "type": "number", "label": "落点Y（画面高%）", "default": 38}, {"id": "duration", "type": "number", "label": "总时长(秒)", "default": 6}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      *{ box-sizing: border-box; margin: 0; padding: 0; }
+      html, body{ width: 1920px; height: 1080px; overflow: hidden; }
+      #root{ position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+      @font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+      @font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+      #root{ background: #000; font-family: 'MEBHeiHeiTi', 'PingFang SC', sans-serif; }
+      .rd-layer{ position: absolute; inset: 0; overflow: hidden; }
+      .rd-layer img{ width: 100%; height: 100%; object-fit: cover; display: block; }
+      #layerA img{ filter: brightness(.85); }
+      #layerB{ -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+      #glint{ position: absolute; width: 180px; height: 180px; margin: -90px 0 0 -90px; border-radius: 50%;
+        background: radial-gradient(circle, #FFFFFF 0%, rgba(200,255,220,.85) 26%, transparent 68%);
+        opacity: 0; pointer-events: none; mix-blend-mode: screen; }
+      .rd-tag{ position: absolute; left: 64px; top: 54px; font-family: 'MiSans SemiBold', sans-serif;
+        font-size: 22px; letter-spacing: .4em; color: rgba(255,255,255,.65); z-index: 5; }
+
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920" data-height="1080">
+      <div class="rd-layer" id="layerA"><img id="imgA" alt=""></div>
+      <div class="rd-layer" id="layerB"><img id="imgB" alt=""></div>
+      <div id="glint"></div>
+      <div class="rd-tag">DROP → IMPACT → SPREAD</div>
+
+    </div>
+    <script>
+      const fallback = {"img1": "./placeholder-1.png", "img2": "./placeholder-2.png", "dropX": 62, "dropY": 38, "duration": 6};
+      const V = Object.assign({}, fallback, (window.__hyperframes?.getVariables?.() || {}));
+      const $ = (id) => document.getElementById(id);
+      const split = (s) => String(s ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const countTo = (el, target, at, dur = 1.0, dec = 0, wobble = false) => {
+        const o = { n: 0 };
+        tl.to(o, { n: Number(String(target).replace(/,/g, "")) || 0, duration: dur,
+          ease: wobble ? "back.out(1.6)" : "power2.out",
+          onUpdate: () => { el.textContent = dec ? o.n.toFixed(dec) : Math.round(o.n).toLocaleString("en-US"); } }, at);
+      };
+      if (V.img1) $("imgA").src = V.img1;
+      if (V.img2) $("imgB").src = V.img2;
+      const layerB = $("layerB"), imgB = $("imgB"), glint = $("glint");
+      const px = (Number(V.dropX) || 62) / 100 * 1920;
+      const py = (Number(V.dropY) || 38) / 100 * 1080;
+      glint.style.left = px + "px"; glint.style.top = py + "px";
+      // 蒙版作用在上层图（NEXT）：竖椭圆 rx24/ry46 origin top
+      const st = { rx: 24, ry: 46, x: px, y: -160, fe: 14 };
+      const applyMask = () => {
+        const r = Math.max((st.rx + st.ry) / 2, 1);
+        const inner = Math.max(0, 1 - st.fe / r) * 100;
+        const m = `radial-gradient(ellipse ${st.rx}px ${st.ry}px at ${st.x}px ${st.y}px, #000 0%, #000 ${inner}%, transparent 100%)`;
+        layerB.style.webkitMaskImage = m;
+        layerB.style.maskImage = m;
+      };
+      applyMask();
+      gsap.set(imgB, { filter: "blur(16px)", scale: 1.06 });
+      // 01 DROP：竖椭圆落下
+      tl.to(st, { y: py, duration: 0.5, ease: "power1.in", onUpdate: applyMask }, 0.5);
+      // 02 IMPACT：触地收圆
+      tl.to(st, { ry: 24, duration: 0.18, ease: "power2.out", onUpdate: applyMask }, 1.0);
+      // GLINT：落点高光只亮一拍
+      tl.fromTo(glint, { opacity: 0, scale: 0.4 }, { opacity: 1, scale: 1, duration: 0.1 }, 1.02);
+      tl.to(glint, { opacity: 0, scale: 2.4, duration: 0.5, ease: "power2.out" }, 1.14);
+      // 03 SPREAD：同一个圆荡开铺满，边缘羽化 14→62
+      const rMax = Math.hypot(Math.max(px, 1920 - px), Math.max(py, 1080 - py)) + 140;
+      tl.to(st, { rx: rMax, ry: rMax, fe: 62, duration: 1.35, ease: "power2.in", onUpdate: applyMask }, 1.18);
+      // SETTLE：新画面 blur 16→0 / scale 1.06→1.00 落定
+      tl.to(imgB, { filter: "blur(0px)", scale: 1, duration: 1.4, ease: "power1.out" }, 1.18);
+      window.__timelines.main = tl;
+
+    </script>
+  </body>
+</html>

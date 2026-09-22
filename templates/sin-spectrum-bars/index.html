@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "bars", "type": "number", "label": "柱数", "default": 48}, {"id": "color", "type": "color", "label": "柱色", "default": "#00FF00"}, {"id": "speed", "type": "number", "label": "速度倍率", "default": 1}, {"id": "duration", "type": "number", "label": "总时长(秒)", "default": 6}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      *{ box-sizing: border-box; margin: 0; padding: 0; }
+      html, body{ width: 1920px; height: 1080px; overflow: hidden; }
+      #root{ position: relative; width: 1920px; height: 1080px; overflow: hidden; }
+      @font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+      @font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+      #root{ background: #070907; font-family: 'MEBHeiHeiTi', 'PingFang SC', sans-serif; color: #EDF5EE; }
+      .mono{ font-family: 'IBM Plex Mono', 'JetBrains Mono', monospace; }
+      .ssb-head{ position: absolute; left: 90px; top: 76px; font-size: 20px; letter-spacing: .34em;
+        color: rgba(237,245,238,.45); z-index: 6; }
+      .ssb-floor{ position: absolute; left: 240px; right: 240px; bottom: 300px; height: 2px;
+        background: rgba(237,245,238,.18); }
+      .ssb-stage{ position: absolute; left: 0; right: 0; bottom: 300px; height: 340px; display: flex;
+        align-items: flex-end; justify-content: center; gap: 12px; }
+      .ssb-bar{ width: 16px; height: 340px; border-radius: 9px 9px 3px 3px; background: var(--ac);
+        transform-origin: 50% 100%; box-shadow: 0 0 18px var(--acGlow); opacity: .92; }
+      .ssb-label{ position: absolute; left: 0; right: 0; bottom: 236px; text-align: center; font-size: 22px;
+        letter-spacing: .3em; color: rgba(237,245,238,.4); }
+
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920" data-height="1080">
+      <div class="ssb-head mono">SPECTRUM · SEEK-SAFE</div>
+      <div class="ssb-stage" id="stage"></div>
+      <div class="ssb-floor"></div>
+      <div class="ssb-label mono">SIN(T + PHASE) · 看似随机 · 规律固定</div>
+
+    </div>
+    <script>
+      const fallback = {"bars": 48, "color": "#00FF00", "speed": 1, "duration": 6};
+      const V = Object.assign({}, fallback, (window.__hyperframes?.getVariables?.() || {}));
+      const $ = (id) => document.getElementById(id);
+      const split = (s) => String(s ?? "").split(",").map((x) => x.trim()).filter(Boolean);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const countTo = (el, target, at, dur = 1.0, dec = 0, wobble = false) => {
+        const o = { n: 0 };
+        tl.to(o, { n: Number(String(target).replace(/,/g, "")) || 0, duration: dur,
+          ease: wobble ? "back.out(1.6)" : "power2.out",
+          onUpdate: () => { el.textContent = dec ? o.n.toFixed(dec) : Math.round(o.n).toLocaleString("en-US"); } }, at);
+      };
+      const hexRgb = (h) => { const m = String(h || "#00FF00").replace("#", "");
+        const v = (m.length === 3 ? m.split("").map((c) => c + c).join("") : m).padEnd(6, "0").slice(0, 6);
+        const n = parseInt(v, 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+      const [ar, ag, ab] = hexRgb(V.color);
+      document.documentElement.style.setProperty("--ac", V.color ?? "#00FF00");
+      document.documentElement.style.setProperty("--acGlow", "rgba(" + ar + "," + ag + "," + ab + ",.3)");
+      const n = Math.max(8, Math.min(96, Number(V.bars) || 48));
+      const speed = Number(V.speed) || 1;
+      const stage = $("stage"), bars = [];
+      for (let i = 0; i < n; i++) {
+        const b = document.createElement("i");
+        b.className = "ssb-bar";
+        stage.appendChild(b);
+        bars.push(b);
+      }
+      const SCENE = 5.4, master = { p: 0 };
+      // 每柱 scaleY = (t, i) 的确定性周期函数，相位错开（seek-safe，禁 CSS animation / Math.random）
+      const applyFrame = () => {
+        const t = master.p * SCENE * speed;
+        bars.forEach((b, i) => {
+          const T = 0.75 + (i % 5) * 0.12;
+          let ph = ((t - (i * 0.13) % 1.1) / T) % 1;
+          if (ph < 0) ph += 1;
+          const s = 0.5 - 0.5 * Math.cos(2 * Math.PI * ph);
+          b.style.transform = "scaleY(" + (0.12 + 0.88 * s) + ")";
+        });
+      };
+      tl.fromTo("#stage", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0);
+      tl.fromTo([".ssb-head", ".ssb-label"], { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0.15);
+      tl.to(master, { p: 1, duration: SCENE, ease: "none", onUpdate: applyFrame }, 0.15);
+      applyFrame();
+      window.__timelines.main = tl;
+
+    </script>
+  </body>
+</html>

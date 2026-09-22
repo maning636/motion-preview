@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"title","type":"string","label":"标题","default":"知识检索"},{"id":"subtitle","type":"string","label":"副标题","default":"从知识库中找到最相关的片段"},{"id":"accent","type":"color","label":"强调色","default":"#00FF00"},{"id":"background","type":"color","label":"背景色","default":"#12100E"},{"id":"foreground","type":"color","label":"文字色","default":"#F4EFE7"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+
+@font-face {
+  font-family: 'MiSans SemiBold';
+  src: url('../_fonts/MiSansSemiBold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'MEBHeiHeiTi';
+  src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype');
+  font-weight: 100 1000;
+  font-weight: normal;
+  font-style: normal;
+}
+
+*{ box-sizing: border-box;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      html, body{ margin: 0; width: 1920px; height: 1080px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      #root{ position: relative; width: 1920px; height: 1080px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .scene{ position: absolute; inset: 0; width: 100%; height: 100%; padding: 96px 112px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .header{ margin-bottom: 40px;font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .title{ margin: 0; font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 64px; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }
+      .subtitle{ margin: 12px 0 0; font-family: 'MEBHeiHeiTi', sans-serif; font-size: 24px; font-weight: 400; opacity: 0.55; }
+      .art{ position: relative; width: 100%; height: 640px; display: flex; align-items: center; justify-content: center;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .art svg{ width: 640px; height: 480px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .art svg path, .art svg circle, .art svg line, .art svg rect{ fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .art svg .accent{ stroke: var(--accent); fill: color-mix(in srgb, var(--accent) 12%, transparent);font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="5.5" data-width="1920" data-height="1080">
+      <section id="scene" class="scene clip" data-start="0" data-duration="5.5" data-track-index="1">
+        <div class="header">
+          <h1 class="title" id="title"></h1>
+          <p class="subtitle" id="subtitle"></p>
+        </div>
+        <div class="art">
+          <svg viewBox="0 0 320 240">
+            <g id="cabinet">
+              <rect x="160" y="50" width="110" height="160" rx="4" />
+              <line x1="160" y1="90" x2="270" y2="90" />
+              <line x1="160" y1="130" x2="270" y2="130" />
+              <line x1="160" y1="170" x2="270" y2="170" />
+              <rect x="205" y="100" width="20" height="6" rx="2" />
+              <rect x="205" y="140" width="20" height="6" rx="2" />
+              <rect id="target" class="accent" x="205" y="180" width="20" height="6" rx="2" />
+            </g>
+            <g id="magnifier">
+              <circle cx="100" cy="120" r="28" />
+              <line x1="120" y1="148" x2="145" y2="180" />
+            </g>
+          </svg>
+        </div>
+      </section>
+    </div>
+    <script>
+      const fallback = { title: "知识检索", subtitle: "从知识库中找到最相关的片段", accent: "#00FF00", background: "#12100E", foreground: "#F4EFE7" };
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : fallback;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4EFE7");
+      document.documentElement.style.setProperty("--background", v.background ?? "#12100E");
+      const root = document.getElementById("root");
+      root.style.backgroundColor = v.background;
+      root.style.color = v.foreground;
+      root.style.setProperty("--accent", v.accent);
+      document.getElementById("title").textContent = v.title;
+      document.getElementById("subtitle").textContent = v.subtitle;
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo(".title", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.1);
+      tl.fromTo(".subtitle", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.25);
+      document.querySelectorAll("#cabinet > rect, #cabinet > line").forEach((el, i) => {
+        const len = el.getTotalLength ? el.getTotalLength() : 200;
+        el.style.strokeDasharray = len; el.style.strokeDashoffset = len;
+        tl.to(el, { strokeDashoffset: 0, duration: 0.4, ease: "power2.out" }, 0.5 + i * 0.05);
+      });
+      tl.fromTo("#magnifier", { opacity: 0, x: -50, y: 30 }, { opacity: 1, x: 0, y: 0, duration: 0.7, ease: "power2.out" }, 1.0);
+      tl.fromTo("#target", { opacity: 0 }, { opacity: 1, duration: 0.4, repeat: 2, yoyo: true }, 1.7);
+      tl.to(".scene", { opacity: 0, y: -16, duration: 0.5, ease: "power2.in" }, 4.8);
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

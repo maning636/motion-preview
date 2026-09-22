@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"title","type":"string","label":"标题","default":"GPU 集群拓扑"},{"id":"subtitle","type":"string","label":"副标题","default":"72 节点状态监控概览"},{"id":"total","type":"number","label":"总节点数","default":72},{"id":"active","type":"number","label":"活跃节点数","default":58},{"id":"idle","type":"number","label":"空闲节点数","default":10},{"id":"error","type":"number","label":"异常节点数","default":4},{"id":"cols","type":"number","label":"列数","default":12},{"id":"accent","type":"color","label":"强调色","default":"#00FF00"},{"id":"background","type":"color","label":"背景色","default":"#12100E"},{"id":"foreground","type":"color","label":"文字色","default":"#F4EFE7"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+
+@font-face {
+  font-family: 'MiSans SemiBold';
+  src: url('../_fonts/MiSansSemiBold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'MEBHeiHeiTi';
+  src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype');
+  font-weight: 100 1000;
+  font-weight: normal;
+  font-style: normal;
+}
+
+*{ box-sizing: border-box;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      html, body{ margin: 0; width: 1920px; height: 1080px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      #root{ position: relative; width: 1920px; height: 1080px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .scene{ position: absolute; inset: 0; width: 100%; height: 100%; padding: 96px 112px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .header{ margin-bottom: 32px;font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .title{ margin: 0; font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 64px; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }
+      .subtitle{ margin: 12px 0 0; font-family: 'MEBHeiHeiTi', sans-serif; font-size: 24px; font-weight: 400; opacity: 0.55; }
+      .summary{ display: flex; gap: 48px; margin-bottom: 32px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .stat{ display: flex; align-items: baseline; gap: 12px; font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+      .stat-num{ font-size: 36px; font-weight: 700;font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .stat-num.accent{ color: var(--accent);font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .stat-label{ font-size: 16px; opacity: 0.5; text-transform: uppercase;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .grid{ display: grid; gap: 8px; justify-content: center;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .cell{ width: 28px; height: 28px; border-radius: 4px; background: rgba(244,239,231,0.08);font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .cell.active{ background: var(--accent);font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .cell.idle{ background: rgba(244,239,231,0.25);font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .cell.error{ background: #c0392b;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920" data-height="1080">
+      <section id="scene" class="scene clip" data-start="0" data-duration="6" data-track-index="1">
+        <div class="header">
+          <h1 class="title" id="title"></h1>
+          <p class="subtitle" id="subtitle"></p>
+        </div>
+        <div class="summary">
+          <div class="stat"><span class="stat-num" id="totalNum"></span><span class="stat-label">TOTAL</span></div>
+          <div class="stat"><span class="stat-num accent" id="activeNum"></span><span class="stat-label">ACTIVE</span></div>
+          <div class="stat"><span class="stat-num" id="idleNum"></span><span class="stat-label">IDLE</span></div>
+          <div class="stat"><span class="stat-num" style="color:#c0392b" id="errorNum"></span><span class="stat-label">ERROR</span></div>
+        </div>
+        <div class="grid" id="grid"></div>
+      </section>
+    </div>
+    <script>
+      const fallback = { title: "GPU 集群拓扑", subtitle: "72 节点状态监控概览", total: 72, active: 58, idle: 10, error: 4, cols: 12, accent: "#00FF00", background: "#12100E", foreground: "#F4EFE7" };
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : fallback;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4EFE7");
+      document.documentElement.style.setProperty("--background", v.background ?? "#12100E");
+      const root = document.getElementById("root");
+      root.style.backgroundColor = v.background;
+      root.style.color = v.foreground;
+      root.style.setProperty("--accent", v.accent);
+      document.getElementById("title").textContent = v.title;
+      document.getElementById("subtitle").textContent = v.subtitle;
+      const total = Math.max(1, Number(v.total) || 1);
+      const active = Math.max(0, Math.min(total, Number(v.active) || 0));
+      const idle = Math.max(0, Math.min(total - active, Number(v.idle) || 0));
+      const error = Math.max(0, Math.min(total - active - idle, Number(v.error) || 0));
+      document.getElementById("totalNum").textContent = total;
+      document.getElementById("activeNum").textContent = active;
+      document.getElementById("idleNum").textContent = idle;
+      document.getElementById("errorNum").textContent = error;
+      const cols = Math.max(1, Number(v.cols) || 12);
+      const grid = document.getElementById("grid");
+      grid.style.gridTemplateColumns = `repeat(${cols}, 28px)`;
+      const states = [];
+      for (let i = 0; i < active; i++) states.push("active");
+      for (let i = 0; i < idle; i++) states.push("idle");
+      for (let i = 0; i < error; i++) states.push("error");
+      while (states.length < total) states.push("");
+      states.forEach(state => {
+        const cell = document.createElement("div");
+        cell.className = "cell" + (state ? " " + state : "");
+        grid.appendChild(cell);
+      });
+
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo(".title", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.1);
+      tl.fromTo(".subtitle", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.25);
+      tl.fromTo(".stat", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.4, stagger: 0.08, ease: "power2.out" }, 0.5);
+      tl.fromTo(".cell", { opacity: 0, scale: 0.5 }, { opacity: 1, scale: 1, duration: 0.25, stagger: 0.015, ease: "back.out(2)" }, 0.8);
+      tl.to(".scene", { opacity: 0, y: -16, duration: 0.5, ease: "power2.in" }, 5.3);
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

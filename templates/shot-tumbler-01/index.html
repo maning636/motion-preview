@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "value", "type": "string", "label": "数值", "default": "99.98"}, {"id": "suffix", "type": "string", "label": "单位", "default": "%"}, {"id": "label", "type": "string", "label": "指标名称", "default": "好评率"}, {"id": "caption", "type": "string", "label": "结论文案", "default": "连续 12 个月保持"}, {"id": "accent", "type": "color", "label": "强调色", "default": "#00FF00"}, {"id": "background", "type": "color", "label": "背景色", "default": "#0A0A0F"}, {"id": "foreground", "type": "color", "label": "文字色", "default": "#F4F4F2"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    
+    <style>
+@font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html, body{ width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F); }
+#root{ position:relative; width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F);
+  color:var(--fg,#F4F4F2); font-family:'MEBHeiHeiTi','PingFang SC','Microsoft YaHei',sans-serif; }
+.num{ font-family:'MiSans SemiBold','PingFang SC',sans-serif; }
+
+.olabel{ position:absolute; left:0; right:0; top:260px; text-align:center; font-family:'MiSans SemiBold';
+  font-size:30px; letter-spacing:.45em; color:rgba(255,255,255,.5); }
+.orow{ position:absolute; left:0; right:0; top:360px; display:flex; justify-content:center; align-items:baseline; }
+.odig{ position:relative; width:132px; height:250px; overflow:hidden; }
+.ostrip{ position:absolute; left:0; top:0; width:100%; }
+.ostrip i{ display:flex; width:132px; height:250px; align-items:center; justify-content:center;
+  font-style:normal; font-family:'MiSans SemiBold'; font-weight:700; font-size:200px; color:var(--fg); }
+.ostrip.ghost i{ color:rgba(255,255,255,.35); }
+.ostat{ font-family:'MiSans SemiBold'; font-weight:700; font-size:200px; color:var(--fg); padding:0 6px; }
+.osuf{ font-family:'MiSans SemiBold'; font-weight:700; font-size:110px; color:var(--accent); margin-left:14px; }
+.ocap{ position:absolute; left:0; right:0; top:700px; text-align:center; font-size:34px;
+  letter-spacing:.25em; color:rgba(255,255,255,.65); }
+.oline{ position:absolute; left:50%; top:668px; transform:translateX(-50%); width:420px; height:6px;
+  border-radius:99px; background:var(--accent); box-shadow:0 0 24px var(--accent); }
+
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920" data-height="1080">
+<div class="olabel" id="l"></div>
+<div class="orow" id="row"></div>
+<div class="oline" id="line"></div>
+<div class="ocap" id="c"></div>
+    </div>
+    <script>
+      const FB = {"value": "99.98", "suffix": "%", "label": "好评率", "caption": "连续 12 个月保持", "accent": "#00FF00", "background": "#0A0A0F", "foreground": "#F4F4F2"};
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : FB;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4F4F2");
+      document.documentElement.style.setProperty("--background", v.background ?? "#0A0A0F");
+const $=(s)=>document.querySelector(s);
+const de=document.documentElement;
+de.style.setProperty('--accent',v.accent||'#00FF00');
+de.style.setProperty('--bg',v.background||'#0A0A0F');
+de.style.setProperty('--fg',v.foreground||'#F4F4F2');
+const F=(f)=>f/30; // 30fps: 帧→秒
+window.__timelines=window.__timelines||{};
+const tl=gsap.timeline({paused:true});
+
+$('#l').textContent=v.label||'';$('#c').textContent=v.caption||'';
+const row=$('#row');
+const digits=[];
+[...(v.value||'99.98')].forEach((ch)=>{
+  if(/\d/.test(ch)){
+    const box=document.createElement('div');box.className='odig';
+    let rows='';for(let r=0;r<3;r++){for(let d=0;d<10;d++){rows+='<i>'+d+'</i>';}}
+    box.innerHTML='<div class="ostrip main">'+rows+'</div><div class="ostrip ghost">'+rows+'</div>';
+    row.appendChild(box);digits.push({box,ch:+ch});
+  }else{
+    const s=document.createElement('div');s.className='ostat';s.textContent=ch;row.appendChild(s);
+  }
+});
+if(v.suffix){const s=document.createElement('div');s.className='osuf';s.textContent=v.suffix;row.appendChild(s);}
+const H=250;
+tl.fromTo('.olabel',{opacity:0},{opacity:1,duration:F(10)},0);
+tl.set('.ostrip.ghost',{opacity:0},0);
+digits.forEach((d,i)=>{
+  const at=F(20+i*7);
+  const main=d.box.querySelector('.main'),ghost=d.box.querySelector('.ghost');
+  const yT=-(20+d.ch)*H;
+  tl.fromTo(d.box,{opacity:0},{opacity:1,duration:F(2)},at-F(4)<0?0:at-F(4));
+  tl.set(ghost,{opacity:.18},at);
+  tl.fromTo(main,{y:0},{y:yT-0.5*H,duration:F(16),ease:'power3.out'},at);
+  tl.fromTo(ghost,{y:0},{y:yT-0.5*H,duration:F(16),ease:'power3.out'},at+F(1.5));
+  tl.to(main,{y:yT,duration:F(6),ease:'power2.out'},at+F(16));
+  tl.to(ghost,{y:yT,duration:F(6),ease:'power2.out'},at+F(17.5));
+  tl.set(ghost,{opacity:0},at+F(22));
+});
+const tAll=F(20+(digits.length-1)*7+22);
+tl.to('.orow',{filter:'brightness(1.55)',scale:1.035,duration:F(4),ease:'power2.out'},tAll);
+tl.to('.orow',{filter:'brightness(1)',scale:1,duration:F(4),ease:'power2.inOut'},tAll+F(4));
+tl.fromTo('.oline',{scaleX:0},{scaleX:1,duration:F(10),ease:'power2.out'},tAll+F(4));
+tl.fromTo('.ocap',{opacity:0,y:10},{opacity:1,y:0,duration:F(10)},tAll+F(6));
+
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

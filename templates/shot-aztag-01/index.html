@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "word", "type": "string", "label": "话题词", "default": "灵感库"}, {"id": "pageTitle", "type": "string", "label": "成品页标题", "default": "本周灵感笔记"}, {"id": "accent", "type": "color", "label": "强调色", "default": "#00FF00"}, {"id": "background", "type": "color", "label": "背景色", "default": "#0A0A0F"}, {"id": "foreground", "type": "color", "label": "文字色", "default": "#F4F4F2"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+@font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html, body{ width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F); }
+#root{ position:relative; width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F);
+  color:var(--fg,#F4F4F2); font-family:'MEBHeiHeiTi','PingFang SC','Microsoft YaHei',sans-serif; }
+.num{ font-family:'MiSans SemiBold','PingFang SC',sans-serif; }
+
+#typ{ position:absolute; left:50%; top:50%; display:flex; align-items:center; }
+#typ .ht{ font-size:120px; color:var(--fg); letter-spacing:2px; }
+#typ .cur{ width:8px; height:110px; background:#FF3B30; margin-left:10px; } /* 红实心光标恒亮不闪 */
+#pill{ position:absolute; left:0; top:0; width:740px; height:236px; border-radius:118px; background:#E8E8E6;
+  display:none; align-items:center; justify-content:center; gap:30px; transform-origin:0 0; }
+#pill .ic{ width:90px; height:90px; border-radius:24px; background:var(--accent); display:flex;
+  align-items:center; justify-content:center; font-size:52px; color:#0A0A0F; }
+#pill .pw{ font-size:96px; color:#15151A; }
+#pageui{ position:absolute; inset:0; display:none; background:#101018; padding:120px 140px; }
+#pageui h2{ font-size:72px; color:var(--fg); margin-bottom:44px; }
+#pageui .pl{ height:22px; border-radius:11px; background:rgba(255,255,255,.2); margin-bottom:24px; }
+#slot{ position:absolute; left:140px; top:520px; width:407px; height:130px; border-radius:65px;
+  background:color-mix(in srgb, var(--accent) 16%, transparent); border:2px dashed color-mix(in srgb, var(--accent) 40%, transparent); }
+
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="3.5" data-width="1920" data-height="1080">
+<div id="typ"><div class="ht" id="ht"></div><div class="cur"></div></div><div id="pill"><div class="ic">#</div><div class="pw" id="pw"></div></div><div id="pageui"><h2 id="pt"></h2><div class="pl" style="width:82%"></div><div class="pl" style="width:68%"></div><div class="pl" style="width:75%"></div><div id="slot"></div></div>
+    </div>
+    <script>
+      const FB = {"word": "灵感库", "pageTitle": "本周灵感笔记", "accent": "#00FF00", "background": "#0A0A0F", "foreground": "#F4F4F2"};
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : FB;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4F4F2");
+      document.documentElement.style.setProperty("--background", v.background ?? "#0A0A0F");
+const $=(s)=>document.querySelector(s);
+const de=document.documentElement;
+de.style.setProperty('--accent',v.accent||'#00FF00');
+de.style.setProperty('--bg',v.background||'#0A0A0F');
+de.style.setProperty('--fg',v.foreground||'#F4F4F2');
+const F=(f)=>f/30; // 30fps: 帧→秒
+window.__timelines=window.__timelines||{};
+const tl=gsap.timeline({paused:true});
+
+$('#pw').textContent=v.word||'';$('#pt').textContent=v.pageTitle||'';
+gsap.set('#typ',{xPercent:-50,yPercent:-50});
+// 打字段：steps 逐字（可回放，不用 tl.call），红实心光标恒亮
+const WORD='#'+ (v.word||'');
+const ht=$('#ht');
+const chars={n:0};
+tl.to(chars,{n:WORD.length,duration:F(WORD.length*5),ease:'steps('+WORD.length+')',
+  onUpdate:()=>{ht.textContent=WORD.slice(0,Math.round(chars.n));}},F(2));
+const TF=2+WORD.length*5+2;
+// 实体化=1 帧硬切：文字+光标整层消失，同帧胶囊出现（origin 0 0 + translate 先行）
+tl.set('#typ',{display:'none'},F(TF));
+tl.set('#pill',{display:'flex',x:590,y:422,scale:1.03},F(TF));
+tl.to('#pill',{scale:1,duration:F(3),ease:'power1.out'},F(TF)); // 3f 微落定
+// hold 18f → 缩移 14f bezier easeInOut（0.55x 落到标签位）
+tl.to('#pill',{x:156,y:455,scale:.55,duration:F(14),ease:'power2.inOut'},F(TF+18));
+// 落位 +3f 再 1 帧硬切揭示成品页：底色/标题/正文/胶囊配色同帧全变
+const RV=TF+35;
+tl.set('#pill',{display:'none'},F(RV));
+tl.set('#pageui',{display:'block'},F(RV));
+tl.set('#slot',{background:'color-mix(in srgb, var(--accent) 30%, transparent)',borderStyle:'solid'},F(RV));
+tl.to({},{duration:F(40)},F(RV+3)); // 真静止收尾
+
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"title","type":"string","label":"标题","default":"AI 应用架构栈"},{"id":"subtitle","type":"string","label":"副标题","default":"L1–L7 分层，聚焦当前讨论层"},{"id":"layers","type":"string","label":"层名（逗号分隔，从下到上）","default":"硬件,虚拟化,运行时,模型层,编排层,业务逻辑,UI 层"},{"id":"focusLayer","type":"number","label":"聚焦层索引（0-based，从下到上）","default":4},{"id":"accent","type":"color","label":"强调色","default":"#00FF00"},{"id":"background","type":"color","label":"背景色","default":"#12100E"},{"id":"foreground","type":"color","label":"文字色","default":"#F4EFE7"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+
+@font-face {
+  font-family: 'MiSans SemiBold';
+  src: url('../_fonts/MiSansSemiBold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'MEBHeiHeiTi';
+  src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype');
+  font-weight: 100 1000;
+  font-weight: normal;
+  font-style: normal;
+}
+
+*{ box-sizing: border-box;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      html, body{ margin: 0; width: 1920px; height: 1080px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      #root{ position: relative; width: 1920px; height: 1080px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .scene{ position: absolute; inset: 0; width: 100%; height: 100%; padding: 96px 112px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .header{ margin-bottom: 40px;font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .title{ margin: 0; font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 64px; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }
+      .subtitle{ margin: 12px 0 0; font-family: 'MEBHeiHeiTi', sans-serif; font-size: 24px; font-weight: 400; opacity: 0.55; }
+      .stack{ display: flex; flex-direction: column-reverse; gap: 10px; width: 100%; height: 720px; justify-content: flex-start; align-items: center;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .layer{ width: 100%; border: 1px solid rgba(244,239,231,0.14); border-radius: 6px; display: flex; align-items: center; justify-content: space-between; padding: 0 36px; background: rgba(244,239,231,0.02);font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .layer.focus{ border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, transparent);font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .layer-index{ font-family: 'MEBHeiHeiTi', sans-serif; font-size: 18px; font-weight: 500; opacity: 0.4; }
+      .layer-name{ font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 26px; font-weight: 600; }
+      .layer.focus .layer-name{ color: var(--accent);font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920" data-height="1080">
+      <section id="scene" class="scene clip" data-start="0" data-duration="6" data-track-index="1">
+        <div class="header">
+          <h1 class="title" id="title"></h1>
+          <p class="subtitle" id="subtitle"></p>
+        </div>
+        <div class="stack" id="stack"></div>
+      </section>
+    </div>
+    <script>
+      const fallback = { title: "AI 应用架构栈", subtitle: "L1–L7 分层，聚焦当前讨论层", layers: "硬件,虚拟化,运行时,模型层,编排层,业务逻辑,UI 层", focusLayer: 4, accent: "#00FF00", background: "#12100E", foreground: "#F4EFE7" };
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : fallback;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4EFE7");
+      document.documentElement.style.setProperty("--background", v.background ?? "#12100E");
+      const root = document.getElementById("root");
+      root.style.backgroundColor = v.background;
+      root.style.color = v.foreground;
+      root.style.setProperty("--accent", v.accent);
+      document.getElementById("title").textContent = v.title;
+      document.getElementById("subtitle").textContent = v.subtitle;
+      const layers = String(v.layers).split(",").map(s => s.trim()).filter(Boolean);
+      const focus = Math.max(0, Math.min(layers.length - 1, Number(v.focusLayer) || 0));
+      const stack = document.getElementById("stack");
+      layers.forEach((layer, i) => {
+        const div = document.createElement("div");
+        div.className = "layer" + (i === focus ? " focus" : "");
+        div.style.flex = i === focus ? "1.4" : "1";
+        div.innerHTML = `<span class="layer-index">L${i + 1}</span><span class="layer-name">${layer}</span><span class="layer-index">L${i + 1}</span>`;
+        stack.appendChild(div);
+      });
+
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo(".title", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.1);
+      tl.fromTo(".subtitle", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.25);
+      document.querySelectorAll(".layer").forEach((layer, i) => {
+        tl.fromTo(layer, { opacity: 0, x: -40 }, { opacity: 1, x: 0, duration: 0.5, ease: "power2.out" }, 0.45 + i * 0.08);
+      });
+      tl.fromTo(".layer.focus", { scale: 0.98 }, { scale: 1, duration: 0.4, ease: "power2.out" }, 1.2);
+      tl.to(".scene", { opacity: 0, y: -16, duration: 0.5, ease: "power2.in" }, 5.3);
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

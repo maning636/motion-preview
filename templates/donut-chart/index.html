@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"title","type":"string","label":"标题","default":"用户设备分布"},{"id":"labels","type":"string","label":"分类（逗号分隔）","default":"Desktop,Mobile,Tablet,Other"},{"id":"values","type":"string","label":"数值（逗号分隔）","default":"52,35,9,4"},{"id":"centerNumber","type":"string","label":"中心数字","default":"52%"},{"id":"centerLabel","type":"string","label":"中心标签","default":"Desktop"},{"id":"accent","type":"color","label":"强调色","default":"#00FF00"},{"id":"background","type":"color","label":"背景色","default":"#12100E"},{"id":"foreground","type":"color","label":"文字色","default":"#F4EFE7"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+
+@font-face {
+  font-family: 'MiSans SemiBold';
+  src: url('../_fonts/MiSansSemiBold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'MEBHeiHeiTi';
+  src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype');
+  font-weight: 100 1000;
+  font-weight: normal;
+  font-style: normal;
+}
+
+*{ box-sizing: border-box;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      html, body{ margin: 0; width: 1920px; height: 1080px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      #root{ position: relative; width: 1920px; height: 1080px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .scene{ position: absolute; inset: 0; width: 100%; height: 100%; padding: 96px 112px; overflow: hidden; display: flex; align-items: center; gap: 80px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .header{ flex: 0 0 520px;font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .title{ margin: 0; font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 64px; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }
+      .subtitle{ margin: 16px 0 0; font-family: 'MEBHeiHeiTi', sans-serif; font-size: 28px; font-weight: 400; opacity: 0.55; }
+      .chart-wrap{ position: relative; width: 520px; height: 520px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .chart-svg{ width: 100%; height: 100%; transform: rotate(-90deg);font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .center-group{ position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; pointer-events: none;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .center-number{ font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 72px; font-weight: 700; line-height: 1; color: var(--accent); }
+      .center-label{ font-family: 'MEBHeiHeiTi', sans-serif; font-size: 22px; font-weight: 500; opacity: 0.55; margin-top: 8px; }
+      .legend{ flex: 0 0 360px; display: flex; flex-direction: column; gap: 24px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .legend-item{ display: flex; align-items: center; gap: 16px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .legend-dot{ width: 16px; height: 16px; border-radius: 2px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .legend-text{ font-family: 'MEBHeiHeiTi', sans-serif; font-size: 24px; font-weight: 500; }
+      .legend-value{ margin-left: auto; font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 24px; font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1920" data-height="1080">
+      <section id="scene" class="scene clip" data-start="0" data-duration="5" data-track-index="1">
+        <div class="header">
+          <h1 class="title" id="title"></h1>
+          <p class="subtitle">占比构成</p>
+        </div>
+        <div class="chart-wrap">
+          <svg class="chart-svg" id="chart" viewBox="0 0 520 520"></svg>
+          <div class="center-group">
+            <div class="center-number" id="centerNumber"></div>
+            <div class="center-label" id="centerLabel"></div>
+          </div>
+        </div>
+        <div class="legend" id="legend"></div>
+      </section>
+    </div>
+    <script>
+      const fallback = { title: "用户设备分布", labels: "Desktop,Mobile,Tablet,Other", values: "52,35,9,4", centerNumber: "52%", centerLabel: "Desktop", accent: "#00FF00", background: "#12100E", foreground: "#F4EFE7" };
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : fallback;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4EFE7");
+      document.documentElement.style.setProperty("--background", v.background ?? "#12100E");
+      const root = document.getElementById("root");
+      root.style.backgroundColor = v.background;
+      root.style.color = v.foreground;
+      root.style.setProperty("--accent", v.accent);
+      document.getElementById("title").textContent = v.title;
+      document.getElementById("centerNumber").textContent = v.centerNumber;
+      document.getElementById("centerLabel").textContent = v.centerLabel;
+      const labels = String(v.labels).split(",").map(s => s.trim());
+      const values = String(v.values).split(",").map(s => Number(s.trim()));
+      const total = values.reduce((a, b) => a + b, 0) || 1;
+      const normalized = values.map(val => val / total);
+      const palette = [v.accent, "rgba(244,239,231,0.55)", "rgba(244,239,231,0.30)", "rgba(244,239,231,0.14)"];
+      const cx = 260, cy = 260, r = 200, stroke = 36;
+      const svg = document.getElementById("chart");
+      let acc = 0;
+      const arcs = [];
+      normalized.forEach((ratio, i) => {
+        const circumference = 2 * Math.PI * r;
+        const dash = ratio * circumference;
+        const gap = circumference - dash;
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circle.setAttribute("cx", cx);
+        circle.setAttribute("cy", cy);
+        circle.setAttribute("r", r);
+        circle.setAttribute("fill", "none");
+        circle.setAttribute("stroke", palette[i % palette.length]);
+        circle.setAttribute("stroke-width", stroke);
+        circle.setAttribute("stroke-dasharray", `${dash} ${gap}`);
+        circle.setAttribute("stroke-dashoffset", -acc * circumference);
+        circle.setAttribute("stroke-linecap", "round");
+        circle.setAttribute("class", "arc");
+        svg.appendChild(circle);
+        arcs.push(circle);
+        acc += ratio;
+      });
+      const legend = document.getElementById("legend");
+      labels.forEach((label, i) => {
+        const pct = Math.round((normalized[i] || 0) * 100) + "%";
+        const item = document.createElement("div");
+        item.className = "legend-item";
+        item.innerHTML = `<span class="legend-dot" style="background:${palette[i % palette.length]}"></span><span class="legend-text">${label}</span><span class="legend-value">${pct}</span>`;
+        legend.appendChild(item);
+      });
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo(".title", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.6, ease: "power3.out" }, 0.1);
+      arcs.forEach((arc, i) => {
+        const len = parseFloat(arc.getAttribute("stroke-dasharray").split(" ")[0]);
+        tl.fromTo(arc, { strokeDasharray: `0 ${2 * Math.PI * r}` }, { strokeDasharray: `${len} ${2 * Math.PI * r - len}`, duration: 0.9, ease: "power3.out" }, 0.4 + i * 0.12);
+      });
+      tl.fromTo(".center-group", { opacity: 0, scale: 0.9 }, { opacity: 1, scale: 1, duration: 0.6, ease: "back.out(1.5)" }, 1.2);
+      document.querySelectorAll(".legend-item").forEach((item, i) => {
+        tl.fromTo(item, { opacity: 0, x: 20 }, { opacity: 1, x: 0, duration: 0.4, ease: "power2.out" }, 1.0 + i * 0.1);
+      });
+      tl.to(".scene", { opacity: 0, y: -16, duration: 0.4, ease: "power2.in" }, 4.4);
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "accent", "type": "color", "label": "强调色", "default": "#00FF00"}, {"id": "background", "type": "color", "label": "背景色", "default": "#0A0A0F"}, {"id": "foreground", "type": "color", "label": "文字色", "default": "#F4F4F2"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+@font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html, body{ width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F); }
+#root{ position:relative; width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F);
+  color:var(--fg,#F4F4F2); font-family:'MEBHeiHeiTi','PingFang SC','Microsoft YaHei',sans-serif; }
+.num{ font-family:'MiSans SemiBold','PingFang SC',sans-serif; }
+
+#view{ position:absolute; inset:0; perspective:1600px; overflow:hidden; }
+.face{ position:absolute; inset:0; overflow:hidden; will-change:transform; }
+#pageA{ background:#101219; }
+#pageB{ background:#0d1410; }
+.pg{ padding:120px 140px; }
+.kick{ font-size:22px; letter-spacing:8px; font-family:'MiSans SemiBold',sans-serif; opacity:.5; }
+.h{ margin-top:30px; font-size:120px; font-weight:900; line-height:1.1; }
+.h em{ font-style:normal; color:var(--accent); }
+.ln{ margin-top:44px; height:16px; border-radius:8px; background:color-mix(in srgb, var(--fg) 22%, transparent); }
+#seam{ position:absolute; left:50%; top:0; width:220px; height:100%; translate:-50% 0; opacity:0;
+  background:linear-gradient(90deg,transparent,rgba(0,0,0,.55),transparent); pointer-events:none; }
+
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="4.5" data-width="1920" data-height="1080">
+
+<div id="view">
+  <div class="face" id="pageA"><div class="pg">
+    <div class="kick">CHAPTER 01</div>
+    <div class="h">功能 A<br>讲完了</div>
+    <div class="ln" style="width:52%"></div><div class="ln" style="width:38%"></div>
+  </div></div>
+  <div class="face" id="pageB"><div class="pg">
+    <div class="kick">CHAPTER 02</div>
+    <div class="h">翻到<br><em>功能 B</em></div>
+    <div class="ln" style="width:56%"></div><div class="ln" style="width:42%"></div>
+  </div></div>
+  <div id="seam"></div>
+</div>
+
+    </div>
+    <script>
+      const FB = {"accent": "#00FF00", "background": "#0A0A0F", "foreground": "#F4F4F2"};
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : FB;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4F4F2");
+      document.documentElement.style.setProperty("--background", v.background ?? "#0A0A0F");
+const $=(s)=>document.querySelector(s);
+const de=document.documentElement;
+de.style.setProperty('--accent',v.accent||'#00FF00');
+de.style.setProperty('--bg',v.background||'#0A0A0F');
+de.style.setProperty('--fg',v.foreground||'#F4F4F2');
+const F=(f)=>f/30; // 30fps: 帧→秒
+window.__timelines=window.__timelines||{};
+const tl=gsap.timeline({paused:true});
+
+// 单轴翻页（放弃 preserve-3d 立方体：headless 渲染尾段两面全黑）：
+// 旧页 0→-90° 离场压暗，接缝最窄处换页，新页 90→0° 进场变亮
+gsap.set('#pageA',{transformOrigin:'50% 50%'});
+gsap.set('#pageB',{transformOrigin:'50% 50%',rotationY:90,autoAlpha:0});
+// f0-30 前态建立（静止）
+tl.to('#pageA',{rotationY:-90,duration:F(30),ease:'power2.in'},F(30));
+tl.to('#pageA',{filter:'brightness(0.45)',duration:F(30),ease:'power2.in'},F(30));
+// f60 换页：旧页隐、新页现（硬切，此时旧页已边缘化不可见）
+tl.set('#pageA',{autoAlpha:0},F(60));
+tl.set('#pageB',{autoAlpha:1},F(60));
+tl.to('#pageB',{rotationY:0,duration:F(30),ease:'power2.out'},F(60));
+tl.to('#pageB',{filter:'brightness(1)',duration:F(30),ease:'power2.out'},F(60));
+// 中段接缝暗影，落定消
+tl.to('#seam',{opacity:1,duration:F(15),ease:'power1.in'},F(45));
+tl.to('#seam',{opacity:0,duration:F(15),ease:'power1.out'},F(60));
+// 收尾真静止（顶满 135f）
+tl.to({},{duration:F(45)},F(90));
+
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

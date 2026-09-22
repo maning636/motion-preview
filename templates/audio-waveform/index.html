@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"title","type":"string","label":"标题","default":"声音不是后贴上去的"},{"id":"subtitle","type":"string","label":"副标题","default":"口播音频和字幕时间轴一起决定页面什么时候切换"},{"id":"bars","type":"number","label":"条形数量","default":32},{"id":"accent","type":"color","label":"强调色","default":"#00FF00"},{"id":"background","type":"color","label":"背景色","default":"#12100E"},{"id":"foreground","type":"color","label":"文字色","default":"#F4EFE7"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+
+@font-face {
+  font-family: 'MiSans SemiBold';
+  src: url('../_fonts/MiSansSemiBold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'MEBHeiHeiTi';
+  src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype');
+  font-weight: 100 1000;
+  font-weight: normal;
+  font-style: normal;
+}
+
+*{ box-sizing: border-box;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      html, body{ margin: 0; width: 1920px; height: 1080px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      #root{ position: relative; width: 1920px; height: 1080px; overflow: hidden;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .scene{ position: absolute; inset: 0; width: 100%; height: 100%; padding: 96px 112px; overflow: hidden; display: flex; flex-direction: column; justify-content: center;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .title-area{ margin-bottom: 48px;font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .title{ margin: 0 0 16px; font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif; font-size: 72px; font-weight: 700; line-height: 1.1; letter-spacing: -0.02em; }
+      .subtitle{ margin: 0; font-family: 'MEBHeiHeiTi', sans-serif; font-size: 28px; font-weight: 400; opacity: 0.55; }
+      .wave-area{ height: 280px; display: flex; align-items: center; justify-content: center; gap: 10px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .bar{ width: 14px; background: var(--accent); border-radius: 7px; opacity: 0;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920" data-height="1080">
+      <section id="scene" class="scene clip" data-start="0" data-duration="6" data-track-index="1">
+        <div class="title-area">
+          <h1 class="title" id="title"></h1>
+          <p class="subtitle" id="subtitle"></p>
+        </div>
+        <div class="wave-area" id="waveArea"></div>
+      </section>
+    </div>
+    <script>
+      const fallback = { title: "声音不是后贴上去的", subtitle: "口播音频和字幕时间轴一起决定页面什么时候切换", bars: 32, accent: "#00FF00", background: "#12100E", foreground: "#F4EFE7" };
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : fallback;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4EFE7");
+      document.documentElement.style.setProperty("--background", v.background ?? "#12100E");
+      const root = document.getElementById("root");
+      root.style.backgroundColor = v.background;
+      root.style.color = v.foreground;
+      root.style.setProperty("--accent", v.accent);
+      document.getElementById("title").textContent = v.title;
+      document.getElementById("subtitle").textContent = v.subtitle;
+
+      const waveArea = document.getElementById("waveArea");
+      const barCount = Number(v.bars) || 32;
+      const bars = [];
+      for (let i = 0; i < barCount; i++) {
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        bar.style.height = "20px";
+        waveArea.appendChild(bar);
+        bars.push(bar);
+      }
+
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo(".title", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.1);
+      tl.fromTo(".subtitle", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.3);
+      bars.forEach((bar, i) => {
+        const h = 40 + Math.abs(Math.sin(i * 0.7)) * 180;
+        tl.fromTo(bar, { opacity: 0, scaleY: 0 }, { opacity: 1, scaleY: 1, height: h, duration: 0.5, ease: "back.out(1.5)", transformOrigin: "center" }, 0.6 + i * 0.02);
+      });
+      tl.to(".bar", { height: (i) => 40 + Math.abs(Math.cos(i * 0.5)) * 160, duration: 0.8, ease: "sine.inOut", stagger: { each: 0.03, repeat: 4, yoyo: true } }, 1.5);
+      tl.to(".scene", { opacity: 0, scale: 1.01, duration: 0.5, ease: "power2.in" }, 5.3);
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

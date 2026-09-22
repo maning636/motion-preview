@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"title","type":"string","label":"标题","default":"系统健康度"},{"id":"subtitle","type":"string","label":"副标题","default":"实时可用性评分"},{"id":"value","type":"number","label":"当前值","default":87},{"id":"min","type":"number","label":"最小值","default":0},{"id":"max","type":"number","label":"最大值","default":100},{"id":"unit","type":"string","label":"单位","default":"%"},{"id":"labelLow","type":"string","label":"低分区标签","default":"低"},{"id":"labelMid","type":"string","label":"中分区标签","default":"中"},{"id":"labelHigh","type":"string","label":"高分区标签","default":"高"},{"id":"accent","type":"color","label":"强调色","default":"#00FF00"},{"id":"background","type":"color","label":"背景色","default":"#12100E"},{"id":"foreground","type":"color","label":"文字色","default":"#F4EFE7"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+
+@font-face {
+  font-family: 'MiSans SemiBold';
+  src: url('../_fonts/MiSansSemiBold.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'MEBHeiHeiTi';
+  src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype');
+  font-weight: 100 1000;
+  font-weight: normal;
+  font-style: normal;
+}
+
+*{ box-sizing: border-box;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      html, body{ margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--background, #12100e);font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      body{ font-family: 'MEBHeiHeiTi', sans-serif; }
+      #root{ position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--background, #12100e); color: var(--foreground, #f4efe7);font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .scene{ position: absolute; inset: 0; width: 100%; height: 100%; padding: 96px 112px; overflow: hidden; display: flex; flex-direction: column; align-items: center;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .title-area{ text-align: center; margin-bottom: 40px;font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .title{ margin: 0 0 12px; font-size: 72px; font-weight: 700; line-height: 1.1; letter-spacing: -0.03em;font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .subtitle{ margin: 0; font-size: 32px; font-weight: 400; color: #6B7280;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .gauge-wrap{ position: relative; width: 720px; height: 420px; margin-top: 40px;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .gauge-svg{ width: 100%; height: 100%; overflow: visible;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .gauge-track{ fill: none; stroke: #211c18; stroke-width: 32; stroke-linecap: round;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .gauge-segment{ fill: none; stroke-width: 32; stroke-linecap: round; opacity: 0;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .gauge-value{ fill: #f4efe7; font-size: 120px; font-weight: 700; text-anchor: middle;font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .gauge-unit{ fill: #6B7280; font-size: 36px; font-weight: 500; text-anchor: middle;font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+      .gauge-labels{ display: flex; justify-content: space-between; width: 560px; margin: 20px auto 0; font-size: 22px; color: #f4efe7;font-family: 'MEBHeiHeiTi', 'PingFang SC', 'Microsoft YaHei', sans-serif;}
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920" data-height="1080">
+      <section id="scene" class="scene clip" data-start="0" data-duration="6" data-track-index="1">
+        <div class="title-area">
+          <h1 class="title" id="title"></h1>
+          <p class="subtitle" id="subtitle"></p>
+        </div>
+        <div class="gauge-wrap">
+          <svg class="gauge-svg" viewBox="0 0 720 420">
+            <path class="gauge-track" id="track"></path>
+            <path class="gauge-segment" id="segLow" stroke="#6B7280"></path>
+            <path class="gauge-segment" id="segMid" stroke="#6B7280"></path>
+            <path class="gauge-segment" id="segHigh" stroke="#00FF00"></path>
+            <text class="gauge-value" x="360" y="320" id="valueText">0</text>
+            <text class="gauge-unit" x="360" y="370" id="unitText">%</text>
+          </svg>
+        </div>
+        <div class="gauge-labels">
+          <span id="labelLow"></span>
+          <span id="labelMid"></span>
+          <span id="labelHigh"></span>
+        </div>
+      </section>
+    </div>
+    <script>
+      const fallback = { title: "系统健康度", subtitle: "实时可用性评分", value: 87, min: 0, max: 100, unit: "%", labelLow: "低", labelMid: "中", labelHigh: "高", accent: "#00FF00", background: "#12100E", foreground: "#F4EFE7" };
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : fallback;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4EFE7");
+      document.documentElement.style.setProperty("--background", v.background ?? "#12100E");
+      document.documentElement.style.setProperty("--accent", v.accent);
+      document.getElementById("root").style.backgroundColor = v.background;
+      document.getElementById("root").style.color = v.foreground;
+      document.getElementById("title").textContent = v.title;
+      document.getElementById("subtitle").textContent = v.subtitle;
+      document.getElementById("unitText").textContent = v.unit;
+      document.getElementById("labelLow").textContent = v.labelLow;
+      document.getElementById("labelMid").textContent = v.labelMid;
+      document.getElementById("labelHigh").textContent = v.labelHigh;
+
+      const cx = 360, cy = 380, r = 300;
+      const startAngle = Math.PI, endAngle = 2 * Math.PI;
+      const arc = (a0, a1) => {
+        const x0 = cx + r * Math.cos(a0), y0 = cy + r * Math.sin(a0);
+        const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+        return `M ${x0} ${y0} A ${r} ${r} 0 0 1 ${x1} ${y1}`;
+      };
+      const trackPath = arc(startAngle, endAngle);
+      document.getElementById("track").setAttribute("d", trackPath);
+
+      const ratio = Math.min(1, Math.max(0, (v.value - v.min) / (v.max - v.min)));
+      const segLowEnd = Math.PI * 1.33;
+      const segMidEnd = Math.PI * 1.66;
+      document.getElementById("segLow").setAttribute("d", arc(Math.PI, segLowEnd));
+      document.getElementById("segMid").setAttribute("d", arc(segLowEnd, segMidEnd));
+      document.getElementById("segHigh").setAttribute("d", arc(segMidEnd, 2 * Math.PI));
+      document.getElementById("segHigh").setAttribute("stroke", v.accent);
+
+      const valueText = document.getElementById("valueText");
+
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      tl.fromTo(".title", { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.7, ease: "power3.out" }, 0.1);
+      tl.fromTo(".subtitle", { opacity: 0, y: 24 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.3);
+      tl.fromTo(".gauge-track", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 0.5);
+      tl.fromTo(".gauge-segment", { opacity: 0 }, { opacity: 1, duration: 0.4, stagger: 0.1, ease: "power2.out" }, 0.7);
+      tl.fromTo(".gauge-labels span", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.3, stagger: 0.05, ease: "power2.out" }, 1.0);
+      const target = { val: 0 };
+      tl.to(target, { val: v.value, duration: 1.6, ease: "power3.out", onUpdate: () => { valueText.textContent = Math.round(target.val); } }, 1.2);
+      tl.to(".scene", { opacity: 0, scale: 1.01, duration: 0.5, ease: "power2.in" }, 5.3);
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

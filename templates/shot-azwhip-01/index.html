@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "accent", "type": "color", "label": "强调色", "default": "#00FF00"}, {"id": "background", "type": "color", "label": "背景色", "default": "#0A0A0F"}, {"id": "foreground", "type": "color", "label": "文字色", "default": "#F4F4F2"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+@font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html, body{ width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F); }
+#root{ position:relative; width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F);
+  color:var(--fg,#F4F4F2); font-family:'MEBHeiHeiTi','PingFang SC','Microsoft YaHei',sans-serif; }
+.num{ font-family:'MiSans SemiBold','PingFang SC',sans-serif; }
+
+#strip{ position:absolute; left:0; top:0; width:4800px; height:1080px; will-change:transform,filter; }
+.scene{ position:absolute; top:0; width:1920px; height:1080px; padding:170px; }
+#scA{ left:0; background:#0C0E14; }
+#scB{ left:2880px; background:#0F1420; }
+.k{ font-size:22px; letter-spacing:8px; opacity:.42; font-family:'MiSans SemiBold',sans-serif; }
+h2{ margin-top:30px; font-size:92px; font-weight:900; }
+.rows{ margin-top:56px; }
+.r{ height:20px; border-radius:10px; margin-bottom:26px; background:color-mix(in srgb, var(--fg) 16%, transparent); }
+#scB h2 em{ color:var(--accent); font-style:normal; }
+#scB .r{ background:color-mix(in srgb, var(--accent) 26%, transparent); }
+
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="4.5" data-width="1920" data-height="1080">
+
+<div id="strip">
+  <div class="scene" id="scA">
+    <div class="k">SCENE 01 · 功能清单</div>
+    <h2>上一镜：罗列</h2>
+    <div class="rows">
+      <div class="r" style="width:52%"></div><div class="r" style="width:44%"></div>
+      <div class="r" style="width:58%"></div><div class="r" style="width:38%"></div>
+    </div>
+  </div>
+  <div class="scene" id="scB">
+    <div class="k">SCENE 02 · 数据面板</div>
+    <h2>下一镜：<em>甩</em>到位</h2>
+    <div class="rows">
+      <div class="r" style="width:48%"></div><div class="r" style="width:56%"></div>
+      <div class="r" style="width:40%"></div><div class="r" style="width:52%"></div>
+    </div>
+  </div>
+</div>
+
+    </div>
+    <script>
+      const FB = {"accent": "#00FF00", "background": "#0A0A0F", "foreground": "#F4F4F2"};
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : FB;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4F4F2");
+      document.documentElement.style.setProperty("--background", v.background ?? "#0A0A0F");
+const $=(s)=>document.querySelector(s);
+const de=document.documentElement;
+de.style.setProperty('--accent',v.accent||'#00FF00');
+de.style.setProperty('--bg',v.background||'#0A0A0F');
+de.style.setProperty('--fg',v.foreground||'#F4F4F2');
+const F=(f)=>f/30; // 30fps: 帧→秒
+window.__timelines=window.__timelines||{};
+const tl=gsap.timeline({paused:true});
+
+const strip=$('#strip');
+gsap.set(strip,{x:0});
+// 两端 hold，f25 起甩 8f 走 70% 路程（峰值 >300px/f），后 40f ease-out 长尾落位
+tl.set(strip,{filter:'blur(9px)'},F(25));
+tl.to(strip,{x:-2016,duration:F(8),ease:'power2.in'},F(25));
+tl.to(strip,{x:-2880,duration:F(40),ease:'power3.out'},F(33));
+tl.to(strip,{filter:'blur(2.5px)',duration:F(6),ease:'none'},F(33));
+tl.set(strip,{clearProps:'filter'},F(45));
+tl.to({},{duration:F(90)},F(45));
+
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

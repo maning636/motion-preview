@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "title", "type": "string", "label": "卡片标题", "default": "周报生成效果"}, {"id": "beforeLabel", "type": "string", "label": "前角标", "default": "BEFORE"}, {"id": "afterLabel", "type": "string", "label": "后角标", "default": "AFTER"}, {"id": "accent", "type": "color", "label": "强调色", "default": "#00FF00"}, {"id": "background", "type": "color", "label": "背景色", "default": "#0A0A0F"}, {"id": "foreground", "type": "color", "label": "文字色", "default": "#F4F4F2"}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+@font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }
+*{ box-sizing: border-box; margin: 0; padding: 0; }
+html, body{ width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F); }
+#root{ position:relative; width:1920px; height:1080px; overflow:hidden; background:var(--bg,#0A0A0F);
+  color:var(--fg,#F4F4F2); font-family:'MEBHeiHeiTi','PingFang SC','Microsoft YaHei',sans-serif; }
+.num{ font-family:'MiSans SemiBold','PingFang SC',sans-serif; }
+
+.ba{ position:absolute; left:460px; top:190px; width:1000px; height:700px; border-radius:22px; overflow:hidden;
+  background:#14141B; border:1px solid rgba(255,255,255,.12); }
+.ba .inner{ position:absolute; inset:0; padding:46px; }
+.ba .ttl{ font-size:42px; color:var(--fg); margin-bottom:34px; }
+.ba .row{ height:88px; border-radius:14px; background:rgba(255,255,255,.07); margin-bottom:22px;
+  display:flex; align-items:center; padding:0 28px; font-size:26px; color:rgba(255,255,255,.75); }
+.ba .row b{ margin-left:auto; font-size:34px; color:var(--fg); }
+.ba .row.hot b{ color:var(--accent); }
+#before{ filter:grayscale(.92) contrast(.72) brightness(.82); }
+#after{ clip-path:inset(0 92% 0 0); background:#171722; }
+.bal{ position:absolute; top:24px; font-size:22px; letter-spacing:4px; padding:8px 16px; border-radius:8px; }
+.bal.b{ right:24px; color:rgba(255,255,255,.55); border:1px solid rgba(255,255,255,.25); }
+.bal.a{ left:24px; top:auto; bottom:24px; color:#061106; background:var(--accent); font-weight:700; }
+#rod{ position:absolute; top:0; bottom:0; left:8%; width:0; z-index:5; }
+#rod .line{ position:absolute; top:0; bottom:0; left:-2px; width:4px; background:#fff; box-shadow:0 0 18px rgba(255,255,255,.6); }
+#rod .grip{ position:absolute; top:50%; left:-30px; margin-top:-30px; width:60px; height:60px; border-radius:50%;
+  background:#fff; color:#0A0A0F; display:flex; align-items:center; justify-content:center; font-size:26px; }
+
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="5" data-width="1920" data-height="1080">
+<div class="ba" id="before"><div class="inner"><div class="ttl" id="t"></div><div class="row"><span>素材整理</span><b>12 min</b></div><div class="row hot"><span>文案生成</span><b>38 s</b></div><div class="row"><span>配音合成</span><b>51 s</b></div><div class="row hot"><span>全片渲染</span><b>96 s</b></div></div><span class="bal b" id="lb"></span></div><div class="ba" id="after"><div class="inner"><div class="ttl" id="t"></div><div class="row"><span>素材整理</span><b>12 min</b></div><div class="row hot"><span>文案生成</span><b>38 s</b></div><div class="row"><span>配音合成</span><b>51 s</b></div><div class="row hot"><span>全片渲染</span><b>96 s</b></div></div><span class="bal a" id="la"></span></div><div id="rod"><div class="line"></div><div class="grip" id="grip">⇄</div></div>
+    </div>
+    <script>
+      const FB = {"title": "周报生成效果", "beforeLabel": "BEFORE", "afterLabel": "AFTER", "accent": "#00FF00", "background": "#0A0A0F", "foreground": "#F4F4F2"};
+      const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : FB;
+      document.documentElement.style.setProperty("--foreground", v.foreground ?? "#F4F4F2");
+      document.documentElement.style.setProperty("--background", v.background ?? "#0A0A0F");
+const $=(s)=>document.querySelector(s);
+const de=document.documentElement;
+de.style.setProperty('--accent',v.accent||'#00FF00');
+de.style.setProperty('--bg',v.background||'#0A0A0F');
+de.style.setProperty('--fg',v.foreground||'#F4F4F2');
+const F=(f)=>f/30; // 30fps: 帧→秒
+window.__timelines=window.__timelines||{};
+const tl=gsap.timeline({paused:true});
+
+$('#t').textContent=v.title||'';$('#before .ttl').textContent=v.title||'';$('#after .ttl').textContent=v.title||'';
+$('#lb').textContent=v.beforeLabel||'BEFORE';$('#la').textContent=v.afterLabel||'AFTER';
+const rod=$('#rod'), after=$('#after'), grip=$('#grip');
+const p={x:8};
+const apply=()=>{ rod.style.left=p.x+'%'; after.style.clipPath='inset(0 '+(100-p.x)+'% 0 0)'; };
+apply();
+// 快甩 12f（8→76 过冲）→ 回弹 12f（→70）→ 停 18f → 慢扫 48f（→40）→ 定格
+tl.to(p,{x:76,duration:F(12),ease:'power3.out',onUpdate:apply},F(14));
+tl.to(grip,{scaleX:1.18,duration:F(6),yoyo:true,repeat:1},F(14));   // 手柄被甩的重量感
+tl.to(p,{x:70,duration:F(12),ease:'sine.inOut',onUpdate:apply},F(26));
+tl.to(p,{x:40,duration:F(48),ease:'sine.inOut',onUpdate:apply},F(56));
+tl.to({},{duration:F(46)},F(104)); // 定格留 40% after 作结论
+
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>

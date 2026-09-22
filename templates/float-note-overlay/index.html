@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id": "bgVideo", "type": "string", "label": "背景视频路径（全屏 cover 循环静音）", "default": "./assets/placeholder.mp4"}, {"id": "kicker", "type": "string", "label": "角标小字", "default": "录播精讲"}, {"id": "title", "type": "string", "label": "主标题", "default": "这一节讲什么"}, {"id": "body", "type": "string", "label": "正文（\\n 换行，最多两行）", "default": "背景放录播或露脸画面\\n解说结论浮在卡片上"}, {"id": "position", "type": "string", "label": "解说卡位置 left/right", "default": "left"}, {"id": "accent", "type": "color", "label": "强调色", "default": "#22c55e"}, {"id": "duration", "type": "number", "label": "总时长(秒)", "default": 6}]'>
+  <head>
+    <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      *{ box-sizing: border-box; margin: 0; padding: 0; }
+      html, body{ width: 1920px; height: 1080px; overflow: hidden; }
+      #root{ position: relative; width: 1920px; height: 1080px; overflow: hidden; background: var(--background, #040604); }
+      @font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
+      #root{ font-family: 'MiSans SemiBold', 'PingFang SC', sans-serif; }
+      #bg{ position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+      /* 浮动解说卡：深色半透明毛玻璃 + 强调色竖条 */
+      .fn-card{ position: absolute; top: 50%; transform: translateY(-50%); z-index: 10;
+        width: 620px; max-height: 720px; padding: 36px 40px 36px 37px;
+        background: rgba(10,14,12,.58); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+        border-radius: 20px; border-left: 4px solid #22c55e; opacity: 0;
+        box-shadow: 0 12px 48px rgba(0,0,0,.4); }
+      .fn-card.left{ left: 96px; }
+      .fn-card.right{ right: 96px; }
+      .fn-kicker{ font-size: clamp(20px, 1.3vw, 26px); color: #22c55e; letter-spacing: .22em;
+        margin-bottom: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .fn-title{ font-size: clamp(40px, 3vw, 58px); line-height: 1.25; color: #fff; margin-bottom: 20px;
+        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+      .fn-body{ font-size: clamp(24px, 1.6vw, 32px); line-height: 1.6; color: rgba(255,255,255,.78);
+        display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+      /* 底部进度条：随 duration 走完 */
+      .fn-progress{ position: absolute; left: 0; right: 0; bottom: 0; height: 4px; z-index: 11;
+        background: rgba(255,255,255,.12); }
+      .fn-progress .bar{ height: 100%; width: 100%; background: #22c55e;
+        transform-origin: left center; transform: scaleX(0); }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="6" data-width="1920" data-height="1080">
+      <video id="bg" muted loop playsinline preload="auto" src="./assets/placeholder.mp4"></video>
+      <div class="fn-card left" id="card">
+        <div class="fn-kicker" id="kicker"></div>
+        <div class="fn-title" id="title"></div>
+        <div class="fn-body" id="body"></div>
+      </div>
+      <div class="fn-progress"><div class="bar" id="bar"></div></div>
+    </div>
+    <script>
+      const fallback = {"bgVideo": "./assets/placeholder.mp4", "kicker": "录播精讲", "title": "这一节讲什么", "body": "背景放录播或露脸画面\n解说结论浮在卡片上", "position": "left", "accent": "#22c55e", "duration": 6};
+      const V = Object.assign({}, fallback, (window.__hyperframes?.getVariables?.() || {}));
+      const $ = (id) => document.getElementById(id);
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const dur = Math.max(1, Number(V.duration) || 6);
+      const accent = String(V.accent || "#22c55e");
+      $("card").style.borderLeftColor = accent;
+      $("kicker").style.color = accent;
+      $("bar").style.background = accent;
+      if (V.bgVideo) $("bg").src = V.bgVideo;
+      const pos = String(V.position ?? "left").toLowerCase() === "right" ? "right" : "left";
+      $("card").classList.remove("left", "right");
+      $("card").classList.add(pos);
+      const kicker = String(V.kicker ?? "").trim();
+      const title = String(V.title ?? "").trim();
+      // body 支持字面 \n（JSON 里写 \\n）或真实换行，逐行成段
+      const bodyLines = String(V.body ?? "").split(/\\n|\n/).map((s) => s.trim()).filter(Boolean);
+      $("kicker").textContent = kicker;
+      $("kicker").style.display = kicker ? "block" : "none";
+      $("title").textContent = title;
+      $("title").style.display = title ? "block" : "none";
+      $("body").innerHTML = bodyLines.map((s) => `<div>${s.replace(/&/g,"&amp;").replace(/</g,"&lt;")}</div>`).join("");
+      $("body").style.display = bodyLines.length ? "block" : "none";
+      // 入场：fade + slide（左卡从左侧滑入，右卡从右）；结尾前 0.4s 淡出
+      const slideX = pos === "right" ? 48 : -48;
+      tl.fromTo("#card", { opacity: 0, x: slideX }, { opacity: 1, x: 0, duration: 0.7, ease: "power2.out" }, 0.2);
+      tl.to("#card", { opacity: 0, y: -16, duration: 0.4, ease: "power2.in" }, Math.max(0.9, dur - 0.4));
+      // 进度条随总时长线性走完
+      tl.fromTo("#bar", { scaleX: 0 }, { scaleX: 1, duration: dur, ease: "none" }, 0);
+      window.__timelines.main = tl;
+    </script>
+  </body>
+</html>
