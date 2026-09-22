@@ -591,3 +591,13 @@ body.modes-full-page { height: auto; overflow: auto; }
   .pg-main { grid-template-columns: 200px minmax(0, 1fr) 270px; }
   .pg-con-base .pg-bases { grid-template-columns: 1fr 1fr; }
 }
+
+/* ── 试玩器 v14：素材库与视频同高、收窄；视频居中 ── */
+.pg-main { grid-template-columns: minmax(200px, 320px) minmax(560px, 900px) minmax(200px, 235px); justify-content: space-between; }
+.pg-main .pg-right { align-self: stretch; }
+.pg-main .pg-right .pg-panel { position: static; height: 100%; display: flex; flex-direction: column; gap: 10px; }
+.pg-main .pg-right .pg-list { flex: 1; max-height: none; min-height: 0; }
+
+/* v14.1 素材库面板高由 JS 钉为视频同高 */
+.pg-main .pg-right { align-self: start; }
+.pg-main .pg-right .pg-panel { overflow: hidden; }

@@ -868,6 +868,12 @@ function pgRenderLayerFrame(index) {
 }
 
 let pgFitTimer = null;
+function pgFitPanels() {
+  const center = stageContent.querySelector(".pg-center");
+  const panel = stageContent.querySelector(".pg-right .pg-panel");
+  if (center && panel) panel.style.height = center.clientHeight + "px";
+}
+
 function pgFitIframes() {
   stageContent.querySelectorAll(".pg-stage-layer").forEach((el) => {
     const iframe = el.querySelector("iframe");
@@ -1545,8 +1551,8 @@ function renderPlayground() {
     pgUpdateClockUI();
   });
 
-  requestAnimationFrame(() => { pgApplyPositions(); pgFitIframes(); pgUpdateClockUI(); });
-  window.addEventListener("resize", () => { clearTimeout(pgFitTimer); pgFitTimer = setTimeout(() => { pgApplyPositions(); pgFitIframes(); }, 120); });
+  requestAnimationFrame(() => { pgFitPanels(); pgApplyPositions(); pgFitIframes(); pgUpdateClockUI(); });
+  window.addEventListener("resize", () => { clearTimeout(pgFitTimer); pgFitTimer = setTimeout(() => { pgFitPanels(); pgApplyPositions(); pgFitIframes(); }, 120); });
 
   /* 顶栏：导出 */
   stageContent.querySelector("#pg-export").addEventListener("click", () => {
