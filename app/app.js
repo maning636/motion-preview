@@ -1107,13 +1107,33 @@ function pgSyncPanel() {
   });
 }
 
+function pgScrollLayerIntoView(index) {
+  const c = stageContent.querySelector(".pg-layers");
+  const row = c?.querySelector(`.pg-layer[data-layer="${index}"]`);
+  if (!c || !row) return;
+  c.scrollTop = Math.max(0, row.offsetTop - c.clientHeight / 2 + row.clientHeight / 2);
+}
+
 function pgPick(index, scroll) {
   pgState.picked = index;
   pgSyncPanel();
-  if (scroll) {
-    const row = stageContent.querySelector(`.pg-layer[data-layer="${index}"]`);
-    row?.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }
+  if (scroll) pgScrollLayerIntoView(index);
+}
+
+/* Delete / Backspace 删除选中层（输入控件聚焦时不触发） */
+let pgKeyBound = false;
+function pgGlobalKey(e) {
+  if (state.view !== "playground") return;
+  if (e.key !== "Delete" && e.key !== "Backspace") return;
+  const a = document.activeElement;
+  if (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT" || a.isContentEditable)) return;
+  if (pgState.picked == null || !pgState.layers[pgState.picked]) return;
+  e.preventDefault();
+  const index = pgState.picked;
+  pgGeneration.set(index, (pgGeneration.get(index) || 0) + 1);
+  pgState.layers.splice(index, 1);
+  pgState.picked = null;
+  renderPlayground();
 }
 
 function pgFieldMarkup(declaration, layer, index) {
@@ -1210,7 +1230,15 @@ function renderPlayground() {
           <button class="button" type="button" id="pg-clear">清空图层</button>
         </div>
       </header>
-      <div class="pg-grid">
+      <section class="pg-strip-panel">
+        <div class="pg-strip-head">
+          <h3>素材库</h3>
+          <input type="search" id="pg-filter" placeholder="搜模板名 / 分类 / 标签" value="${escapeHtml(pgState.filter)}">
+          <span class="pg-strip-hint">点素材上屏 · 横向滑动逛全部模板</span>
+        </div>
+        <div class="pg-strip" id="pg-list" data-lenis-prevent></div>
+      </section>
+      <div class="pg-grid2">
         <aside class="pg-left">
           <section class="pg-panel">
             <h3>底片</h3>
@@ -1248,13 +1276,6 @@ function renderPlayground() {
           </div>
           <p class="pg-stage-hint">舞台为模板实时渲染、透明叠加在底片上；点 ▶ 播放看运动轨迹与时间段效果；最终成片按清单在本地 HyperFrames 渲染（见下方说明）。</p>
         </div>
-        <aside class="pg-right">
-          <section class="pg-panel">
-            <h3>素材库</h3>
-            <input type="search" id="pg-filter" placeholder="搜模板名 / 分类 / 标签" value="${escapeHtml(pgState.filter)}">
-            <div class="pg-list" id="pg-list" data-lenis-prevent></div>
-          </section>
-        </aside>
       </div>
       <section class="pg-about">
         <div class="howto-head">
@@ -1523,10 +1544,12 @@ function renderPlayground() {
       .filter((t) => !needle || JSON.stringify(t).toLowerCase().includes(needle))
       .slice(0, 60);
     list.innerHTML = pool.map((t) => `
-      <div class="pg-item" data-add="${t.id}" role="button" tabindex="0">
+      <div class="pg-item" data-add="${t.id}" role="button" tabindex="0" title="${escapeHtml(t.category)} · ${t.duration}s">
         <video muted loop playsinline preload="none" data-src="${assetUrl(t.preview)}"></video>
-        <div class="pg-item-info"><strong>${escapeHtml(t.name)}</strong><span>${escapeHtml(t.category)} · ${t.duration}s</span></div>
-        <button class="pg-add" type="button" tabindex="-1" aria-label="加为图层"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+        <div class="pg-item-row">
+          <div class="pg-item-info"><strong>${escapeHtml(t.name)}</strong><span>${t.duration}s</span></div>
+          <button class="pg-add" type="button" tabindex="-1" aria-label="加为图层"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+        </div>
       </div>`).join("") || `<p class="pg-empty-layer">没有匹配的模板。</p>`;
     list.querySelectorAll(".pg-item").forEach((item) => {
       const video = item.querySelector("video");
@@ -1552,6 +1575,7 @@ function renderPlayground() {
     pgState.filter = filterInput.value;
     renderPgList();
   });
+  if (!pgKeyBound) { document.addEventListener("keydown", pgGlobalKey); pgKeyBound = true; }
 
   scrollStageTop();
 }
