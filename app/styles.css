@@ -514,3 +514,55 @@ body.modes-full-page { height: auto; overflow: auto; }
 .pg-con-body-h { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
 .pg-con-body-h .pg-zone,
 .pg-con-body-h .pg-chips-zone { flex: none; }
+
+/* ── 试玩器 v9：操作台重设计（暗色混音台 · 内层横排钉死） ── */
+.pg-con-body { display: flex; flex-wrap: nowrap; gap: 0; align-items: stretch; }
+.pg-con-body > * { border-left: 1px solid rgba(255,255,255,.07); padding: 2px 18px; }
+.pg-con-body > *:first-child { border-left: none; padding-left: 4px; }
+.pg-console-h { background: #14110d; border-color: #2a251d; color: #f4efe7; padding: 16px 18px; gap: 14px; box-shadow: 0 14px 34px -20px rgba(0,0,0,.55); }
+.pg-con-head h3 { color: #4ade80; letter-spacing: .16em; font-size: 13px; }
+.pg-con-hint { color: rgba(244,239,231,.42); }
+.pg-duration { color: rgba(244,239,231,.55); }
+.pg-duration input { background: #1e1a14; border-color: #2f2a20; color: #f4efe7; height: 26px; border-radius: 7px; }
+.pg-con-body-h { gap: 0; align-items: stretch; }
+.pg-con-body-h > * { border-left: 1px solid rgba(255,255,255,.07); padding: 2px 18px; }
+.pg-con-body-h > *:first-child { border-left: none; padding-left: 4px; }
+.pg-chips-zone { width: 176px; border-right: none; display: flex; flex-direction: column; gap: 8px; }
+.pg-chips-zone h4, .pg-zone h4 { color: #4ade80; font-size: 11px; letter-spacing: .2em; font-weight: 800; margin: 0 0 2px; }
+.pg-zone-sub { color: rgba(244,239,231,.35); font-size: 10px; letter-spacing: .06em; }
+.pg-chip { background: #1e1a14; border-color: #2f2a20; color: rgba(244,239,231,.85); height: 28px; }
+.pg-chip:hover { border-color: rgba(74,222,128,.5); }
+.pg-chip.active { border-color: #4ade80; color: #4ade80; background: rgba(74,222,128,.08); box-shadow: none; }
+.pg-chip .pg-layer-del { color: rgba(244,239,231,.4); }
+.pg-chip-empty { color: rgba(244,239,231,.4); }
+.pg-con-body .pg-zone, .pg-con-body-h .pg-zone { border: none; background: transparent; padding: 2px 18px; }
+.pg-zone-pos { width: 210px; flex: none; }
+.pg-zone-size { width: 264px; flex: none; }
+.pg-zone-fx { flex: 1; min-width: 380px; display: flex; gap: 20px; align-items: flex-start; }
+.pg-zone-fx .pg-motion { width: 320px; flex: none; border-top: none; padding-top: 2px; }
+.pg-zone-fx .pg-vars { flex: 1; min-width: 0; border-top: none; padding-top: 2px; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.pg-pad { grid-template-columns: repeat(3, 32px); gap: 5px; }
+.pg-pad .pg-pos { width: 32px; height: 32px; background: #1e1a14; border-color: #2f2a20; color: rgba(244,239,231,.55); border-radius: 8px; }
+.pg-pad .pg-pos:hover { border-color: rgba(74,222,128,.6); color: #4ade80; }
+.pg-pad .pg-pos.on { background: #4ade80; border-color: #4ade80; color: #14110d; box-shadow: 0 0 12px rgba(74,222,128,.45); }
+.pg-row2 { color: rgba(244,239,231,.5); font-size: 11.5px; }
+.pg-row2 input[type="number"], .pg-motion-body input[type="number"], .pg-mline input[type="number"] { background: #1e1a14; border-color: #2f2a20; color: #f4efe7; height: 26px; border-radius: 7px; font-variant-numeric: tabular-nums; }
+.pg-row2 input:focus, .pg-motion-body input:focus, .pg-var input:focus, .pg-var select:focus { border-color: #4ade80; outline: none; }
+.pg-row2 em { color: #4ade80; font-variant-numeric: tabular-nums; }
+.pg-row2 input[type="range"] { accent-color: #4ade80; }
+.pg-motion-head { color: #4ade80; font-size: 12px; }
+.pg-motion-body { color: rgba(244,239,231,.5); font-size: 11.5px; }
+.pg-hintline { color: rgba(244,239,231,.35); }
+.pg-var { grid-template-columns: 60px minmax(0,1fr); font-size: 11.5px; }
+.pg-var label { color: rgba(244,239,231,.5); }
+.pg-var input[type="text"], .pg-var input[type="number"], .pg-var select { background: #1e1a14; border-color: #2f2a20; color: #f4efe7; height: 26px; border-radius: 7px; }
+.pg-var input[type="color"] { background: #1e1a14; border-color: #2f2a20; height: 26px; border-radius: 7px; }
+.pg-con-body-h .button, .pg-con-body .button { background: #1e1a14; border: 1px solid #2f2a20; color: #4ade80; font-size: 11.5px; padding: 5px 10px; border-radius: 8px; }
+.pg-con-body-h .button:hover, .pg-con-body .button:hover { border-color: #4ade80; background: rgba(74,222,128,.08); }
+.pg-motion input[type="checkbox"], .pg-row2 input[type="radio"] { accent-color: #4ade80; }
+
+/* v9.1 控制台滚动条收细 */
+.pg-con-body-h::-webkit-scrollbar { height: 6px; }
+.pg-con-body-h::-webkit-scrollbar-track { background: transparent; }
+.pg-con-body-h::-webkit-scrollbar-thumb { background: #2f2a20; border-radius: 3px; }
+.pg-con-body-h::-webkit-scrollbar-thumb:hover { background: rgba(74,222,128,.5); }
