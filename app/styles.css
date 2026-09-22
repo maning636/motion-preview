@@ -604,3 +604,9 @@ body.modes-full-page { height: auto; overflow: auto; }
   .pg-main .pg-right .pg-panel { height: auto; max-height: 70vh; }
   .pg-con-hint { display: none; }
 }
+
+/* v16.1 窄屏微溢修复 */
+@media (max-width: 1100px) {
+  .pg-main > * { min-width: 0; max-width: 100%; }
+  .pg-main .pg-panel { min-width: 0; }
+}
