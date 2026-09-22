@@ -1237,15 +1237,7 @@ function renderPlayground() {
           <button class="button" type="button" id="pg-clear">清空图层</button>
         </div>
       </header>
-      <div class="pg-grid3">
-        <aside class="pg-left">
-          <section class="pg-panel pg-con-base">
-            <h3>底片</h3>
-            <div class="pg-bases">${baseButtons}</div>
-            <label class="pg-upload">上传自己的底片（视频 / 图片）<input type="file" id="pg-file" accept="video/*,image/*" hidden></label>
-            <p class="pg-upload-name">${pgState.base.type === "upload" ? `已选：${escapeHtml(pgState.base.name)}` : "未上传则用内置氛围底片"}</p>
-          </section>
-        </aside>
+      <div class="pg-grid2b">
         <div class="pg-center">
           <div class="pg-stage" id="pg-stage">
             ${pgState.base.type === "upload" && pgState.base.dataUrl && pgState.base.kind === "image"
@@ -1282,6 +1274,12 @@ function renderPlayground() {
           <label class="pg-duration">成片时长 <input type="number" id="pg-duration" min="3" max="600" step="1" value="${pgState.duration}"> 秒</label>
         </div>
         <div class="pg-con-body-h">
+          <div class="pg-base-zone pg-zone">
+            <h4>底片</h4>
+            <div class="pg-bases">${baseButtons}</div>
+            <label class="pg-upload">上传底片<input type="file" id="pg-file" accept="video/*,image/*" hidden></label>
+            <p class="pg-upload-name">${pgState.base.type === "upload" ? escapeHtml(pgState.base.name) : "内置氛围底片"}</p>
+          </div>
           <div class="pg-chips-zone">
             <h4>图层（${pgState.layers.length}）</h4>
             <div class="pg-layer-chips" data-lenis-prevent>${layerChips || `<span class="pg-chip-empty">尚无图层，右侧素材库点一行上屏</span>`}</div>
