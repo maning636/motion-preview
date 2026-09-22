@@ -1237,32 +1237,13 @@ function renderPlayground() {
           <button class="button" type="button" id="pg-clear">清空图层</button>
         </div>
       </header>
-      <section class="pg-strip-panel">
-        <div class="pg-strip-head">
-          <h3>素材库</h3>
-          <input type="search" id="pg-filter" placeholder="搜模板名 / 分类 / 标签" value="${escapeHtml(pgState.filter)}">
-          <span class="pg-strip-hint">点素材上屏 · 横向滑动逛全部模板</span>
-        </div>
-        <div class="pg-strip" id="pg-list" data-lenis-prevent></div>
-      </section>
-      <div class="pg-grid2">
-        <aside class="pg-left pg-console">
+      <div class="pg-grid3">
+        <aside class="pg-left">
           <section class="pg-panel pg-con-base">
-            <h3>底片库</h3>
+            <h3>底片</h3>
             <div class="pg-bases">${baseButtons}</div>
             <label class="pg-upload">上传自己的底片（视频 / 图片）<input type="file" id="pg-file" accept="video/*,image/*" hidden></label>
             <p class="pg-upload-name">${pgState.base.type === "upload" ? `已选：${escapeHtml(pgState.base.name)}` : "未上传则用内置氛围底片"}</p>
-          </section>
-          <section class="pg-panel pg-con-layers">
-            <h3>图层（${pgState.layers.length}）</h3>
-            <div class="pg-layer-chips" data-lenis-prevent>${layerChips || `<span class="pg-chip-empty">尚无图层</span>`}</div>
-          </section>
-          <section class="pg-panel pg-con-controls">
-            <div class="pg-con-head">
-              <h3>操作台</h3>
-              <label class="pg-duration">成片时长 <input type="number" id="pg-duration" min="3" max="600" step="1" value="${pgState.duration}"> 秒</label>
-            </div>
-            ${controlsZone}
           </section>
         </aside>
         <div class="pg-center">
@@ -1286,7 +1267,28 @@ function renderPlayground() {
           </div>
           <p class="pg-stage-hint">舞台为模板实时渲染、透明叠加在底片上；点 ▶ 播放看运动轨迹与时间段效果；最终成片按清单在本地 HyperFrames 渲染（见下方说明）。</p>
         </div>
+        <aside class="pg-right">
+          <section class="pg-panel">
+            <h3>素材库</h3>
+            <input type="search" id="pg-filter" placeholder="搜模板名 / 分类 / 标签" value="${escapeHtml(pgState.filter)}">
+            <div class="pg-list" id="pg-list" data-lenis-prevent></div>
+          </section>
+        </aside>
       </div>
+      <section class="pg-console-h">
+        <div class="pg-con-head">
+          <h3>操作台</h3>
+          <span class="pg-con-hint">选中图层后在这里操控：方向键定位置 · 滑杆定大小 · 运动与内容随层切换；Delete 键删除选中层</span>
+          <label class="pg-duration">成片时长 <input type="number" id="pg-duration" min="3" max="600" step="1" value="${pgState.duration}"> 秒</label>
+        </div>
+        <div class="pg-con-body-h">
+          <div class="pg-chips-zone">
+            <h4>图层（${pgState.layers.length}）</h4>
+            <div class="pg-layer-chips" data-lenis-prevent>${layerChips || `<span class="pg-chip-empty">尚无图层，右侧素材库点一行上屏</span>`}</div>
+          </div>
+          ${controlsZone}
+        </div>
+      </section>
       <section class="pg-about">
         <div class="howto-head">
           <p class="kicker">WHAT IS THIS</p>
@@ -1554,12 +1556,10 @@ function renderPlayground() {
       .filter((t) => !needle || JSON.stringify(t).toLowerCase().includes(needle))
       .slice(0, 60);
     list.innerHTML = pool.map((t) => `
-      <div class="pg-item" data-add="${t.id}" role="button" tabindex="0" title="${escapeHtml(t.category)} · ${t.duration}s">
+      <div class="pg-item" data-add="${t.id}" role="button" tabindex="0">
         <video muted loop playsinline preload="none" data-src="${assetUrl(t.preview)}"></video>
-        <div class="pg-item-row">
-          <div class="pg-item-info"><strong>${escapeHtml(t.name)}</strong><span>${t.duration}s</span></div>
-          <button class="pg-add" type="button" tabindex="-1" aria-label="加为图层"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
-        </div>
+        <div class="pg-item-info"><strong>${escapeHtml(t.name)}</strong><span>${escapeHtml(t.category)} · ${t.duration}s</span></div>
+        <button class="pg-add" type="button" tabindex="-1" aria-label="加为图层"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
       </div>`).join("") || `<p class="pg-empty-layer">没有匹配的模板。</p>`;
     list.querySelectorAll(".pg-item").forEach((item) => {
       const video = item.querySelector("video");
