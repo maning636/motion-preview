@@ -496,3 +496,21 @@ body.modes-full-page { height: auto; overflow: auto; }
 .pg-base-zone .pg-bases { grid-template-columns: 1fr 1fr; }
 .pg-base-zone .pg-upload { font-size: 11.5px; padding: 7px; }
 .pg-con-body-h { align-items: start; }
+
+/* ── 试玩器 v8：钉死的三区网格 + 永不折行的横版功能区 ── */
+.pg-main { display: grid; grid-template-columns: 200px minmax(0, 1fr) 270px; grid-template-areas: "base stage lib" "console console lib"; gap: 16px; align-items: start; }
+.pg-con-base { grid-area: base; }
+.pg-main .pg-center { grid-area: stage; }
+.pg-main .pg-right { grid-area: lib; }
+.pg-main .pg-console-h { grid-area: console; }
+.pg-main .pg-right .pg-panel { position: sticky; top: 12px; }
+.pg-con-base .pg-bases { grid-template-columns: 1fr 1fr; }
+.pg-con-base .pg-upload { font-size: 11.5px; padding: 7px; }
+@media (max-width: 900px) {
+  .pg-main { grid-template-columns: 1fr; grid-template-areas: "stage" "base" "console" "lib"; }
+  .pg-con-body-h { flex-wrap: nowrap; }
+}
+/* 功能区：永不折行，宁可横滚 */
+.pg-con-body-h { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+.pg-con-body-h .pg-zone,
+.pg-con-body-h .pg-chips-zone { flex: none; }
