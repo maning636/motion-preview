@@ -837,15 +837,18 @@ async function pgFetchTemplate(templateId) {
   return pgHtmlCache.get(templateId);
 }
 
-function pgBuildSrcdoc(html, variables) {
+function pgBuildSrcdoc(html, baseHref, variables) {
+  const baseTag = `<base href="${baseHref}">`;
   const varsScript = `<script>window.__hyperframes={getVariables:function(){return ${JSON.stringify(variables)};}};window.__renderExport=true;</script>`;
   let doc = html;
   const player = `<script>window.addEventListener("load",function(){var tls=Object.values(window.__timelines||{});tls.forEach(function(tl){try{tl.repeat(-1);tl.repeatDelay(0.4);tl.play(0);}catch(e){}});});</script>`;
   if (/<head[^>]*>/i.test(doc)) {
-    doc = doc.replace(/<head[^>]*>/i, (m) => m + varsScript);
+    doc = doc.replace(/<head[^>]*>/i, (m) => m + baseTag + varsScript);
     doc = /<\/head>/i.test(doc) ? doc.replace(/<\/head>/i, PG_TRANSPARENT_STYLE + "</head>") : doc;
+  } else if (/<html[^>]*>/i.test(doc)) {
+    doc = doc.replace(/<html[^>]*>/i, (m) => m + baseTag + varsScript);
   } else {
-    doc = varsScript + doc;
+    doc = baseTag + varsScript + doc;
     if (!/<style[^>]*>/i.test(doc)) doc = doc.replace(varsScript, varsScript + PG_TRANSPARENT_STYLE);
   }
   return /<\/body>/i.test(doc) ? doc.replace(/<\/body>/i, player + "</body>") : doc + player;
@@ -860,7 +863,7 @@ function pgRenderLayerFrame(index) {
   const variables = { ...layer.values, exportMode: "transparent" };
   pgFetchTemplate(layer.templateId).then((html) => {
     if (pgGeneration.get(index) !== mine) return;
-    el.srcdoc = pgBuildSrcdoc(html, variables);
+    el.srcdoc = pgBuildSrcdoc(html, `./templates/${layer.templateId}/`, variables);
   }).catch(() => {});
 }
 
@@ -1023,7 +1026,10 @@ function pgCommitDraw() {
   if (!layer || points.length < 3) return;
   const stage = stageContent.querySelector("#pg-stage");
   const r = stage.getBoundingClientRect();
-  const raw = points.map(([px, py]) => [px / r.width, py / r.height]);
+  const [ax, ay] = PG_ANCHORS[layer.position] || PG_ANCHORS.cc;
+  const baseX = ((ax + (layer.x || 0)) / 100) * r.width;
+  const baseY = ((ay + (layer.y || 0)) / 100) * r.height;
+  const raw = points.map(([px, py]) => [(px - baseX) / r.width, (py - baseY) / r.height]);
   const motion = pgNormalizeMotion({ type: "path", points: raw, secs: Math.max(0.5, Number(layer.motion?.secs) || 1.5), ease: layer.motion?.ease || "out" });
   if (motion) layer.motion = motion;
   renderPlayground();
@@ -1197,7 +1203,12 @@ function renderPlayground() {
     <div class="pg-con-body">
       <div class="pg-zone pg-zone-pos">
         <h4>位置 <span class="pg-zone-sub">方向键</span></h4>
-        <div class="pg-grid3 pg-pad">${PG_POSITIONS.map(([key, label]) => `<button type="button" class="pg-pos ${picked.position === key ? "on" : ""}" data-pos="${pgState.picked}:${key}" title="${label}">${PAD_ARROWS[key]}</button>`).join("")}</div>
+        <div class="pg-grid3 pg-pad">${PG_POSITIONS.map(([key, label]) => {
+        const [dx, dy] = { tl: [-1, -1], tc: [0, -1], tr: [1, -1], cl: [-1, 0], cc: [0, 0], cr: [1, 0], bl: [-1, 1], bc: [0, 1], br: [1, 1] }[key];
+        const isHome = key === "cc";
+        const on = isHome && picked.position === "cc" && !picked.x && !picked.y;
+        return `<button type="button" class="pg-pos ${on ? "on" : ""}" data-nudge="${pgState.picked}:${dx}:${dy}:${isHome ? 1 : 0}" title="${isHome ? "回中归位" : label + "（点一下动一步，按住连动）"}">${PAD_ARROWS[key]}</button>`;
+      }).join("")}</div>
         <div class="pg-row2">
           <label>横移 <input type="number" min="-45" max="45" step="1" value="${picked.x || 0}" data-dx="${pgState.picked}">%</label>
           <label>纵移 <input type="number" min="-45" max="45" step="1" value="${picked.y || 0}" data-dy="${pgState.picked}">%</label>
@@ -1341,14 +1352,37 @@ function renderPlayground() {
     pgState.picked = null;
     renderPlayground();
   }));
-  stageContent.querySelectorAll("[data-pos]").forEach((btn) => btn.addEventListener("click", () => {
-    const [index, key] = btn.dataset.pos.split(":");
+  stageContent.querySelectorAll("[data-nudge]").forEach((btn) => {
+    const [index, dx, dy, home] = btn.dataset.nudge.split(":");
     const layer = pgState.layers[Number(index)];
-    layer.position = key;
-    layer.x = 0;
-    layer.y = 0;
-    renderPlayground();
-  }));
+    if (!layer) return;
+    const step = 2;
+    const apply = () => {
+      if (home === "1") {
+        layer.position = "cc";
+        layer.x = 0;
+        layer.y = 0;
+      } else {
+        layer.x = Math.max(-45, Math.min(45, (layer.x || 0) + Number(dx) * step));
+        layer.y = Math.max(-45, Math.min(45, (layer.y || 0) + Number(dy) * step));
+      }
+      pgApplyPositions();
+      const xi = stageContent.querySelector(`[data-dx="${index}"]`);
+      const yi = stageContent.querySelector(`[data-dy="${index}"]`);
+      if (xi) xi.value = Math.round(layer.x);
+      if (yi) yi.value = Math.round(layer.y);
+    };
+    let timer = null;
+    const start = (e) => {
+      e.preventDefault();
+      apply();
+      timer = setTimeout(function rep() { apply(); timer = setTimeout(rep, 110); }, 380);
+    };
+    const stop = () => { clearTimeout(timer); timer = null; };
+    btn.addEventListener("pointerdown", start);
+    btn.addEventListener("pointerup", stop);
+    btn.addEventListener("pointerleave", stop);
+  });
   stageContent.querySelectorAll("[data-dx]").forEach((input) => input.addEventListener("change", () => {
     const layer = pgState.layers[Number(input.dataset.dx)];
     layer.x = Math.max(-45, Math.min(45, Number(input.value) || 0));

@@ -2,7 +2,7 @@
 <html lang="zh-CN" data-composition-variables='[{"id": "titleEn", "type": "string", "label": "英文小标签（全大写）", "default": "BUILD PROGRESS"}, {"id": "titleCn", "type": "string", "label": "中文标题（含高亮词）", "default": "它会一步一步问你"}, {"id": "titleAccent", "type": "string", "label": "标题高亮词（绿色，须为标题子串）", "default": "一步一步"}, {"id": "windowTitle", "type": "string", "label": "代码窗口名", "default": "generator.js"}, {"id": "line1", "type": "string", "label": "代码行1", "default": "const profile = await ask(\"你平时忙什么\")"}, {"id": "line2", "type": "string", "label": "代码行2", "default": "const style = await ask(\"喜欢什么风格\")"}, {"id": "line3", "type": "string", "label": "代码行3", "default": "const draft = generate(profile, style)"}, {"id": "line4", "type": "string", "label": "代码行4", "default": "await confirm(draft) // 一步一步确认"}, {"id": "line5", "type": "string", "label": "代码行5", "default": "return publish(draft) // 完成"}, {"id": "duration", "type": "number", "label": "总时长（秒，演完定格）", "default": 6}]'>
   <head>
     <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="../_lib/gsap.min.js"></script>
     <style>
 @font-face { font-family: 'MiSans SemiBold'; src: url('../_fonts/MiSansSemiBold.ttf') format('truetype'); }
 @font-face { font-family: 'MEBHeiHeiTi'; src: url('../_fonts/MEBHeiHeiTi.ttf') format('truetype'); font-weight: 100 1000; }

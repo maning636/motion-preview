@@ -2,7 +2,7 @@
 <html lang="zh-CN" data-composition-variables='[{"id": "title", "type": "string", "label": "标题", "default": "API 调用时序"}, {"id": "subtitle", "type": "string", "label": "副标题", "default": "客户端与服务端交互过程"}, {"id": "actors", "type": "string", "label": "参与者（逗号分隔）", "default": "客户端,网关,服务A,数据库"}, {"id": "steps", "type": "string", "label": "步骤（格式：from>to:label，\\n 分隔）", "default": "客户端>网关:发送请求\\n网关>服务A:转发请求\\n服务A>数据库:查询数据\\n数据库>服务A:返回结果\\n服务A>网关:组装响应\\n网关>客户端:返回结果"}]'>
   <head>
     <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="../_lib/gsap.min.js"></script>
     <style>
       /* ===== 奶油纸面贴纸工作台 · 设计令牌（见 design-systems/sticker-workbench/DESIGN.md） ===== */
       *{ box-sizing: border-box; margin: 0; padding: 0; }

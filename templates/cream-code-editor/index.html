@@ -2,7 +2,7 @@
 <html lang="zh-CN" data-composition-variables='[{"id": "filename", "type": "string", "label": "文件名", "default": "rag.py"}, {"id": "language", "type": "string", "label": "语言", "default": "Python 3.12"}, {"id": "code", "type": "string", "label": "代码行（\\n 分隔）", "default": "def retrieve(query, index):\n    hits = index.search(query, k=5)\n    contexts = [h.text for h in hits]\n    return contexts\n\ndef generate(query, contexts):\n    prompt = build_prompt(query, contexts)\n    return llm(prompt)"}, {"id": "highlightLine", "type": "number", "label": "高亮行号（1-based）", "default": 3}]'>
   <head>
     <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <script src="../_lib/gsap.min.js"></script>
     <style>
       /* ===== 奶油纸面贴纸工作台 · 设计令牌（见 design-systems/sticker-workbench/DESIGN.md） ===== */
       *{ box-sizing: border-box; margin: 0; padding: 0; }

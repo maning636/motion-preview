@@ -569,3 +569,6 @@ body.modes-full-page { height: auto; overflow: auto; }
 
 /* ── 试玩器 v10：操作台移到舞台正下方、与视频同宽 ── */
 .pg-main { grid-template-areas: "base stage lib" ". console lib"; }
+
+/* v11 方向键点动手感 */
+.pg-pad .pg-pos:active { transform: scale(.92); background: rgba(74,222,128,.25); }
