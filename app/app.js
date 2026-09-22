@@ -1263,7 +1263,6 @@ function renderPlayground() {
                 <i class="pg-handle" data-act="resize" title="拖动缩放"></i>
               </div>`).join("")}
           </div>
-          <p class="pg-stage-hint">舞台为模板实时渲染、透明叠加在底片上；点 ▶ 播放看运动轨迹与时间段效果；最终成片按清单在本地 HyperFrames 渲染（见下方说明）。</p>
         </div>
         <aside class="pg-right">
           <section class="pg-panel">
@@ -1272,11 +1271,10 @@ function renderPlayground() {
             <div class="pg-list" id="pg-list" data-lenis-prevent></div>
           </section>
         </aside>
-      </div>
-      <section class="pg-console-h">
+        <section class="pg-console-h">
         <div class="pg-con-head">
           <h3>操作台</h3>
-          <span class="pg-con-hint">选中图层后在这里操控：方向键定位置 · 滑杆定大小 · 运动与内容随层切换；Delete 键删除选中层</span>
+          <span class="pg-con-hint">舞台为模板实时渲染、透明叠加在底片上，点 ▶ 播放预览效果；选中图层后在本条操控：方向键定位置 · 滑杆定大小 · 运动内容随层切换；Delete 键删除选中层</span>
           <label class="pg-duration">成片时长 <input type="number" id="pg-duration" min="3" max="600" step="1" value="${pgState.duration}"> 秒</label>
         </div>
         <div class="pg-con-body-h">
@@ -1286,7 +1284,8 @@ function renderPlayground() {
           </div>
           ${controlsZone}
         </div>
-      </section>
+        </section>
+      </div>
       <section class="pg-about">
         <div class="howto-head">
           <p class="kicker">WHAT IS THIS</p>
