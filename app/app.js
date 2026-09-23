@@ -968,7 +968,7 @@ function pgApplyPositions() {
     el.style.visibility = pgClock.t >= layer.start && pgClock.t <= layer.end ? "visible" : "hidden";
   });
   const pathSvg = stage.querySelector("#pg-path-preview");
-  if (pathSvg) {
+  if (pathSvg && !pgDraw) {
     const layer = pgState.layers[pgState.picked];
     if (layer && layer.motion && layer.motion.type === "path") {
       const [ax, ay] = PG_ANCHORS[layer.position] || PG_ANCHORS.cc;
@@ -1044,7 +1044,7 @@ function pgStartDraw(index) {
   pgExitDraw();
   const stage = stageContent.querySelector("#pg-stage");
   if (!stage) return;
-  pgDraw = { index, points: [] };
+  pgDraw = { index, points: [], finished: false };
   const ov = document.createElement("div");
   ov.id = "pg-draw-ov";
   ov.innerHTML = `<svg><polyline points=""/></svg>`;
@@ -1056,6 +1056,7 @@ function pgStartDraw(index) {
   };
   ov.addEventListener("pointerdown", (e) => {
     e.preventDefault();
+    if (!pgDraw || pgDraw.finished) return;
     pgDraw.points = [toLocal(e)];
     ov.setPointerCapture(e.pointerId);
     const poly = ov.querySelector("polyline");
@@ -1067,6 +1068,7 @@ function pgStartDraw(index) {
     const up = () => {
       ov.removeEventListener("pointermove", move);
       ov.removeEventListener("pointerup", up);
+      if (pgDraw) pgDraw.finished = true;
     };
     ov.addEventListener("pointermove", move);
     ov.addEventListener("pointerup", up);
@@ -1088,7 +1090,7 @@ function pgLayerDefaults(template) {
     templateId: template.id, name: template.name, preview: template.preview,
     position: "cc", x: ((n % 5) - 2) * 5, y: ((n % 3) - 1) * 5,
     scale: 100, start: 0, end: Math.min(template.duration || 6, pgState.duration),
-    motion: null,
+    motion: null, motionMode: "line",
     values: defaults(template),
   };
 }
@@ -1172,7 +1174,8 @@ function pgFieldMarkup(declaration, layer, index) {
 
 function pgMotionMarkup(layer, index) {
   const m = layer.motion;
-  const isPath = m && m.type === "path";
+  const isPath = (layer.motionMode || "line") === "path";
+  const hasPath = m && m.type === "path";
   return `
     <div class="pg-motion ${m ? "" : "off"}" data-motion="${index}">
       <label class="pg-motion-head"><input type="checkbox" data-mon="${index}" ${m ? "checked" : ""}> 运动轨迹</label>
@@ -1189,7 +1192,7 @@ function pgMotionMarkup(layer, index) {
         </div>
         <div class="pg-mpath" ${!isPath ? "hidden" : ""}>
           <button type="button" class="button" data-mdraw="${index}">✏️ 在舞台画轨迹</button>
-          ${isPath ? `<button type="button" class="button" data-mclear="${index}">清除轨迹</button>` : ""}
+          ${hasPath ? `<button type="button" class="button" data-mclear="${index}">清除轨迹</button>` : ""}
           <span class="pg-hintline">舞台上按住拖动画线，双击结束，Esc 取消</span>
         </div>
         <div class="pg-row2">
@@ -1336,12 +1339,15 @@ function pgWireConsole() {
     const layer = pgState.layers[index];
     if (cb.checked) {
       const mode = stageContent.querySelector(`input[name="pmmode${index}"]:checked`)?.value || "line";
+      layer.motionMode = mode;
       const secs = Math.max(0.1, Number(stageContent.querySelector(`[data-msecs="${index}"]`)?.value) || 1.5);
       const ease = stageContent.querySelector(`[data-mease="${index}"]`)?.value || "out";
-      layer.motion = mode === "line"
-        ? pgNormalizeMotion({ type: "line", dx: Number(stageContent.querySelector(`[data-mdx="${index}"]`)?.value) || 0, dy: Number(stageContent.querySelector(`[data-mdy="${index}"]`)?.value) || 0, secs, ease })
-        : pgNormalizeMotion({ type: "path", points: [[0, 0], [0.1, -0.1]], secs, ease });
-      if (!layer.motion) layer.motion = { type: "line", dx: 0, dy: -80, secs, ease };
+      if (mode === "line") {
+        layer.motion = pgNormalizeMotion({ type: "line", dx: Number(stageContent.querySelector(`[data-mdx="${index}"]`)?.value) || 0, dy: Number(stageContent.querySelector(`[data-mdy="${index}"]`)?.value) || 0, secs, ease })
+          || { type: "line", dx: 0, dy: -80, secs, ease };
+      } else {
+        layer.motion = layer.motion && layer.motion.type === "path" ? layer.motion : null;
+      }
     } else {
       layer.motion = null;
     }
@@ -1353,11 +1359,10 @@ function pgWireConsole() {
     const layer = pgState.layers[index];
     const secs = Math.max(0.1, Number(stageContent.querySelector(`[data-msecs="${index}"]`)?.value) || 1.5);
     const ease = stageContent.querySelector(`[data-mease="${index}"]`)?.value || "out";
+    layer.motionMode = radio.value;
     if (radio.value === "line") {
       layer.motion = pgNormalizeMotion({ type: "line", dx: Number(stageContent.querySelector(`[data-mdx="${index}"]`)?.value) || 0, dy: Number(stageContent.querySelector(`[data-mdy="${index}"]`)?.value) || 0, secs, ease })
         || { type: "line", dx: 0, dy: -80, secs, ease };
-    } else {
-      layer.motion = pgNormalizeMotion({ type: "path", points: [[0, 0], [0.1, -0.1]], secs, ease });
     }
     renderPlayground();
   }));
