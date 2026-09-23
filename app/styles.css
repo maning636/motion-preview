@@ -691,3 +691,7 @@ body.modes-full-page { height: auto; overflow: auto; }
 /* v26.2 按键与二维码中心对齐 */
 .hero-wechat { align-items: flex-start; }
 .hw-back { margin-left: 45px; }
+
+/* v27 顶栏「前往老马官网」 */
+.nav-home { background: var(--accent); color: #fff !important; border-color: var(--accent); font-weight: 800; }
+.nav-home:hover { background: var(--accent-deep); border-color: var(--accent-deep); color: #fff !important; }
