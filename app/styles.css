@@ -672,3 +672,10 @@ body.modes-full-page { height: auto; overflow: auto; }
 .hero-content { grid-template-columns: minmax(0, 1fr) minmax(320px, 470px); }
 .hero-wechat { position: absolute; left: 47%; top: 50%; transform: translate(-50%, -50%); z-index: 3; }
 @media (max-width: 1280px) { .hero-wechat { display: none; } }
+
+/* v24.3 微信卡去框：大二维码 + 旁置文字 */
+.hero-wechat { flex-direction: row; align-items: center; gap: 16px; background: none; border: none; padding: 0; box-shadow: none; backdrop-filter: none; -webkit-backdrop-filter: none; }
+.hero-wechat img { width: 200px; height: 200px; border-radius: 0; }
+.hero-wechat .hw-text { align-items: flex-start; text-align: left; gap: 8px; }
+.hero-wechat strong { font-size: 22px; color: var(--fg); letter-spacing: 0; }
+.hero-wechat span { font-size: 12.5px; text-align: left; }
