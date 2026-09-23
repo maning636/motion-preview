@@ -533,7 +533,6 @@ function renderHome() {
           <p class="hero-desc"><strong>不需要 Claude 和 Codex，豆包、DeepSeek 也能一键出片。</strong>${total} 个视频动效模板，每一个都配好了打磨过的提示词。挑素材、GitHub 下载提示词、粘贴给你的 AI，同款大片动效即刻生成；装上 Skill，一篇文章直接产出一整条成片。</p>
           <div class="hero-cta-row">
             <button class="hero-cta" type="button" id="hero-cta">进入模板库<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg></button>
-            <button class="hero-cta hero-cta-dark" type="button" id="hero-playground">试玩编辑器<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg></button>
             <a class="hero-cta-ghost" href="${GITHUB_REPO}" target="_blank" rel="noreferrer">GitHub 免费下载</a>
           </div>
         </div>
@@ -543,6 +542,18 @@ function renderHome() {
             <source src="./app/assets/hero-skill.mp4" type="video/mp4" />
           </video>
           <p class="hero-video-cap">模板实拍混剪：封面轮转 · 档案聚焦 · 大数字卡 · 前后对比</p>
+        </div>
+      </div>
+      <div class="hero-play-block" id="hero-play-block">
+        <div class="hpb-text">
+          <p class="kicker">PLAYGROUND · 测试区</p>
+          <h3>不动一行代码，浏览器里叠出一条成片<span class="period">。</span></h3>
+          <p class="hpb-desc">挑一条底片，把 443 个动效模板叠上去——拖位置、画轨迹、改文案，编排清单一键导出。这是和传统模板站最大的不同：<strong>先在浏览器里玩出效果，再决定要不要带走</strong>。</p>
+          <button class="hero-cta" type="button" id="hero-playground">打开测试区<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg></button>
+        </div>
+        <div class="hpb-media" role="button" tabindex="0" aria-label="打开测试区">
+          <img src="./app/assets/pg-cover.jpg" alt="测试区实操画面" />
+          <span class="hpb-badge">解说视频 · 即将上线</span>
         </div>
       </div>
     </div>
@@ -648,6 +659,8 @@ function renderHome() {
     </footer>`;
   stage.querySelector("#hero-cta").addEventListener("click", () => { state.series = "all"; state.category = ALL_CATEGORY; renderGallery(); });
   stage.querySelector("#hero-playground").addEventListener("click", renderPlayground);
+  stage.querySelector(".hpb-media")?.addEventListener("click", renderPlayground);
+  stage.querySelector(".hpb-media")?.addEventListener("keydown", (e) => { if (e.key === "Enter") renderPlayground(); });
   stage.querySelectorAll(".qr-image").forEach((img) => {
     img.addEventListener("error", () => {
       const placeholder = document.createElement("div");
