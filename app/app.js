@@ -546,7 +546,7 @@ function renderHome() {
         <div class="hero-wechat">
           <img src="./app/assets/qr-wechat-personal.jpg?v=2" alt="老马个人微信二维码" />
           <div class="hw-text">
-            <strong>获取，加微信</strong>
+            <strong>免费获取，加微信</strong>
             <span>领 skill · 进群 · 会员 · 代加工<br />唯一入口</span>
           </div>
         </div>
