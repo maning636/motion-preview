@@ -547,8 +547,8 @@ function renderHome() {
       <div class="hero-play-block" id="hero-play-block">
         <div class="hpb-text">
           <p class="kicker">PLAYGROUND · 测试区</p>
-          <h3>不动一行代码，浏览器里叠出一条成片<span class="period">。</span></h3>
-          <p class="hpb-desc">挑一条底片，把 443 个动效模板叠上去——拖位置、画轨迹、改文案，编排清单一键导出。这是和传统模板站最大的不同：<strong>先在浏览器里玩出效果，再决定要不要带走</strong>。</p>
+          <h3>你的成片你做主，不被任何 Agent 绑架<span class="period">。</span></h3>
+          <p class="hpb-desc"><strong>带底片来，带成片走。</strong>底片是你的，动效是我们的——compose.json 传上来或从零叠，大小位置随手调，最终合成在浏览器里完成。同一份 JSON 递回给你的 Agent，就能做自己的 skill，从此不依赖任何人。</p>
           <button class="hero-cta" type="button" id="hero-playground">打开测试区<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg></button>
         </div>
         <div class="hpb-media" role="button" tabindex="0" aria-label="打开测试区">
