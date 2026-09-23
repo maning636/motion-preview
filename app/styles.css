@@ -667,3 +667,8 @@ body.modes-full-page { height: auto; overflow: auto; }
 .hero-wechat { padding: 14px 14px; }
 .hero-wechat img { width: 118px; height: 118px; }
 @media (max-width: 1280px) { .hero-content { grid-template-columns: minmax(0, 1fr) minmax(320px, 470px); } }
+
+/* v24.2 微信卡改悬浮：恢复两列（视频原位不动），卡片垂直居中于空白区 */
+.hero-content { grid-template-columns: minmax(0, 1fr) minmax(320px, 470px); }
+.hero-wechat { position: absolute; left: 47%; top: 50%; transform: translate(-50%, -50%); z-index: 3; }
+@media (max-width: 1280px) { .hero-wechat { display: none; } }
