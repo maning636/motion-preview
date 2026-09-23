@@ -631,3 +631,6 @@ body.modes-full-page { height: auto; overflow: auto; }
   .hero-play-block { grid-template-columns: 1fr; }
   .hero-play-block .hpb-text { height: auto; }
 }
+
+/* ── v20 首页全宽：hero 双块铺满屏幕 ── */
+.hero-content, .hero-play-block { max-width: none; }
