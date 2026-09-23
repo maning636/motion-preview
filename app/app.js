@@ -20,7 +20,7 @@ const showHome = document.querySelector("#show-home");
 const showLibrary = document.querySelector("#show-library");
 const showModes = document.querySelector("#show-modes");
 const showPlayground = document.querySelector("#show-playground");
-const STATIC_CATALOG_VERSION = "20260921-open-443";
+const STATIC_CATALOG_VERSION = "20260923-free-379";
 const ALL_CATEGORY = "全部";
 
 async function api(url, options) {
@@ -98,7 +98,7 @@ const SERIES_SECTIONS = [
   { key: "standard", title: "标准版 · 暗色科技", subtitle: "深色底 + 荧光绿强调，适合科技感、教程、录屏叠加（免费开源）", match: (t) => !t.id.startsWith("shot-") && !t.id.startsWith("sc2-") && !["shot", "sc2", "cream", "member-area", "form", "board", "file", "glass", "hero3d", "fx", "teach", "page"].includes(t.series) },
   { key: "cream", title: "奶油贴纸版", subtitle: "奶油纸面 + 贴纸硬投影，适合知识讲解、口播配图（免费开源）", match: (t) => t.series === "cream" },
   { key: "families", title: "新风格族", member: true, subtitle: "公文表单、白板黄卡、档案拼贴、玻璃拟态、3D Hero、模式特效、教学外壳、书页系——2026-08 新增八组", match: (t) => ["form", "board", "file", "glass", "hero3d", "fx", "teach", "page"].includes(t.series) },
-  { key: "shot", title: "视觉动效", member: true, subtitle: "近期上新：镜头语言级动效、口播荧光绿包装、拼贴纪实、SC2 差异化复刻——描线实体化、乱码解码、关键词接力、波形语音等", match: (t) => t.id.startsWith("shot-") || t.id.startsWith("sc2-") || t.series === "shot" || t.series === "sc2" },
+  { key: "shot", title: "视觉动效", member: false, subtitle: "近期上新：镜头语言级动效、口播荧光绿包装、拼贴纪实、SC2 差异化复刻——描线实体化、乱码解码、关键词接力、波形语音等", match: (t) => t.id.startsWith("shot-") || t.id.startsWith("sc2-") || t.series === "shot" || t.series === "sc2" },
 ];
 const SERIES_NAV = [
   ...SERIES_SECTIONS.map((s) => ({ key: s.key, title: s.title, sub: s.subtitle, member: !!s.member })),
@@ -270,7 +270,7 @@ function openGetPromptModal(template) {
       <h3>获取「${template.name}」提示词</h3>
       <p class="member-note">${isMember
         ? "会员预览模板：完整提示词与模板源文件仅会员渠道发放。<br />详情见首页「关注我们」。"
-        : "公开模板：443 个模板已在 GitHub 全量开源（本体 + 预览，含 443 个提示词），直接下载；<br />生产 Skill 加微信进群免费领；完整版 Skill、会员动效系列与成片流水线在知识星球逐步开放。"}</p>
+        : "公开模板：379 个模板已免费开源（本体 + 预览，含 443 个提示词），直接下载；<br />生产 Skill 加微信进群免费领；完整版 Skill、会员动效系列与成片流水线在知识星球逐步开放。"}</p>
       <div class="get-actions">
         ${isMember ? "" : `<a class="button primary" href="${GITHUB_REPO}" target="_blank" rel="noreferrer">GitHub 免费下载样例</a>`}
         <a class="button${isMember ? " primary" : ""}" href="#follow-us" id="get-goto-qr">扫码进社区</a>
@@ -595,7 +595,7 @@ function renderHome() {
           <ul>
             <li>挑模板 → 复制提示词 → 粘贴给任意 AI，输出自包含动效页面</li>
             <li>浏览器打开即播放，录屏进剪辑软件即用</li>
-            <li><strong>443 个模板已在 GitHub 全量开源</strong>（模板本体 + 预览 + 443 个提示词），直接下载</li>
+            <li><strong>379 个模板已免费开源</strong>（模板本体 + 预览 + 379 个提示词），直接下载</li>
           </ul>
           <a class="button primary cp-cta" href="${GITHUB_REPO}" target="_blank" rel="noreferrer">GitHub 免费下载</a>
         </article>
@@ -617,7 +617,7 @@ function renderHome() {
       <div class="howto-head">
         <p class="kicker">HOW TO GET</p>
         <h2>三步出片<span class="sec-period">。</span></h2>
-        <p>模板全部开源：443 个（模板本体 + 预览，含提示词 443 个）已在 GitHub 全量开源，直接下载。</p>
+        <p>模板开源：379 个免费开源（模板本体 + 预览 + 379 个提示词），会员版 64 个新风格族除外。</p>
       </div>
       <div class="guide-grid">
         <article class="guide-card">
@@ -651,7 +651,7 @@ function renderHome() {
             <div class="unlock-qr qr-feature"><img class="qr-image" src="./app/assets/qr-wechat-personal.jpg?v=2" alt="个人微信二维码" data-label="个人微信" /><span class="qr-name">个人微信 · 唯一入口：领 Skill / 进社区 / 会员咨询</span></div>
           </div>
           <ul class="follow-points">
-            <li><strong>GitHub 全量开源</strong>：443 个模板（本体 + 预览）已上 GitHub，含 443 个提示词直接下载；上不去的，在公众号「老马AI研习社」后台领同款打包</li>
+            <li><strong>GitHub 全量开源</strong>：379 个模板（本体 + 预览）已上 GitHub 免费开源，含 379 个提示词直接下载；会员版 64 个新风格族除外；上不去的，在公众号「老马AI研习社」后台领同款打包</li>
             <li><strong>个人微信 · 唯一入口</strong>：免费领生产 Skill、进社区、知识星球入口、会员与定制咨询，都从这里走</li>
             <li><strong>知识星球逐步开放</strong>：会员新模板族、专属生产工具箱（skill + 脚本）、成片流水线文档（现有 26 套，持续增加）——星球入口在社区公布</li>
           </ul>
