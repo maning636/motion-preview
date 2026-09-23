@@ -610,3 +610,6 @@ body.modes-full-page { height: auto; overflow: auto; }
   .pg-main > * { min-width: 0; max-width: 100%; }
   .pg-main .pg-panel { min-width: 0; }
 }
+
+/* v17.1 手柄收入层内防裁切 */
+.pg-handle { right: 4px; bottom: 4px; }

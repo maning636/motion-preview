@@ -815,6 +815,7 @@ const pgState = {
   layers: [],
   picked: null,
   filter: "",
+  shown: 60,
 };
 
 /* 实时渲染舞台层：与官网工作站同款机制（fetch 模板 → 注入变量/透明/播放 → srcdoc iframe） */
@@ -1151,6 +1152,7 @@ function pgGlobalKey(e) {
   if (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA" || a.tagName === "SELECT" || a.isContentEditable)) return;
   if (pgState.picked == null || !pgState.layers[pgState.picked]) return;
   e.preventDefault();
+  pgSetPlaying(false);
   const index = pgState.picked;
   pgGeneration.set(index, (pgGeneration.get(index) || 0) + 1);
   pgState.layers.splice(index, 1);
@@ -1262,6 +1264,7 @@ function pgConsoleMarkup() {
 function pgWireConsole() {
   stageContent.querySelectorAll("[data-del]").forEach((btn) => btn.addEventListener("click", () => {
     const index = Number(btn.dataset.del);
+    pgSetPlaying(false);
     pgGeneration.set(index, (pgGeneration.get(index) || 0) + 1);
     pgState.layers.splice(index, 1);
     pgState.picked = null;
@@ -1488,6 +1491,7 @@ function renderPlayground() {
   /* 左侧面板全部事件 */
   stageContent.querySelectorAll("[data-base]").forEach((btn) => btn.addEventListener("click", () => {
     const base = PG_BASES.find((b) => b.id === btn.dataset.base);
+    pgSetPlaying(false);
     pgState.base = { type: "builtin", id: base.id, src: base.src, name: base.name };
     renderPlayground();
   }));
@@ -1496,12 +1500,14 @@ function renderPlayground() {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
+      pgSetPlaying(false);
       pgState.base = { type: "upload", name: file.name, dataUrl: reader.result, kind: file.type.startsWith("image") ? "image" : "video" };
       renderPlayground();
     };
     reader.readAsDataURL(file);
   });
   stageContent.querySelector("#pg-duration").addEventListener("change", (event) => {
+    pgSetPlaying(false);
     pgState.duration = Math.max(3, Math.min(600, Number(event.target.value) || 15));
     pgState.layers.forEach((layer) => { layer.end = Math.min(layer.end, pgState.duration); });
     pgClock.t = Math.min(pgClock.t, pgState.duration);
@@ -1611,9 +1617,9 @@ function renderPlayground() {
     const pool = state.catalog.templates
       .filter((t) => t.status === "ready")
       .filter((t) => !PG_VIDEO_ONLY.has(t.id))
-      .filter((t) => !needle || JSON.stringify(t).toLowerCase().includes(needle))
-      .slice(0, 60);
-    list.innerHTML = pool.map((t) => `
+      .filter((t) => !needle || JSON.stringify(t).toLowerCase().includes(needle));
+    const slice = pool.slice(0, pgState.shown);
+    list.innerHTML = slice.map((t) => `
       <div class="pg-item" data-add="${t.id}" role="button" tabindex="0">
         <video muted loop playsinline preload="none" data-src="${assetUrl(t.preview)}"></video>
         <div class="pg-item-info"><strong>${escapeHtml(t.name)}</strong><span>${escapeHtml(t.category)} · ${t.duration}s</span></div>
@@ -1641,7 +1647,17 @@ function renderPlayground() {
   renderPgList();
   filterInput.addEventListener("input", () => {
     pgState.filter = filterInput.value;
+    pgState.shown = 60;
     renderPgList();
+  });
+  list.addEventListener("scroll", () => {
+    if (list.scrollTop + list.clientHeight >= list.scrollHeight - 48) {
+      const total = state.catalog.templates.filter((t) => t.status === "ready" && !PG_VIDEO_ONLY.has(t.id)).length;
+      if (pgState.shown < total) {
+        pgState.shown += 60;
+        renderPgList();
+      }
+    }
   });
   if (!pgKeyBound) { document.addEventListener("keydown", pgGlobalKey); pgKeyBound = true; }
 
