@@ -693,5 +693,5 @@ body.modes-full-page { height: auto; overflow: auto; }
 .hw-back { margin-left: 45px; }
 
 /* v27 顶栏「前往老马官网」 */
-.nav-home { background: var(--accent); color: #fff !important; border-color: var(--accent); font-weight: 800; }
+.nav-home { background: var(--accent); color: #fff !important; border-color: var(--accent); font-weight: 800; text-decoration: none !important; }
 .nav-home:hover { background: var(--accent-deep); border-color: var(--accent-deep); color: #fff !important; }
