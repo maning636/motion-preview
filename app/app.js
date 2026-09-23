@@ -543,6 +543,13 @@ function renderHome() {
           </video>
           <p class="hero-video-cap">模板实拍混剪：封面轮转 · 档案聚焦 · 大数字卡 · 前后对比</p>
         </div>
+        <div class="hero-wechat">
+          <img src="./app/assets/qr-wechat-personal.jpg" alt="老马个人微信二维码" />
+          <div class="hw-text">
+            <strong>领全套 · 加我微信</strong>
+            <span>基础 skill · 进群 · 会员 · 平台代加工<br />个人微信是唯一入口，扫码即达</span>
+          </div>
+        </div>
       </div>
       <div class="hero-play-block" id="hero-play-block">
         <div class="hpb-text">

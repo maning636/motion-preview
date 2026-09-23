@@ -651,3 +651,19 @@ body.modes-full-page { height: auto; overflow: auto; }
 .hpb-desc { font-size: 12.5px; line-height: 1.7; }
 .hpb-media { padding: 8px; }
 .hpb-badge { right: 16px; bottom: 16px; font-size: 11px; padding: 5px 10px; }
+
+/* ── v24 首屏微信卡 ── */
+.hero-content { grid-template-columns: minmax(0, 1fr) auto minmax(320px, 470px); }
+.hero-wechat { display: flex; flex-direction: column; align-items: center; gap: 10px; background: rgba(255,255,255,.72); border: 1.5px solid rgba(15,157,63,.35); border-radius: 20px; padding: 18px 22px; backdrop-filter: blur(4px); box-shadow: var(--warm-shadow); }
+.hero-wechat img { width: 132px; height: 132px; border-radius: 12px; display: block; }
+.hero-wechat .hw-text { display: flex; flex-direction: column; align-items: center; gap: 5px; text-align: center; }
+.hero-wechat strong { font-size: 15px; color: var(--accent); letter-spacing: .04em; }
+.hero-wechat span { font-size: 11.5px; color: var(--muted); line-height: 1.65; }
+@media (max-width: 1280px) { .hero-content { grid-template-columns: minmax(0, 1fr) minmax(320px, 470px); } .hero-wechat { display: none; } }
+@media (max-width: 900px) { .hero-content { grid-template-columns: 1fr; } }
+
+/* v24.1 微信卡列宽修复（auto 中列在部分内核塌缩，改定宽） */
+.hero-content { grid-template-columns: minmax(340px, 1fr) 210px minmax(320px, 470px); }
+.hero-wechat { padding: 14px 14px; }
+.hero-wechat img { width: 118px; height: 118px; }
+@media (max-width: 1280px) { .hero-content { grid-template-columns: minmax(0, 1fr) minmax(320px, 470px); } }
