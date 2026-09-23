@@ -1435,6 +1435,8 @@ function renderPlayground() {
         </div>
         <div class="pg-actions">
           <button class="button primary" type="button" id="pg-export">导出 compose.json</button>
+          <button class="button" type="button" id="pg-import">导入 compose.json</button>
+          <input type="file" id="pg-import-file" accept="application/json,.json" hidden>
           <button class="button" type="button" id="pg-copy">复制 JSON</button>
           <button class="button" type="button" id="pg-clear">清空图层</button>
         </div>
@@ -1595,6 +1597,58 @@ function renderPlayground() {
   window.addEventListener("resize", () => { clearTimeout(pgFitTimer); pgFitTimer = setTimeout(() => { pgFitPanels(); pgApplyPositions(); pgFitIframes(); }, 120); });
 
   /* 顶栏：导出 */
+  stageContent.querySelector("#pg-import").addEventListener("click", () => {
+    stageContent.querySelector("#pg-import-file").click();
+  });
+  stageContent.querySelector("#pg-import-file").addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const button = stageContent.querySelector("#pg-import");
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const j = JSON.parse(String(reader.result));
+        if (!j || !Array.isArray(j.layers)) throw new Error("缺少 layers 数组");
+        pgSetPlaying(false);
+        pgClock.t = 0;
+        pgState.duration = Math.max(3, Math.min(600, Number(j.duration) || 15));
+        const ANCHORS = new Set(["tl", "tc", "tr", "cl", "cc", "cr", "bl", "bc", "br"]);
+        let skipped = 0;
+        pgState.layers = [];
+        for (const raw of j.layers) {
+          const template = state.catalog.templates.find((t) => t.id === raw.templateId);
+          if (!template) { skipped++; continue; }
+          const motion = raw.motion && (raw.motion.type === "line" || raw.motion.type === "path")
+            ? { ...raw.motion, secs: Math.max(0.1, Number(raw.motion.secs) || 1.5), ease: raw.motion.ease === "linear" ? "linear" : "out" }
+            : null;
+          pgState.layers.push({
+            templateId: template.id, name: template.name, preview: template.preview,
+            position: ANCHORS.has(raw.position) ? raw.position : "cc",
+            x: Math.max(-45, Math.min(45, Number(raw.x) || 0)),
+            y: Math.max(-45, Math.min(45, Number(raw.y) || 0)),
+            scale: Math.max(20, Math.min(200, Number(raw.scale) || 100)),
+            start: Math.max(0, Number(raw.start) || 0),
+            end: Math.max(0, Math.min(pgState.duration, Number(raw.end) || Math.min(template.duration || 6, pgState.duration))),
+            motion,
+            motionMode: motion ? motion.type : (raw.motionMode === "path" ? "path" : "line"),
+            values: { ...defaults(template), ...(typeof raw.values === "object" && raw.values ? raw.values : {}) },
+          });
+        }
+        if (j.base && j.base.type === "video" && typeof j.base.src === "string") {
+          const hit = PG_BASES.find((b) => j.base.src.includes(b.src.replace("./app/assets/bg/", "")));
+          pgState.base = hit ? { type: "builtin", id: hit.id, src: hit.src, name: hit.name } : pgState.base;
+        }
+        pgState.picked = null;
+        renderPlayground();
+        button.textContent = skipped ? `导入完成 · ${skipped} 层未识别` : "导入完成 ✓";
+      } catch (err) {
+        button.textContent = "导入失败：" + (err.message || "格式错误").slice(0, 18);
+      }
+      event.target.value = "";
+      setTimeout(() => { button.textContent = "导入 compose.json"; }, 2200);
+    };
+    reader.readAsText(file);
+  });
   stageContent.querySelector("#pg-export").addEventListener("click", () => {
     const blob = new Blob([JSON.stringify(pgComposeJson(), null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
