@@ -544,7 +544,7 @@ function renderHome() {
           <p class="hero-video-cap">模板实拍混剪：封面轮转 · 档案聚焦 · 大数字卡 · 前后对比</p>
         </div>
         <div class="hero-wechat">
-          <img src="./app/assets/qr-wechat-personal.jpg" alt="老马个人微信二维码" />
+          <img src="./app/assets/qr-wechat-personal.jpg?v=2" alt="老马个人微信二维码" />
           <div class="hw-text">
             <strong>获取，加微信</strong>
             <span>领 skill · 进群 · 会员 · 代加工<br />唯一入口</span>
@@ -646,7 +646,7 @@ function renderHome() {
           <strong>关注我们</strong>
           <h3>完整版逐步开放，加微信进社区</h3>
           <div class="qr-row">
-            <div class="unlock-qr qr-feature"><img class="qr-image" src="./app/assets/qr-wechat-personal.jpg" alt="个人微信二维码" data-label="个人微信" /><span class="qr-name">个人微信 · 统一入口：领 Skill / 进社区 / 会员咨询</span></div>
+            <div class="unlock-qr qr-feature"><img class="qr-image" src="./app/assets/qr-wechat-personal.jpg?v=2" alt="个人微信二维码" data-label="个人微信" /><span class="qr-name">个人微信 · 统一入口：领 Skill / 进社区 / 会员咨询</span></div>
             <div class="unlock-qr"><img class="qr-image" src="./app/assets/qr-douyin.png" alt="抖音二维码" data-label="抖音" /><span class="qr-name">抖音 · 更新预告</span></div>
             <div class="unlock-qr"><img class="qr-image" src="./app/assets/qr-xhs.png" alt="小红书二维码" data-label="小红书" /><span class="qr-name">小红书 · 更新预告</span></div>
           </div>
