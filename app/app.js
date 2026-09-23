@@ -270,7 +270,7 @@ function openGetPromptModal(template) {
       <h3>获取「${template.name}」提示词</h3>
       <p class="member-note">${isMember
         ? "会员预览模板：完整提示词与模板源文件仅会员渠道发放。<br />详情见首页「关注我们」。"
-        : "公开模板：178 个提示词已在 GitHub 全量开源，直接下载；<br />生产 Skill 进社区免费领；完整版 Skill、会员动效系列与成片流水线在知识星球逐步开放。"}</p>
+        : "公开模板：443 个模板已在 GitHub 全量开源（本体 + 预览，含 178 个提示词），直接下载；<br />生产 Skill 加微信进群免费领；完整版 Skill、会员动效系列与成片流水线在知识星球逐步开放。"}</p>
       <div class="get-actions">
         ${isMember ? "" : `<a class="button primary" href="${GITHUB_REPO}" target="_blank" rel="noreferrer">GitHub 免费下载样例</a>`}
         <a class="button${isMember ? " primary" : ""}" href="#follow-us" id="get-goto-qr">扫码进社区</a>
@@ -595,7 +595,7 @@ function renderHome() {
           <ul>
             <li>挑模板 → 复制提示词 → 粘贴给任意 AI，输出自包含动效页面</li>
             <li>浏览器打开即播放，录屏进剪辑软件即用</li>
-            <li><strong>178 个提示词已在 GitHub 全量开源</strong>（标准版 88 + 奶油版 90），直接下载</li>
+            <li><strong>443 个模板已在 GitHub 全量开源</strong>（模板本体 + 预览 + 178 个提示词），直接下载</li>
           </ul>
           <a class="button primary cp-cta" href="${GITHUB_REPO}" target="_blank" rel="noreferrer">GitHub 免费下载</a>
         </article>
@@ -617,7 +617,7 @@ function renderHome() {
       <div class="howto-head">
         <p class="kicker">HOW TO GET</p>
         <h2>三步出片<span class="sec-period">。</span></h2>
-        <p>提示词全部免费：178 个（标准版 88 + 奶油版 90）已在 GitHub 全量开源，直接下载。</p>
+        <p>模板全部开源：443 个（模板本体 + 预览，含提示词 178 个）已在 GitHub 全量开源，直接下载。</p>
       </div>
       <div class="guide-grid">
         <article class="guide-card">
@@ -648,15 +648,12 @@ function renderHome() {
           <strong>关注我们</strong>
           <h3>完整版逐步开放，加微信进社区</h3>
           <div class="qr-row">
-            <div class="unlock-qr qr-feature"><img class="qr-image" src="./app/assets/qr-wechat-personal.jpg?v=2" alt="个人微信二维码" data-label="个人微信" /><span class="qr-name">个人微信 · 统一入口：领 Skill / 进社区 / 会员咨询</span></div>
-            <div class="unlock-qr"><img class="qr-image" src="./app/assets/qr-douyin.png" alt="抖音二维码" data-label="抖音" /><span class="qr-name">抖音 · 更新预告</span></div>
-            <div class="unlock-qr"><img class="qr-image" src="./app/assets/qr-xhs.png" alt="小红书二维码" data-label="小红书" /><span class="qr-name">小红书 · 更新预告</span></div>
+            <div class="unlock-qr qr-feature"><img class="qr-image" src="./app/assets/qr-wechat-personal.jpg?v=2" alt="个人微信二维码" data-label="个人微信" /><span class="qr-name">个人微信 · 唯一入口：领 Skill / 进社区 / 会员咨询</span></div>
           </div>
           <ul class="follow-points">
-            <li><strong>GitHub 全量开源</strong>：178 个提示词直接下载；上不去 GitHub 的，可在公众号后台领同款打包</li>
-            <li><strong>个人微信 · 统一入口</strong>：免费领生产 Skill、进社区、知识星球入口、会员与定制咨询，都从这里走</li>
+            <li><strong>GitHub 全量开源</strong>：443 个模板（本体 + 预览）已上 GitHub，含 178 个提示词直接下载；上不去的，在公众号「老马AI研习社」后台领同款打包</li>
+            <li><strong>个人微信 · 唯一入口</strong>：免费领生产 Skill、进社区、知识星球入口、会员与定制咨询，都从这里走</li>
             <li><strong>知识星球逐步开放</strong>：会员新模板族、专属生产工具箱（skill + 脚本）、成片流水线文档（现有 26 套，持续增加）——星球入口在社区公布</li>
-            <li><strong>抖音 / 小红书</strong>：同步更新预告</li>
           </ul>
         </article>
       </div>
