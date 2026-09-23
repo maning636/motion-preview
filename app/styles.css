@@ -695,3 +695,7 @@ body.modes-full-page { height: auto; overflow: auto; }
 /* v27 顶栏「前往老马官网」 */
 .nav-home { background: var(--accent); color: #fff !important; border-color: var(--accent); font-weight: 800; text-decoration: none !important; }
 .nav-home:hover { background: var(--accent-deep); border-color: var(--accent-deep); color: #fff !important; }
+
+/* v27.1 说明文字提前换行：宽度永远收在二维码左缘之前 */
+.hero-desc { max-width: min(620px, calc(47vw - 290px)); }
+@media (max-width: 1280px) { .hero-desc { max-width: 620px; } }
