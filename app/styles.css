@@ -679,3 +679,15 @@ body.modes-full-page { height: auto; overflow: auto; }
 .hero-wechat .hw-text { align-items: flex-start; text-align: left; gap: 8px; }
 .hero-wechat strong { font-size: 22px; color: var(--fg); letter-spacing: 0; }
 .hero-wechat span { font-size: 12.5px; text-align: left; }
+
+/* v26 返回官网：二维码正上方小按键 */
+.hw-back { display: inline-block; padding: 7px 16px; border-radius: 999px; background: #14110d; color: #4ade80; font-size: 12.5px; font-weight: 700; letter-spacing: .06em; text-decoration: none; transition: 160ms ease; }
+.hw-back:hover { background: #4ade80; color: #14110d; }
+
+/* v26.1 微信区结构：按键在上，二维码+文字一行在下 */
+.hero-wechat { flex-direction: column; align-items: center; gap: 12px; }
+.hero-wechat .hw-row { display: flex; flex-direction: row; align-items: center; gap: 16px; }
+
+/* v26.2 按键与二维码中心对齐 */
+.hero-wechat { align-items: flex-start; }
+.hw-back { margin-left: 45px; }

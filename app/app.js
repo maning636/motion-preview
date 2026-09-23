@@ -544,10 +544,13 @@ function renderHome() {
           <p class="hero-video-cap">模板实拍混剪：封面轮转 · 档案聚焦 · 大数字卡 · 前后对比</p>
         </div>
         <div class="hero-wechat">
-          <img src="./app/assets/qr-wechat-personal.jpg?v=2" alt="老马个人微信二维码" />
-          <div class="hw-text">
-            <strong>免费获取，加微信</strong>
-            <span>领 skill · 进群 · 会员 · 代加工<br />唯一入口</span>
+          <a class="hw-back" href="https://maning789link.top/">← 返回官网</a>
+          <div class="hw-row">
+            <img src="./app/assets/qr-wechat-personal.jpg?v=2" alt="老马个人微信二维码" />
+            <div class="hw-text">
+              <strong>免费获取，加微信</strong>
+              <span>领 skill · 进群 · 会员 · 代加工<br />唯一入口</span>
+            </div>
           </div>
         </div>
       </div>
