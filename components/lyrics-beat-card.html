@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"words","type":"string","label":"歌词词组（逗号分隔）","default":"你的声音,我,你像星光"},{"id":"textColor","type":"color","label":"文字色","default":"#FFFFFF"},{"id":"accentColor","type":"color","label":"强调色","default":"#39FF85"},{"id":"bgAlpha","type":"number","label":"背景透明度（0=透明,1=全黑）","default":"0.3"},{"id":"fontSize","type":"number","label":"字号（px）","default":"96"},{"id":"beatInterval","type":"number","label":"每字节拍间隔（秒）","default":"0.5"},{"id":"direction","type":"select","label":"入场方向","options":[{"label":"从下往上","value":"up"},{"label":"从左往右","value":"left"},{"label":"无位移","value":"none"}],"default":"up"}'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=480, height=270" />
+    <style>
+      @font-face {
+        font-family: 'MiSans SemiBold';
+        src: url('/templates/_fonts/MiSansSemiBold.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: 'MEBHeiHeiTi';
+        src: url('/templates/_fonts/MEBHeiHeiTi.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { width: 480px; height: 270px; overflow: hidden; }
+      body { background: transparent; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 18px; }
+      #wrap {
+        position: relative;
+        width: 100%;
+        max-width: 460px;
+        text-align: center;
+      }
+      #line {
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0;
+        justify-content: center;
+        line-height: 1.1;
+      }
+      .w {
+        display: inline-block;
+        font-family: 'MiSans SemiBold', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        font-size: var(--fs, 96px);
+        font-weight: 700;
+        color: var(--tc, #FFFFFF);
+        white-space: nowrap;
+        opacity: 0;
+        transform: translateY(var(--ty, 30px)) translateX(var(--tx, 0px));
+        will-change: transform, opacity;
+        margin: 0 0.05em;
+      }
+      #bgbar {
+        position: absolute;
+        bottom: -6px;
+        left: 50%;
+        transform: translateX(-50%);
+        height: 3px;
+        width: 0;
+        background: var(--ac, #39FF85);
+        border-radius: 2px;
+        opacity: 0.8;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrap">
+      <div id="line"></div>
+      <div id="bgbar"></div>
+    </div>
+  <script src="/templates/_lib/gsap.min.js"></script>
+  <script>
+    (() => {
+      const fallback = {
+        words: "你的声音,我,你像星光",
+        textColor: "#FFFFFF",
+        accentColor: "#39FF85",
+        bgAlpha: "0.3",
+        fontSize: "96",
+        beatInterval: "0.5",
+        direction: "up"
+      };
+      const v = window.__hyperframes && window.__hyperframes.getVariables
+        ? window.__hyperframes.getVariables()
+        : fallback;
+
+      const tc = v.textColor || "#FFFFFF";
+      const ac = v.accentColor || "#39FF85";
+      const fs = parseFloat(v.fontSize) || 96;
+      const interval = parseFloat(v.beatInterval) || 0.5;
+      const dir = v.direction || "up";
+      const wordsRaw = (v.words || "你的声音,我,你像星光").split(/[,，]/).filter(w => w.trim());
+
+      document.documentElement.style.setProperty('--tc', tc);
+      document.documentElement.style.setProperty('--ac', ac);
+      document.documentElement.style.setProperty('--fs', fs + 'px');
+
+      const ty = dir === 'up' ? '30px' : '0px';
+      const tx = dir === 'left' ? '40px' : '0px';
+      document.querySelectorAll('.w').forEach(el => {
+        el.style.setProperty('--ty', ty);
+        el.style.setProperty('--tx', tx);
+      });
+
+      const line = document.getElementById('line');
+      line.innerHTML = '';
+      wordsRaw.forEach(word => {
+        const span = document.createElement('span');
+        span.className = 'w';
+        span.textContent = word;
+        span.style.setProperty('--ty', ty);
+        span.style.setProperty('--tx', tx);
+        line.appendChild(span);
+      });
+
+      const spans = Array.from(line.querySelectorAll('.w'));
+      const totalDuration = spans.length * interval + 0.8;
+
+      function runLoop() {
+        const tl = gsap.timeline({ repeat: 0 });
+
+        spans.forEach((span, i) => {
+          tl.to(span, {
+            opacity: 1,
+            y: 0,
+            x: 0,
+            duration: 0.35,
+            ease: 'back.out(1.7)'
+          }, i * interval);
+        });
+
+        const lastSpan = spans[spans.length - 1];
+        if (lastSpan) {
+          tl.to('#bgbar', {
+            width: lastSpan.offsetWidth + 'px',
+            duration: 0.4,
+            ease: 'power2.out'
+          }, (spans.length - 1) * interval + 0.1);
+
+          tl.to('#bgbar', {
+            opacity: 0,
+            duration: 0.3,
+            ease: 'power2.in'
+          }, spans.length * interval + 0.2);
+        }
+
+        tl.call(() => {
+          spans.forEach(s => gsap.set(s, { opacity: 0, y: ty, x: tx }));
+          gsap.set('#bgbar', { width: 0, opacity: 0.8 });
+        });
+
+        return tl;
+      }
+
+      const master = gsap.timeline({ repeat: -1, delay: 0.3 });
+      master.add(runLoop());
+      master.duration(totalDuration + 0.6);
+    })();
+  </script>
+  </body>
+</html>

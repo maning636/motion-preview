@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"bgText","type":"string","label":"背景大字","default":"墨"},{"id":"accentColor","type":"color","label":"大字配色","default":"#39FF85"},{"id":"bgColor","type":"color","label":"背景色（低饱和）","default":"#1A2E1A"},{"id":"fontSize","type":"number","label":"字号比例（%舞台宽）","default":"200"},{"id":"motionIntensity","type":"select","label":"动效强度","options":[{"label":"弱（微动）","value":"1"},{"label":"中（呼吸）","value":"2"},{"label":"强（摆动）","value":"3"}],"default":"2"},{"id":"stackCount","type":"number","label":"叠层数量（2-5）","default":"3"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=480, height=270" />
+    <style>
+      @font-face {
+        font-family: 'MiSans Bold';
+        src: url('/templates/_fonts/MiSansBold.ttf') format('truetype');
+        font-weight: normal;
+        font-style: normal;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { width: 480px; height: 270px; overflow: hidden; }
+      body { background: transparent; display: flex; align-items: center; justify-content: center; }
+
+      #scene {
+        position: relative;
+        width: 480px;
+        height: 270px;
+        overflow: hidden;
+        /* 低饱和背景 */
+        background: var(--bc, #1A2E1A);
+      }
+
+      /* 叠层大字容器 — 全部 absolute 竖排 */
+      #layers {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .layer {
+        position: absolute;
+        font-family: 'MiSans Bold', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        font-weight: 900;
+        color: var(--tc, #39FF85);
+        writing-mode: vertical-rl;
+        text-orientation: upright;
+        user-select: none;
+        will-change: transform, opacity;
+        line-height: 1;
+        /* 竖排居中：使用 left/top 配合 translate 居中 */
+        transform-origin: center center;
+      }
+
+      /* 叠层淡化：越靠后越淡 */
+      .layer:nth-child(1) { opacity: 0.18; }
+      .layer:nth-child(2) { opacity: 0.30; }
+      .layer:nth-child(3) { opacity: 0.45; }
+      .layer:nth-child(4) { opacity: 0.60; }
+      .layer:nth-child(5) { opacity: 0.75; }
+    </style>
+  </head>
+  <body>
+    <div id="scene">
+      <div id="layers"></div>
+    </div>
+
+  <script src="/templates/_lib/gsap.min.js"></script>
+  <script>
+    (() => {
+      const fallback = {
+        bgText: "墨",
+        accentColor: "#39FF85",
+        bgColor: "#1A2E1A",
+        fontSize: "200",
+        motionIntensity: "2",
+        stackCount: "3"
+      };
+      const v = window.__hyperframes && window.__hyperframes.getVariables
+        ? window.__hyperframes.getVariables()
+        : fallback;
+
+      const bgText = v.bgText || "墨";
+      const tc = v.accentColor || "#39FF85";
+      const bc = v.bgColor || "#1A2E1A";
+      const fsRatio = parseFloat(v.fontSize) || 200; // % of stage width
+      const intensity = parseInt(v.motionIntensity) || 2;
+      const count = Math.min(5, Math.max(2, parseInt(v.stackCount) || 3));
+
+      document.documentElement.style.setProperty('--tc', tc);
+      document.documentElement.style.setProperty('--bc', bc);
+
+      const layersEl = document.getElementById('layers');
+      layersEl.innerHTML = '';
+
+      // 计算字号：基于 480px 宽度的比例
+      const baseFontSize = Math.round(480 * fsRatio / 100);
+
+      // 创建叠层
+      for (let i = 0; i < count; i++) {
+        const el = document.createElement('div');
+        el.className = 'layer';
+        el.textContent = bgText;
+        // 每层字号略微缩小，制造层次感
+        const scaleFactor = 1 - i * 0.03;
+        el.style.fontSize = Math.round(baseFontSize * scaleFactor) + 'px';
+        layersEl.appendChild(el);
+      }
+
+      const layers = Array.from(layersEl.querySelectorAll('.layer'));
+      // 先记录 CSS 里的目标透明度——gsap.set 清零内联 opacity 后 getComputedStyle 只会读到 0
+      const targetOpacities = layers.map(l => parseFloat(getComputedStyle(l).opacity));
+
+      // 动效参数
+      let rotAmp, scaleAmp, dur;
+      if (intensity === 1) { rotAmp = 0.8; scaleAmp = 0.03; dur = 4.0; }
+      else if (intensity === 3) { rotAmp = 2.5; scaleAmp = 0.08; dur = 2.5; }
+      else { rotAmp = 1.5; scaleAmp = 0.05; dur = 3.2; } // 默认中
+
+      // 入场：从淡入缩放进入
+      gsap.set(layers, { opacity: 0, scale: 0.85 });
+
+      function runLoop() {
+        const tl = gsap.timeline();
+
+        // 入场
+        layers.forEach((l, i) => {
+          tl.to(l, {
+            opacity: targetOpacities[i],
+            scale: 1,
+            duration: 0.7,
+            ease: 'power2.out'
+          }, i * 0.15);
+        });
+
+        // 入场停顿
+        tl.to(layers, { duration: 0.3 });
+
+        // 主循环动效（每个叠层不同相位）
+        layers.forEach((l, i) => {
+          const phase = i * 0.4; // 相位错开
+          const delay = -(i * 0.12);
+
+          // 呼吸缩放
+          tl.to(l, {
+            scale: 1 + scaleAmp,
+            duration: dur / 2,
+            ease: 'sine.inOut'
+          }, phase + delay);
+
+          tl.to(l, {
+            scale: 1 - scaleAmp * 0.6,
+            duration: dur / 2,
+            ease: 'sine.inOut'
+          }, phase + dur / 2 + delay);
+
+          // 轻微旋转摆动
+          tl.to(l, {
+            rotation: rotAmp,
+            duration: dur / 2,
+            ease: 'sine.inOut'
+          }, phase + delay);
+
+          tl.to(l, {
+            rotation: -rotAmp * 0.5,
+            duration: dur / 2,
+            ease: 'sine.inOut'
+          }, phase + dur / 2 + delay);
+        });
+
+        // 循环停顿
+        tl.to(layers, { duration: 0.5 });
+
+        // 复位
+        tl.call(() => {
+          layers.forEach((l) => {
+            gsap.set(l, { scale: 1, rotation: 0 });
+          });
+        });
+
+        return tl;
+      }
+
+      const master = gsap.timeline({ repeat: -1, delay: 0.3 });
+      master.add(runLoop());
+      master.duration(dur + 2.0);
+    })();
+  </script>
+  </body>
+</html>

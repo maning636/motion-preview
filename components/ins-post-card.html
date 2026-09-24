@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"nickname","type":"string","label":"昵称","default":"Lisa_0223"},{"id":"likeCount","type":"string","label":"点赞数","default":"128.4K"},{"id":"cardCount","type":"number","label":"轮播卡片数（1-3）","default":"3"},{"id":"accentColor","type":"color","label":"强调色（图标/点赞数）","default":"#E1306C"},{"id":"cardBg","type":"color","label":"图片区背景色","default":"#833AB4"},{"id":"cardBg2","type":"color","label":"图片区渐变色2","default":"#FD1D1D"},{"id":"slideDirection","type":"select","label":"滑入方向","options":[{"label":"从右滑入","value":"right"},{"label":"从左滑入","value":"left"}],"default":"right"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=480, height=270" />
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { width: 480px; height: 270px; overflow: hidden; background: transparent; }
+      body { display: flex; align-items: flex-end; justify-content: center; padding-bottom: 12px; }
+      #stage {
+        position: relative;
+        width: 300px;
+        height: 380px;
+        overflow: hidden;
+        border-radius: 12px;
+        background: #fff;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.18);
+      }
+      /* 顶部头像栏 */
+      #header {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 52px;
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        gap: 10px;
+        z-index: 2;
+        background: linear-gradient(to bottom, rgba(0,0,0,0.32) 0%, transparent 100%);
+      }
+      #avatar {
+        width: 34px; height: 34px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #833AB4, #E1306C);
+        border: 2px solid rgba(255,255,255,0.9);
+        flex-shrink: 0;
+        display: flex; align-items: center; justify-content: center;
+        overflow: hidden;
+      }
+      #avatar img { width: 100%; height: 100%; object-fit: cover; }
+      #nickname {
+        font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        color: #fff;
+        text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        max-width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      /* 图片区 */
+      #img-area {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 300px;
+        overflow: hidden;
+      }
+      #img-gradient {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(145deg, var(--bg1,#833AB4) 0%, var(--bg2,#FD1D1D) 100%);
+      }
+      /* 底部操作栏 */
+      #footer {
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: 80px;
+        padding: 8px 12px;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      #actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+      .action-icon {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        color: #262626;
+      }
+      .action-icon svg { width: 22px; height: 22px; }
+      #like-count {
+        font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        color: #262626;
+      }
+      #carousel-dots {
+        display: flex;
+        gap: 5px;
+        margin-top: 2px;
+      }
+      .dot {
+        width: 6px; height: 6px;
+        border-radius: 50%;
+        background: #dbdbdb;
+        transition: background 0.3s;
+      }
+      .dot.active { background: #262626; }
+    </style>
+  </head>
+  <body>
+    <div id="stage">
+      <!-- 顶部头像栏 -->
+      <div id="header">
+        <div id="avatar">
+          <svg viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+          </svg>
+        </div>
+        <span id="nickname"></span>
+      </div>
+
+      <!-- 图片区 -->
+      <div id="img-area">
+        <div id="img-gradient"></div>
+      </div>
+
+      <!-- 底部操作栏 -->
+      <div id="footer">
+        <div id="actions">
+          <!-- 点赞 -->
+          <div class="action-icon" id="like-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+          </div>
+          <!-- 评论 -->
+          <div class="action-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </div>
+          <!-- 分享 -->
+          <div class="action-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </div>
+        </div>
+        <span id="like-count"></span>
+        <div id="carousel-dots"></div>
+      </div>
+    </div>
+
+  <script src="/templates/_lib/gsap.min.js"></script>
+  <script>
+    (() => {
+      const fallback = {
+        nickname: "Lisa_0223",
+        likeCount: "128.4K",
+        cardCount: "3",
+        accentColor: "#E1306C",
+        cardBg: "#833AB4",
+        cardBg2: "#FD1D1D",
+        slideDirection: "right"
+      };
+      const v = window.__hyperframes && window.__hyperframes.getVariables
+        ? window.__hyperframes.getVariables()
+        : fallback;
+
+      const nickname = v.nickname || "Lisa_0223";
+      const likeCount = v.likeCount || "128.4K";
+      const cardCount = Math.min(3, Math.max(1, parseInt(v.cardCount) || 3));
+      const accentColor = v.accentColor || "#E1306C";
+      const cardBg = v.cardBg || "#833AB4";
+      const cardBg2 = v.cardBg2 || "#FD1D1D";
+      const slideDir = v.slideDirection || "right";
+
+      // 设置渐变色
+      document.documentElement.style.setProperty('--bg1', cardBg);
+      document.documentElement.style.setProperty('--bg2', cardBg2);
+
+      // 设置点赞色
+      const likeIcon = document.getElementById('like-icon');
+      likeIcon.style.color = accentColor;
+
+      // 设置文字
+      document.getElementById('nickname').textContent = nickname;
+      document.getElementById('like-count').textContent = '赞 ' + likeCount;
+
+      // 生成轮播指示点
+      const dotsContainer = document.getElementById('carousel-dots');
+      for (let i = 0; i < cardCount; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'dot' + (i === 0 ? ' active' : '');
+        dotsContainer.appendChild(dot);
+      }
+
+      // ── 卡片轮播动效 ─────────────────────────────────────
+      const stage = document.getElementById('stage');
+      const dots = dotsContainer.querySelectorAll('.dot');
+
+      // 计算滑入/滑出起点终点（基于方向）
+      const cardW = 300;
+      const canvasW = 480;
+      const startX = slideDir === 'right' ? canvasW + 20 : -cardW - 20;
+      const endX = slideDir === 'right' ? -cardW - 20 : canvasW + 20;
+      const centerX = (canvasW - cardW) / 2;
+
+      // 初始位置
+      gsap.set(stage, { x: startX });
+
+      function runCard(index) {
+        const dot = dots[index];
+        if (dot) {
+          dots.forEach(d => d.classList.remove('active'));
+          dot.classList.add('active');
+        }
+
+        const tl = gsap.timeline();
+        // 滑入（带回弹）
+        tl.to(stage, {
+          x: centerX,
+          duration: 0.65,
+          ease: 'back.out(1.2)'
+        });
+        // 停留
+        tl.to(stage, {
+          x: centerX,
+          duration: 0.5
+        });
+        // 滑出
+        tl.to(stage, {
+          x: endX,
+          duration: 0.5,
+          ease: 'power2.in'
+        });
+        // 重置位置（瞬间回到另一侧）
+        tl.call(() => {
+          const nextX = slideDir === 'right' ? canvasW + 20 : -cardW - 20;
+          gsap.set(stage, { x: nextX });
+        });
+
+        return tl;
+      }
+
+      const totalDuration = 0.65 + 0.5 + 0.5 + 0.05; // ~1.7s per card
+
+      const master = gsap.timeline({ repeat: -1, delay: 0.3 });
+      for (let i = 0; i < cardCount; i++) {
+        master.add(runCard(i));
+      }
+      master.duration(totalDuration * cardCount + 0.1);
+    })();
+  </script>
+  </body>
+</html>

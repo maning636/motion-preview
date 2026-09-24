@@ -849,7 +849,11 @@ let pgDraw = null;   // { index, points: [[nx,ny]...] }
 
 async function pgFetchTemplate(templateId) {
   if (!pgHtmlCache.has(templateId)) {
-    pgHtmlCache.set(templateId, fetch(`./templates/${templateId}/index.html`).then((r) => {
+    // 组件从 components/<id>.html 取；模板从 templates/<id>/index.html 取
+    const entry = state.catalog && state.catalog.templates && state.catalog.templates.find(t => t.id === templateId);
+    const isComponent = !!(entry && entry.component === true);
+    const url = isComponent ? `./${entry.path}.html` : `./templates/${templateId}/index.html`;
+    pgHtmlCache.set(templateId, fetch(url).then((r) => {
       if (!r.ok) throw new Error("模板加载失败：" + templateId);
       return r.text();
     }).catch((e) => { pgHtmlCache.delete(templateId); throw e; }));
@@ -883,7 +887,10 @@ function pgRenderLayerFrame(index) {
   const variables = { ...layer.values, exportMode: "transparent" };
   pgFetchTemplate(layer.templateId).then((html) => {
     if (pgGeneration.get(index) !== mine) return;
-    el.srcdoc = pgBuildSrcdoc(html, `./templates/${layer.templateId}/`, variables);
+    const entry2 = state.catalog && state.catalog.templates && state.catalog.templates.find(t => t.id === layer.templateId);
+    const isComp = !!(entry2 && entry2.component === true);
+    const baseHref = isComp ? './components/' : `./templates/${layer.templateId}/`;
+    el.srcdoc = pgBuildSrcdoc(html, baseHref, variables);
   }).catch(() => {});
 }
 

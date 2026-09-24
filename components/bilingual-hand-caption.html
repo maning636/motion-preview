@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"cnText","type":"string","label":"中文文案","default":"燃烧吧青春"},{"id":"enText","type":"string","label":"英文文案","default":"BURN YOUTH"},{"id":"panelColor","type":"color","label":"面板底色","default":"#1A5C2A"},{"id":"accentColor","type":"color","label":"强调色（装饰线）","default":"#39FF85"},{"id":"textColor","type":"color","label":"文字色","default":"#FFFFFF"},{"id":"cornerPosition","type":"select","label":"位置","options":[{"label":"左下","value":"bl"},{"label":"右下","value":"br"},{"label":"左上","value":"tl"},{"label":"右上","value":"tr"}],"default":"bl"},{"id":"entranceDir","type":"select","label":"入场方向","options":[{"label":"从底部滑入","value":"bottom"},{"label":"从左侧滑入","value":"left"},{"label":"弹性缩放入场","value":"scale"}],"default":"scale"},{"id":"loopDuration","type":"number","label":"循环时长（秒，2-6）","default":"3"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=480, height=270" />
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { width: 480px; height: 270px; overflow: hidden; background: transparent; }
+      body {
+        display: flex;
+        align-items: flex-end;
+        justify-content: flex-start;
+        padding: 0;
+      }
+
+      /* 角落定位 */
+      #caption-bar {
+        position: relative;
+        display: flex;
+        flex-direction: row;
+        align-items: flex-end;
+        padding: 8px 14px 10px 14px;
+        border-radius: 4px 8px 8px 0;
+        background: var(--pc, #1A5C2A);
+        /* 左上右下对齐 */
+        transform-origin: var(--xo, left) var(--yo, bottom);
+        /* 顶部描边装饰线 */
+        border-top: 3px solid var(--ac, #39FF85);
+        border-left: 3px solid var(--ac, #39FF85);
+        border-right: 3px solid var(--ac, #39FF85);
+        box-shadow:
+          2px 2px 8px rgba(0,0,0,0.35),
+          inset 0 0 12px rgba(0,0,0,0.15);
+        will-change: transform, opacity;
+        min-width: 180px;
+        max-width: 320px;
+      }
+
+      /* 装饰色块 */
+      #accent-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--ac, #39FF85);
+        border-radius: 4px 8px 0 0;
+      }
+
+      /* 中文区 */
+      #cn-wrap {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        margin-right: 10px;
+        min-width: 60px;
+      }
+
+      #cn-text {
+        font-family: 'PingFang SC', 'Microsoft YaHei', 'SimHei', sans-serif;
+        font-weight: 900;
+        font-size: var(--cn-size, 22px);
+        color: var(--tc, #FFFFFF);
+        /* 手写感：略倾斜 + 文字阴影模拟描边 */
+        font-style: italic;
+        letter-spacing: 2px;
+        text-shadow:
+          1px 1px 0 rgba(0,0,0,0.5),
+          -0.5px -0.5px 0 rgba(0,0,0,0.3),
+          0 0 6px rgba(0,0,0,0.4);
+        line-height: 1.15;
+        writing-mode: horizontal-tb;
+        white-space: nowrap;
+      }
+
+      /* 英文区 */
+      #en-wrap {
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-end;
+        padding-bottom: 2px;
+      }
+
+      #en-text {
+        font-family: 'Arial', 'Helvetica Neue', sans-serif;
+        font-size: var(--en-size, 9px);
+        font-weight: 700;
+        color: var(--ac, #39FF85);
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        /* 非斜体，正向小字，竖排英文 */
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+        white-space: nowrap;
+        /* 装饰下划线 */
+        border-bottom: 1.5px solid var(--ac, #39FF85);
+        padding-bottom: 2px;
+        opacity: 0.9;
+      }
+
+      /* 右侧小三角装饰 */
+      #triangle {
+        position: absolute;
+        right: -8px;
+        bottom: 0;
+        width: 0;
+        height: 0;
+        border-top: 10px solid transparent;
+        border-bottom: 0px solid transparent;
+        border-left: 8px solid var(--pc, #1A5C2A);
+      }
+
+      /* 底部滑块脉冲（入场提示） */
+      #pulse-dot {
+        position: absolute;
+        bottom: -6px;
+        left: 12px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--ac, #39FF85);
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="caption-bar">
+      <div id="accent-bar"></div>
+      <div id="cn-wrap">
+        <div id="cn-text"></div>
+      </div>
+      <div id="en-wrap">
+        <div id="en-text"></div>
+      </div>
+      <div id="triangle"></div>
+      <div id="pulse-dot"></div>
+    </div>
+
+  <script src="/templates/_lib/gsap.min.js"></script>
+  <script>
+    (() => {
+      const fallback = {
+        cnText: "燃烧吧青春",
+        enText: "BURN YOUTH",
+        panelColor: "#1A5C2A",
+        accentColor: "#39FF85",
+        textColor: "#FFFFFF",
+        cornerPosition: "bl",
+        entranceDir: "scale",
+        loopDuration: "3"
+      };
+      const v = window.__hyperframes && window.__hyperframes.getVariables
+        ? window.__hyperframes.getVariables()
+        : fallback;
+
+      const cnText = v.cnText || "燃烧吧青春";
+      const enText = v.enText || "BURN YOUTH";
+      const pc = v.panelColor || "#1A5C2A";
+      const ac = v.accentColor || "#39FF85";
+      const tc = v.textColor || "#FFFFFF";
+      const pos = v.cornerPosition || "bl";
+      const dir = v.entranceDir || "scale";
+      const loopDur = Math.min(6, Math.max(2, parseFloat(v.loopDuration) || 3));
+
+      // CSS 变量
+      document.documentElement.style.setProperty('--pc', pc);
+      document.documentElement.style.setProperty('--ac', ac);
+      document.documentElement.style.setProperty('--tc', tc);
+
+      // 字号根据文案长度自适应
+      const cnLen = cnText.length;
+      const cnSize = cnLen <= 4 ? 22 : (cnLen <= 6 ? 18 : 14);
+      const enSize = cnLen <= 4 ? 9 : (cnLen <= 6 ? 8 : 7);
+      document.documentElement.style.setProperty('--cn-size', cnSize + 'px');
+      document.documentElement.style.setProperty('--en-size', enSize + 'px');
+
+      // 设置文案
+      document.getElementById('cn-text').textContent = cnText;
+      document.getElementById('en-text').textContent = enText;
+
+      // 角落定位
+      const bar = document.getElementById('caption-bar');
+      const tri = document.getElementById('triangle');
+      let xo = 'left', yo = 'bottom';
+      let initX = 0, initY = 0;
+
+      if (pos === 'bl') {
+        bar.style.left = '0px';
+        bar.style.bottom = '0px';
+        xo = 'left'; yo = 'bottom';
+        bar.style.transformOrigin = 'left bottom';
+        initY = dir === 'bottom' ? 30 : 0;
+        initX = dir === 'left' ? 40 : 0;
+        // 三角朝右（右下角）
+        tri.style.right = '-8px';
+        tri.style.bottom = '0px';
+        tri.style.borderLeft = `8px solid ${pc}`;
+        tri.style.borderTop = '10px solid transparent';
+        tri.style.borderBottom = '0px solid transparent';
+      } else if (pos === 'br') {
+        bar.style.right = '0px';
+        bar.style.bottom = '0px';
+        bar.style.borderRadius = '8px 4px 0 8px';
+        bar.style.transformOrigin = 'right bottom';
+        initY = dir === 'bottom' ? 30 : 0;
+        initX = dir === 'left' ? -40 : 0;
+        // 三角朝左
+        tri.style.left = '-8px';
+        tri.style.right = 'auto';
+        tri.style.bottom = '0px';
+        tri.style.borderRight = `8px solid ${pc}`;
+        tri.style.borderTop = '10px solid transparent';
+        tri.style.borderBottom = '0px solid transparent';
+        tri.style.borderLeft = '0px solid transparent';
+        xo = 'right'; yo = 'bottom';
+      } else if (pos === 'tl') {
+        bar.style.left = '0px';
+        bar.style.top = '0px';
+        bar.style.bottom = 'auto';
+        bar.style.borderRadius = '0 8px 8px 0';
+        bar.style.transformOrigin = 'left top';
+        initY = dir === 'bottom' ? -30 : 0;
+        initX = dir === 'left' ? 40 : 0;
+        tri.style.right = '-8px';
+        tri.style.top = '0px';
+        tri.style.bottom = 'auto';
+        tri.style.borderLeft = `8px solid ${pc}`;
+        tri.style.borderBottom = '10px solid transparent';
+        tri.style.borderTop = '0px solid transparent';
+        xo = 'left'; yo = 'top';
+      } else if (pos === 'tr') {
+        bar.style.right = '0px';
+        bar.style.top = '0px';
+        bar.style.bottom = 'auto';
+        bar.style.borderRadius = '8px 0 0 8px';
+        bar.style.transformOrigin = 'right top';
+        initY = dir === 'bottom' ? -30 : 0;
+        initX = dir === 'left' ? -40 : 0;
+        tri.style.left = '-8px';
+        tri.style.right = 'auto';
+        tri.style.top = '0px';
+        tri.style.bottom = 'auto';
+        tri.style.borderRight = `8px solid ${pc}`;
+        tri.style.borderBottom = '10px solid transparent';
+        tri.style.borderTop = '0px solid transparent';
+        tri.style.borderLeft = '0px solid transparent';
+        xo = 'right'; yo = 'top';
+      }
+
+      bar.style.setProperty('--xo', xo);
+      bar.style.setProperty('--yo', yo);
+
+      // 更新三角颜色
+      tri.style.borderLeft = pos === 'bl' ? `8px solid ${pc}` : tri.style.borderLeft;
+      tri.style.borderRight = (pos === 'br') ? `8px solid ${pc}` : tri.style.borderRight;
+
+      // 初始状态
+      let startState = { opacity: 0 };
+      if (dir === 'bottom') {
+        startState.y = initY;
+        startState.x = 0;
+      } else if (dir === 'left') {
+        startState.x = initX;
+        startState.y = 0;
+      } else {
+        // scale 模式
+        startState.scale = 0;
+        startState.y = 0;
+        startState.x = 0;
+      }
+      gsap.set(bar, startState);
+
+      const pulseDot = document.getElementById('pulse-dot');
+
+      function runLoop() {
+        const tl = gsap.timeline();
+
+        // ── 入场 ──
+        if (dir === 'scale') {
+          tl.to(bar, {
+            opacity: 1,
+            scale: 1,
+            duration: 0.7,
+            ease: 'back.out(2.2)'
+          });
+        } else if (dir === 'bottom') {
+          tl.to(bar, {
+            opacity: 1,
+            y: 0,
+            x: 0,
+            duration: 0.55,
+            ease: 'power3.out'
+          });
+        } else {
+          tl.to(bar, {
+            opacity: 1,
+            x: 0,
+            y: 0,
+            duration: 0.55,
+            ease: 'power3.out'
+          });
+        }
+
+        // 脉冲入场点
+        tl.to(pulseDot, {
+          opacity: 0.8,
+          duration: 0.2,
+          ease: 'power2.out'
+        }, '-=0.2');
+        tl.to(pulseDot, {
+          opacity: 0,
+          duration: 0.3
+        });
+
+        // ── 停留 ──
+        tl.to(bar, { duration: Math.max(0.2, loopDur - 1.4) });
+
+        // ── 出场 ──
+        if (dir === 'scale') {
+          tl.to(bar, {
+            opacity: 0,
+            scale: 0.85,
+            duration: 0.5,
+            ease: 'power2.in'
+          });
+        } else if (dir === 'bottom') {
+          tl.to(bar, {
+            opacity: 0,
+            y: -20,
+            duration: 0.5,
+            ease: 'power2.in'
+          });
+        } else {
+          tl.to(bar, {
+            opacity: 0,
+            x: pos.startsWith('l') ? -30 : 30,
+            duration: 0.5,
+            ease: 'power2.in'
+          });
+        }
+
+        // ── 重置 ──
+        tl.call(() => {
+          gsap.set(bar, startState);
+          gsap.set(pulseDot, { opacity: 0 });
+        });
+
+        return tl;
+      }
+
+      const master = gsap.timeline({ repeat: -1, delay: 0.3 });
+      master.add(runLoop());
+      master.duration(loopDur);
+    })();
+  </script>
+  </body>
+</html>

@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"photoCount","type":"select","label":"照片数量","options":[{"label":"3张","value":"3"},{"label":"4张","value":"4"},{"label":"5张","value":"5"}],"default":"4"},{"id":"ringColor","type":"color","label":"轨道强调色","default":"#39FF85"},{"id":"ringBgColor","type":"color","label":"轨道底色","default":"#FF7A45"},{"id":"textColor","type":"color","label":"占位图文字色","default":"#FFFFFF"},{"id":"rotationDuration","type":"number","label":"旋转一圈时长（秒，2-4）","default":"3"},{"id":"orbitFlatness","type":"number","label":"轨道扁平度（0.15-0.45）","default":"0.28"}]'>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=480, height=270" />
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { width: 480px; height: 270px; overflow: hidden; background: transparent; }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      #stage {
+        position: relative;
+        width: 480px;
+        height: 270px;
+        transform-style: preserve-3d;
+      }
+
+      /* 中心装饰圆 */
+      #center-dot {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--rc, #39FF85);
+        transform: translate(-50%, -50%);
+        opacity: 0.6;
+        z-index: 10;
+        box-shadow: 0 0 8px var(--rc, #39FF85);
+        will-change: transform, opacity;
+      }
+
+      /* 中心光圈 */
+      #center-ring {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 1.5px solid var(--rc, #39FF85);
+        transform: translate(-50%, -50%);
+        opacity: 0.35;
+        z-index: 10;
+        will-change: transform, opacity;
+      }
+
+      /* 照片卡 */
+      .photo-card {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 72px;
+        height: 52px;
+        border-radius: 6px;
+        overflow: hidden;
+        border: 2px solid var(--rc, #39FF85);
+        box-shadow:
+          0 2px 12px rgba(0,0,0,0.35),
+          0 0 6px rgba(57,255,133,0.2);
+        will-change: transform, opacity;
+        backface-visibility: hidden;
+      }
+
+      /* 渐变占位图 */
+      .photo-inner {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          135deg,
+          var(--rb, #FF7A45) 0%,
+          color-mix(in srgb, var(--rb, #FF7A45) 60%, var(--rc, #39FF85) 100%) 100%
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+      }
+
+      .photo-inner::after {
+        content: attr(data-n);
+        font-family: 'Arial Black', 'Helvetica Neue', sans-serif;
+        font-size: 18px;
+        font-weight: 900;
+        color: var(--tc, #FFFFFF);
+        opacity: 0.7;
+        letter-spacing: 1px;
+      }
+
+      /* 轨道底（超宽扁椭圆辅助线） */
+      #orbit-guide {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        border: 1px dashed rgba(57,255,133,0.18);
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage">
+      <div id="orbit-guide"></div>
+      <div id="center-ring"></div>
+      <div id="center-dot"></div>
+    </div>
+
+  <script src="/templates/_lib/gsap.min.js"></script>
+  <script>
+    (() => {
+      const fallback = {
+        photoCount: "4",
+        ringColor: "#39FF85",
+        ringBgColor: "#FF7A45",
+        textColor: "#FFFFFF",
+        rotationDuration: "3",
+        orbitFlatness: "0.28"
+      };
+      const v = window.__hyperframes && window.__hyperframes.getVariables
+        ? window.__hyperframes.getVariables()
+        : fallback;
+
+      const count = Math.min(5, Math.max(3, parseInt(v.photoCount) || 4));
+      const rc = v.ringColor || "#39FF85";
+      const rb = v.ringBgColor || "#FF7A45";
+      const tc = v.textColor || "#FFFFFF";
+      const dur = Math.min(4, Math.max(2, parseFloat(v.rotationDuration) || 3));
+      const flat = Math.min(0.45, Math.max(0.15, parseFloat(v.orbitFlatness) || 0.28));
+
+      // CSS 变量
+      document.documentElement.style.setProperty('--rc', rc);
+      document.documentElement.style.setProperty('--rb', rb);
+      document.documentElement.style.setProperty('--tc', tc);
+
+      const stage = document.getElementById('stage');
+      const orbitGuide = document.getElementById('orbit-guide');
+      const centerDot = document.getElementById('center-dot');
+      const centerRing = document.getElementById('center-ring');
+
+      // 舞台尺寸 480×270，中心在 240,135
+      const cx = 240, cy = 135;
+      // 椭圆轨道参数（超宽屏扁平椭圆）
+      const rx = 160; // 水平半径
+      const ry = Math.round(rx * flat); // 垂直半径（扁平）
+
+      // 设置轨道辅助线可见
+      orbitGuide.style.width = (rx * 2) + 'px';
+      orbitGuide.style.height = (ry * 2) + 'px';
+      orbitGuide.style.borderColor = rc + '30';
+
+      // 创建照片卡
+      const cards = [];
+      for (let i = 0; i < count; i++) {
+        const card = document.createElement('div');
+        card.className = 'photo-card';
+        const inner = document.createElement('div');
+        inner.className = 'photo-inner';
+        inner.setAttribute('data-n', i + 1);
+        card.appendChild(inner);
+        stage.appendChild(card);
+        cards.push(card);
+      }
+
+      // 入场动画：中心圆先出现
+      gsap.set(centerDot, { scale: 0, opacity: 0 });
+      gsap.set(centerRing, { scale: 0, opacity: 0 });
+      cards.forEach(c => gsap.set(c, { opacity: 0, scale: 0.5 }));
+
+      // 主旋转函数
+      function startRotation() {
+        // 中心装饰入场
+        gsap.to(centerDot, {
+          scale: 1, opacity: 0.6, duration: 0.6, ease: 'back.out(1.8)'
+        });
+        gsap.to(centerRing, {
+          scale: 1, opacity: 0.35, duration: 0.8, ease: 'back.out(1.5)', delay: 0.1
+        });
+
+        // 各卡按间隔旋转
+        const angleStep = 360 / count;
+        const circleDur = dur; // 一圈秒数
+
+        cards.forEach((card, idx) => {
+          const baseAngle = idx * angleStep;
+
+          // 入场：从中心淡入放大
+          gsap.to(card, {
+            opacity: 1, scale: 1,
+            duration: 0.5,
+            delay: 0.2 + idx * 0.12,
+            ease: 'back.out(1.6)'
+          });
+
+          // 持续旋转：Y轴倾角随位置变化，近处大角度，远处小角度
+          // 使用 gsap.to + repeat:-1 + yoyo 模式
+          // 角度匀速变化，但 scale/opacity 用 easeInOut 产生3D感
+          const tl = gsap.timeline({ repeat: -1 });
+
+          // 每张照片的角度 = baseAngle + 当前累计旋转角度
+          // 每次循环转 360°，用 ease 'none' 匀速
+          // scale 和 opacity 用 ease 'power1.inOut' 制造景深感
+          // 近处（角度在 0° 附近，即从右侧经过）scale大、opacity高
+          // 远处（角度在 180° 附近，即从左侧经过）scale小、opacity低
+
+          // 绕一圈的关键帧
+          tl.to({}, {
+            duration: circleDur,
+            ease: 'none',
+            onUpdate: function() {
+              const prog = tl.progress();
+              const currentAngle = baseAngle + prog * 360;
+              const rad = (currentAngle - 90) * Math.PI / 180;
+
+              // 椭圆轨道坐标
+              const x = cx + rx * Math.cos(rad);
+              const y = cy + ry * Math.sin(rad);
+
+              // 距离最近的点（0°/360°）scale最大，180° scale最小
+              // 用 cos(当前角-90°) 来衡量远近：cos=1(最近) 到 cos=-1(最远)
+              const cosAngle = Math.cos((currentAngle) * Math.PI / 180);
+              const scale = 0.6 + 0.4 * (cosAngle * 0.5 + 0.5); // 0.6~1.0
+              const opacity = 0.4 + 0.6 * (cosAngle * 0.5 + 0.5); // 0.4~1.0
+
+              // Y轴倾斜：最大在两侧(90°/270°)，最小在上下
+              const tiltY = Math.sin(currentAngle * Math.PI / 180) * 20; // ±20deg
+
+              card.style.transform =
+                `translate(-50%, -50%) translate(${x - cx}px, ${y - cy}px) rotateY(${tiltY}deg) scale(${scale})`;
+              card.style.opacity = opacity;
+
+              // 置于顶层：最接近观众的照片在最上层
+              const zIndex = Math.round((cosAngle + 1) * 5); // 0~10
+              card.style.zIndex = zIndex;
+            }
+          });
+
+          // 循环：结束后无缝重启
+          tl.eventCallback('onRepeat', null);
+        });
+
+        // 中心圆轻微脉冲
+        gsap.to(centerDot, {
+          scale: 1.15, opacity: 0.8, duration: dur * 0.5,
+          ease: 'sine.inOut', yoyo: true, repeat: -1
+        });
+        gsap.to(centerRing, {
+          scale: 1.2, opacity: 0.2, duration: dur * 0.7,
+          ease: 'sine.inOut', yoyo: true, repeat: -1
+        });
+      }
+
+      // 延迟启动
+      setTimeout(startRotation, 100);
+    })();
+  </script>
+  </body>
+</html>
