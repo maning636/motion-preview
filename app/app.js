@@ -20,6 +20,7 @@ const showHome = document.querySelector("#show-home");
 const showLibrary = document.querySelector("#show-library");
 const showModes = document.querySelector("#show-modes");
 const showPlayground = document.querySelector("#show-playground");
+const showStandard = document.querySelector("#show-standard");
 const STATIC_CATALOG_VERSION = "20260923-free-379";
 const ALL_CATEGORY = "全部";
 
@@ -101,6 +102,7 @@ const SERIES_SECTIONS = [
   { key: "shot", title: "视觉动效", member: false, subtitle: "近期上新：镜头语言级动效、口播荧光绿包装、拼贴纪实、SC2 差异化复刻——描线实体化、乱码解码、关键词接力、波形语音等", match: (t) => t.id.startsWith("shot-") || t.id.startsWith("sc2-") || t.series === "shot" || t.series === "sc2" },
 ];
 const SERIES_NAV = [
+  { key: "all", title: "全部资产", sub: "满屏模板 + 组件同池，449 个契约资产一览" },
   ...SERIES_SECTIONS.map((s) => ({ key: s.key, title: s.title, sub: s.subtitle, member: !!s.member })),
   { key: "new", title: "免费新增", sub: "2026-09 新开源：纪实档案族 · 转场包 · 新品，全部免费，点进来直接挑", fresh: true },
 ];
@@ -191,9 +193,11 @@ function renderSeriesNav(resultCount) {
   nav.className = "series-nav";
   nav.style.setProperty("--series-count", SERIES_NAV.length);
   for (const item of SERIES_NAV) {
-    const count = item.key === "new"
-      ? state.catalog.templates.filter((t) => t.isNew).length
-      : state.catalog.templates.filter(SERIES_SECTIONS.find((s) => s.key === item.key).match).length;
+    const count = item.key === "all"
+      ? state.catalog.templates.length
+      : item.key === "new"
+        ? state.catalog.templates.filter((t) => t.isNew).length
+        : state.catalog.templates.filter(SERIES_SECTIONS.find((s) => s.key === item.key).match).length;
     const pill = document.createElement("button");
     pill.type = "button";
     pill.className = `series-pill ${state.series === item.key ? "active" : ""}`;
@@ -318,6 +322,13 @@ function buildCard(template) {
     freeBadge.textContent = "免费";
     media.append(freeBadge);
   }
+  if (template.origin === "community") {
+    const communityBadge = document.createElement("span");
+    communityBadge.className = "card-badge badge-community";
+    communityBadge.textContent = template.author ? `社区 · ${template.author}` : "社区";
+    communityBadge.title = "社区投稿入选：过了契约与合规双闸门的 AI 作品";
+    media.append(communityBadge);
+  }
   fragment.querySelector(".template-name").textContent = template.name;
   fragment.querySelector(".template-description").textContent = template.description;
   fragment.querySelector(".template-meta").textContent = template.size;
@@ -359,6 +370,7 @@ function renderGallery() {
   const items = filteredTemplates();
   renderTabs(items.length);
   stageContent.innerHTML = "";
+  stageContent.insertAdjacentHTML("beforeend", `<p class="pool-note">这里的每一件都是<strong>自描述的 AI 契约节点</strong>（schema 字段就是给 AI 填的表单），都过了契约校验——你也可以把 AI 做的投进来：测试区导出旁的「投稿」下载投稿包，微信提交，过双闸门即收录署名。</p>`);
   stageContent.append(renderSeriesNav(items.length));
   if (!items.length) {
     stageContent.insertAdjacentHTML("beforeend", `<div class="empty-state">没有匹配的模板，换个关键词或分类试试。</div>`);
@@ -498,6 +510,7 @@ function updateNav() {
   showLibrary.classList.toggle("active", state.view === "gallery" || state.view === "workspace");
   showModes.classList.toggle("active", state.view === "modes");
   showPlayground.classList.toggle("active", state.view === "playground");
+  showStandard.classList.toggle("active", state.view === "standard");
 }
 
 /* ── 首页视图（四段式产品橱窗） ── */
@@ -529,11 +542,11 @@ function renderHome() {
       <div class="hero-content">
         <div class="hero-text">
           <p class="hero-eyebrow">老马AI研习社 · 出品</p>
-          <h2 class="hero-title">复制提示词，<br />就是大片动效<span class="period">。</span></h2>
-          <p class="hero-desc"><strong>不需要 Claude 和 Codex，豆包、DeepSeek 也能一键出片。</strong>${total} 个视频动效模板，每一个都配好了打磨过的提示词。挑素材、GitHub 下载提示词、粘贴给你的 AI，同款大片动效即刻生成；装上 Skill，一篇文章直接产出一整条成片。</p>
+          <h2 class="hero-title">让 AI 生成视频，<br />你保留最终控制权<span class="period">。</span></h2>
+          <p class="hero-desc"><strong>不管你用哪个 Agent——它有底片、有 JSON，就能在这里接着改。</strong>AI 一次生成 10 个镜头，总有 3 个不对；重新生成，满意的 5 个也没了。在这个开放编辑器里，只改那 3 个：大小、位置、角度、时长、运动轨迹，可视化随手调，改完导出还是一份开放标准的 JSON。</p>
           <div class="hero-cta-row">
-            <button class="hero-cta" type="button" id="hero-cta">进入模板库<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg></button>
-            <a class="hero-cta-ghost" href="${GITHUB_REPO}" target="_blank" rel="noreferrer">GitHub 免费下载</a>
+            <button class="hero-cta" type="button" id="hero-playground">进入测试区<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg></button>
+            <button class="hero-cta-ghost" type="button" id="hero-standard">看开放标准</button>
           </div>
         </div>
         <div class="hero-video-card">
@@ -555,10 +568,10 @@ function renderHome() {
       </div>
       <div class="hero-play-block" id="hero-play-block">
         <div class="hpb-text">
-          <p class="kicker">PLAYGROUND · 测试区</p>
-          <h3>你的成片你做主，不被任何 Agent 绑架<span class="period">。</span></h3>
-          <p class="hpb-desc"><strong>带底片来，带成片走。</strong>底片是你的，动效是我们的——compose.json 传上来或从零叠，大小位置随手调，最终合成在浏览器里完成。同一份 JSON 递回给你的 Agent，就能做自己的 skill，从此不依赖任何人。</p>
-          <button class="hero-cta" type="button" id="hero-playground">打开测试区<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg></button>
+          <p class="kicker">OPEN EDITOR · 开放编辑器</p>
+          <h3>任何 Agent 的产出，都能进来接着改<span class="period">。</span></h3>
+          <p class="hpb-desc"><strong>带底片来，带成片走。</strong>底片是你的，JSON 是开放标准的——不管这份 JSON 是我们素材池的模板，还是你的 Agent 自己做的动效（HTML 内联进 JSON 即可），传上来就能编辑：大小位置随手调、运动轨迹随手画，最终合成在浏览器里完成。改完的 JSON 递回给你的 Agent，从此不依赖任何人。</p>
+          <button class="hero-cta" type="button" id="hero-playground-2">打开测试区<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg></button>
         </div>
         <div class="hpb-media" role="button" tabindex="0" aria-label="打开测试区">
           <img src="./app/assets/pg-cover.jpg" alt="测试区实操画面" />
@@ -571,7 +584,7 @@ function renderHome() {
       <div class="howto-head">
         <p class="kicker">SHOWCASE</p>
         <h2>先看效果<span class="sec-period">。</span></h2>
-        <p>三个系列各挑了几个，点开任意一张可以换文案、换数据再生成。</p>
+        <p>三个系列各挑了几个，点开任意一张可以换文案、换数据再生成。模板不是成品，是 AI 生成的风格锚与起点。</p>
       </div>
       <div class="showcase-grid">
         ${showcase.map((t) => `
@@ -623,7 +636,7 @@ function renderHome() {
         <article class="guide-card">
           <strong>STEP 01</strong>
           <h3>挑素材，获取提示词</h3>
-          <p>打开「模板库」，三个系列任选，鼠标悬停卡片即可预览动效。看到合适的，点卡片底部的「获取提示词」——GitHub 直接下载。</p>
+          <p>打开「素材池」，三个系列任选，鼠标悬停卡片即可预览动效。看到合适的，点卡片底部的「获取提示词」——GitHub 直接下载。</p>
         </article>
         <article class="guide-card">
           <strong>STEP 02</strong>
@@ -660,11 +673,12 @@ function renderHome() {
     </section>
 
     <footer class="site-footer">
-      <span>动效仓库 · 老马AI研习社 出品 · ${total} 个模板持续更新</span>
-      <span>模板与 Skill 获取方式见上方「关注我们」</span>
+      <span>动效工作站 · 老马AI研习社 出品 · ${total} 个契约资产持续更新</span>
+      <span>素材与 Skill 获取方式见上方「关注我们」</span>
     </footer>`;
-  stage.querySelector("#hero-cta").addEventListener("click", () => { state.series = "all"; state.category = ALL_CATEGORY; renderGallery(); });
   stage.querySelector("#hero-playground").addEventListener("click", renderPlayground);
+  stage.querySelector("#hero-standard").addEventListener("click", renderStandard);
+  stage.querySelector("#hero-playground-2").addEventListener("click", renderPlayground);
   stage.querySelector(".hpb-media")?.addEventListener("click", renderPlayground);
   stage.querySelector(".hpb-media")?.addEventListener("keydown", (e) => { if (e.key === "Enter") renderPlayground(); });
   stage.querySelectorAll(".qr-image").forEach((img) => {
@@ -772,10 +786,132 @@ function selectTemplate(template) {
   renderWorkspace();
 }
 
+/* ── 开放标准视图（compose/2 规范 · 任何 Agent 都可以 targeting 本工作站） ── */
+
+const COMPOSE2_AI_PROMPT = `你是一名动效编排助手。请把用户的成片需求输出为一份 compose/2 JSON（一个开放的视频动效编排标准），规则如下：
+
+一、顶层结构
+{
+  "version": "compose/2",
+  "duration": 15,                // 总时长（秒），3–600
+  "base": { "type": "upload", "name": "底片文件名" },   // 底片由用户自己提供，你只声明它存在
+  "layers": [ ... ]              // 图层数组，按叠加顺序排列
+}
+
+二、图层有两种
+1. 站内图层（引用素材池现成模板）：
+{ "templateId": "模板id", "position": "cc", "x": 0, "y": 0, "scale": 100, "start": 0, "end": 5, "motion": null, "values": { "变量id": "值" } }
+2. 外部图层（你自己写的动效，HTML 内联自包含，单文件、无外部依赖、透明底）：
+{ "type": "external", "name": "图层名", "html": "<!doctype html>...", "position": "cc", "x": 0, "y": 0, "scale": 100, "start": 0, "end": 5, "motion": null, "values": {} }
+
+三、字段约束
+- position：九宫格锚点，枚举 tl/tc/tr/cl/cc/cr/bl/bc/br（左上到右下）
+- x / y：相对锚点的偏移，-45 到 45（舞台宽高的百分比）
+- scale：缩放，20–200（100 = 原始大小）
+- start / end：该层的显隐时段（秒），0 ≤ start < end ≤ duration
+- motion：null 或 { "type": "line", "dx": 10, "dy": 0, "secs": 2, "ease": "out" }（dx/dy 为舞台百分比位移；ease 枚举 out/linear）
+- values：该层变量的键值对（站内图层按模板 schema 填；外部图层可留空）
+
+四、外部图层的 HTML 约定
+- 单个完整 HTML 文档，所有 CSS/JS 内联，禁止引用外部 URL
+- 如需循环动画可用 gsap（运行时已注入）：window.__timelines 中的 timeline 会被自动循环播放
+- 背景必须透明（编辑器会强制注入透明样式）
+- 画布按 1920×1080 设计，编辑器负责缩放适配
+
+五、输出要求
+- 只输出 JSON 本体，不要 markdown 代码围栏，不要解释
+- 至少 1 个图层；优先使用站内图层，站内没有合适效果时才写外部图层`;
+
+function renderStandard() {
+  state.view = "standard";
+  updateNav();
+  stopPlaying();
+  tabbar.style.display = "none";
+  stageContent.innerHTML = `
+    <div class="modes-wrap std-wrap">
+      <header class="modes-head">
+        <p class="kicker">OPEN STANDARD · compose/2</p>
+        <h2>一份 JSON，接通所有 Agent<span class="sec-period">。</span></h2>
+        <p>compose/2 是本工作站的开放编排标准：任何能做动效的 Agent，只要按这个标准输出 JSON（底片自备、动效 HTML 可以内联），它的作品就能在测试区被打开、被微调、被合成。向后兼容 compose/1。</p>
+      </header>
+
+      <section class="std-section">
+        <h3>顶层结构</h3>
+        <pre class="std-code">{
+  "version": "compose/2",
+  "duration": 15,              <i>// 总时长（秒），3–600</i>
+  "base": { "type": "upload", "name": "底片文件名" },
+  "layers": [ ... ]            <i>// 图层数组，按叠加顺序</i>
+}</pre>
+      </section>
+
+      <section class="std-section">
+        <h3>图层类型 ① 站内图层</h3>
+        <p>引用素材池 449 个契约资产（templateId 即素材池卡片 id）：</p>
+        <pre class="std-code">{
+  "templateId": "lyrics-beat-card",
+  "position": "cc",      <i>// 九宫格锚点：tl/tc/tr/cl/cc/cr/bl/bc/br</i>
+  "x": 0, "y": 0,        <i>// 相对锚点偏移（舞台%），-45 到 45</i>
+  "scale": 100,          <i>// 缩放 20–200</i>
+  "start": 0, "end": 5,  <i>// 显隐时段（秒）</i>
+  "motion": null,        <i>// 或 {"type":"line","dx":10,"dy":0,"secs":2,"ease":"out"}</i>
+  "values": { "words": "你的声音,我" }   <i>// 按该资产 schema 填变量</i>
+}</pre>
+      </section>
+
+      <section class="std-section">
+        <h3>图层类型 ② 外部图层（开放的核心）</h3>
+        <p>任何 Agent 自己做的动效，HTML 内联进 JSON 即可进编辑器——一个 JSON 就是一整部片，完全可移植：</p>
+        <pre class="std-code">{
+  "type": "external",
+  "name": "我的 Agent 做的粒子标题",
+  "html": "&lt;!doctype html&gt;...（单文件、无外部依赖、透明底）",
+  "position": "cc", "x": 0, "y": 0, "scale": 100,
+  "start": 0, "end": 5, "motion": null, "values": {}
+}</pre>
+        <ul class="std-notes">
+          <li>HTML 约定：单个完整文档，CSS/JS 全内联，禁止外部 URL；可用 gsap（运行时注入，<code>window.__timelines</code> 自动循环）；背景透明（编辑器强制注入）；按 1920×1080 设计</li>
+          <li>外部图层与站内图层完全同权：缩放、拖动、锚点、时段、直线/手绘路径运动全部可编辑</li>
+          <li>导出 roundtrip：外部层原样写回 JSON，自包含不丢信息</li>
+        </ul>
+      </section>
+
+      <section class="std-section">
+        <h3>给 AI 的一段话<span class="sec-period">。</span></h3>
+        <p>复制下面这段，粘贴给任何大模型（Claude / GPT / 豆包 / DeepSeek……）作为系统提示，再告诉它你的成片需求——它输出的 JSON 直接就能导入测试区：</p>
+        <button class="button primary std-copy" type="button" id="std-copy-prompt">复制这段提示词</button>
+        <pre class="std-code std-prompt" id="std-prompt-text"></pre>
+      </section>
+
+      <section class="std-section">
+        <h3>给 Agent 开发者</h3>
+        <ul class="std-notes">
+          <li><strong>直接 targeting</strong>：让你的 skill/工具按本页规范输出 compose/2，用户导入测试区即可可视化微调——你专注生成，编辑交给我们</li>
+          <li><strong>外来格式转换</strong>：已有别家 JSON？把原 JSON + 上面那段提示词一起喂给 AI，让它翻译成 compose/2，比写解析器可靠</li>
+          <li><strong>投稿入库</strong>：好作品可以投稿进素材池（导出旁的「投稿」动作下载投稿包，微信提交）——过了契约与合规双闸门、可复用度 ⭐⭐ 以上即收录，community 角标署名展示</li>
+          <li><strong>变量自描述</strong>：素材池每个资产的 schema 字段（id/type/label/default）就是给 AI 填的表单，目录文件 catalog.static.json 可直接喂给 Agent 当检索源</li>
+        </ul>
+      </section>
+    </div>`;
+  stageContent.querySelector("#std-prompt-text").textContent = COMPOSE2_AI_PROMPT;
+  stageContent.querySelector("#std-copy-prompt").addEventListener("click", async (event) => {
+    const btn = event.currentTarget;
+    try {
+      await navigator.clipboard.writeText(COMPOSE2_AI_PROMPT);
+      btn.textContent = "已复制 ✓ 去粘贴给你的 AI";
+    } catch {
+      btn.textContent = "复制失败，请手动全选";
+    }
+    setTimeout(() => { btn.textContent = "复制这段提示词"; }, 2400);
+  });
+  scrollStageTop();
+}
+
 showHome.addEventListener("click", renderHome);
 showLibrary.addEventListener("click", renderGallery);
 showModes.addEventListener("click", renderModes);
 showPlayground.addEventListener("click", renderPlayground);
+showStandard.addEventListener("click", renderStandard);
 search.addEventListener("input", renderGallery);
 
 async function savePreset() {
@@ -835,6 +971,7 @@ const pgState = {
   picked: null,
   filter: "",
   shown: 60,
+  unknownLayers: [],
 };
 
 /* 实时渲染舞台层：与官网工作站同款机制（fetch 模板 → 注入变量/透明/播放 → srcdoc iframe） */
@@ -885,6 +1022,11 @@ function pgRenderLayerFrame(index) {
   const mine = (pgGeneration.get(index) || 0) + 1;
   pgGeneration.set(index, mine);
   const variables = { ...layer.values, exportMode: "transparent" };
+  if (layer.type === "external") {
+    // compose/2 外部图层：HTML 内联自包含，直接走同一 srcdoc 沙箱管线
+    el.srcdoc = pgBuildSrcdoc(layer.html || "<!doctype html><html><body></body></html>", "./", variables);
+    return;
+  }
   pgFetchTemplate(layer.templateId).then((html) => {
     if (pgGeneration.get(index) !== mine) return;
     const entry2 = state.catalog && state.catalog.templates && state.catalog.templates.find(t => t.id === layer.templateId);
@@ -1124,14 +1266,17 @@ function pgLayerDefaults(template) {
 
 function pgComposeJson() {
   return {
-    version: "compose/1",
-    generator: "motion-preview 编辑器试玩器",
+    version: "compose/2",
+    generator: "动效工作站 · 开放编辑器",
     canvas: { width: 1920, height: 1080 },
     duration: pgState.duration,
     base: pgState.base.type === "upload"
       ? { type: "upload", name: pgState.base.name, note: "本地文件不出站，请与 compose.json 放在同一目录" }
       : { type: "video", src: pgState.base.src },
-    layers: pgState.layers.map(({ name, preview, ...layer }) => ({ ...layer, motion: layer.motion || null })),
+    layers: pgState.layers.map(({ name, preview, ...layer }) =>
+      layer.type === "external"
+        ? { name, ...layer, motion: layer.motion || null }
+        : { ...layer, motion: layer.motion || null }),
   };
 }
 
@@ -1236,9 +1381,22 @@ function pgConsoleMarkup() {
   const PAD_ARROWS = { tl: "↖", tc: "↑", tr: "↗", cl: "←", cc: "●", cr: "→", bl: "↙", bc: "↓", br: "↘" };
   const layerChips = pgState.layers.map((layer, index) => `
     <div class="pg-layer pg-chip ${pgState.picked === index ? "active" : ""}" data-layer="${index}" title="点选该层">
-      <span>${escapeHtml(layer.name)}</span>
+      ${layer.type === "external" ? '<em class="pg-ext-tag">外部</em>' : ""}<span>${escapeHtml(layer.name)}</span>
       <button class="pg-layer-del" type="button" data-del="${index}" aria-label="删除图层">×</button>
     </div>`).join("");
+  const unknownZone = (pgState.unknownLayers && pgState.unknownLayers.length) ? `
+    <div class="pg-unknown-zone">
+      <h4>未识别层（${pgState.unknownLayers.length}）<span class="pg-zone-sub">不是素材池资产——粘贴它的动效 HTML，转成外部图层继续编辑</span></h4>
+      ${pgState.unknownLayers.map((u, ui) => `
+        <div class="pg-unknown" data-unknown="${ui}">
+          <strong>${escapeHtml(u.templateId)}</strong>
+          <textarea placeholder="粘贴这层动效的自包含 HTML（单文件、无外部依赖），点「转为外部图层」" spellcheck="false"></textarea>
+          <div class="pg-unknown-row">
+            <button class="button" type="button" data-convert="${ui}">转为外部图层</button>
+            <button class="button" type="button" data-drop-unknown="${ui}">丢弃</button>
+          </div>
+        </div>`).join("")}
+    </div>` : "";
   const picked = pgState.picked != null ? pgState.layers[pgState.picked] : null;
   const pickedTemplate = picked ? state.catalog.templates.find((t) => t.id === picked.templateId) : null;
   const controlsZone = picked ? `
@@ -1284,10 +1442,40 @@ function pgConsoleMarkup() {
             <div class="pg-layer-chips" data-lenis-prevent>${layerChips || `<span class="pg-chip-empty">尚无图层，右侧素材库点一行上屏</span>`}</div>
           </div>
           ${controlsZone}
+          ${unknownZone}
         </div>`;
 }
 
 function pgWireConsole() {
+  stageContent.querySelectorAll("[data-convert]").forEach((btn) => btn.addEventListener("click", () => {
+    const ui = Number(btn.dataset.convert);
+    const u = pgState.unknownLayers[ui];
+    const ta = stageContent.querySelector(`.pg-unknown[data-unknown="${ui}"] textarea`);
+    const html = (ta && ta.value || "").trim();
+    if (!u || !html) { if (ta) ta.placeholder = "先粘贴 HTML 再转换"; return; }
+    const raw = u.raw || {};
+    pgState.layers.push({
+      type: "external",
+      name: u.templateId.slice(0, 40),
+      html,
+      position: ["tl", "tc", "tr", "cl", "cc", "cr", "bl", "bc", "br"].includes(raw.position) ? raw.position : "cc",
+      x: Math.max(-45, Math.min(45, Number(raw.x) || 0)),
+      y: Math.max(-45, Math.min(45, Number(raw.y) || 0)),
+      scale: Math.max(20, Math.min(200, Number(raw.scale) || 100)),
+      start: Math.max(0, Number(raw.start) || 0),
+      end: Math.max(0, Math.min(pgState.duration, Number(raw.end) || Math.min(6, pgState.duration))),
+      motion: raw.motion && (raw.motion.type === "line" || raw.motion.type === "path") ? raw.motion : null,
+      motionMode: raw.motion && raw.motion.type === "path" ? "path" : "line",
+      values: (typeof raw.values === "object" && raw.values) ? raw.values : {},
+    });
+    pgState.unknownLayers.splice(ui, 1);
+    pgPick(pgState.layers.length - 1, true);
+    renderPlayground();
+  }));
+  stageContent.querySelectorAll("[data-drop-unknown]").forEach((btn) => btn.addEventListener("click", () => {
+    pgState.unknownLayers.splice(Number(btn.dataset.dropUnknown), 1);
+    renderPlayground();
+  }));
   stageContent.querySelectorAll("[data-del]").forEach((btn) => btn.addEventListener("click", () => {
     const index = Number(btn.dataset.del);
     pgSetPlaying(false);
@@ -1442,15 +1630,16 @@ function renderPlayground() {
     <div class="pg-wrap">
       <header class="pg-head">
         <div>
-          <p class="kicker">PLAYGROUND</p>
-          <h2>编辑器试玩器<span class="sec-period">。</span></h2>
-          <p class="pg-desc">挑一条底片，把模板库里的动效叠上去——右边点素材实时上屏（透明叠加），舞台上直接拖动摆位、手柄缩放，每层可加直线/手绘运动轨迹，左栏微调参数，玩出你的第一条 compose.json。</p>
+          <p class="kicker">OPEN PLAYGROUND</p>
+          <h2>开放编辑器<span class="sec-period">。</span></h2>
+          <p class="pg-desc">挑一条底片，把动效叠上去——素材池的 449 个契约资产、或任何 Agent 做的动效（粘贴 HTML 成外部图层）都行。舞台上直接拖动摆位、手柄缩放，每层可加直线/手绘运动轨迹，玩出你的 compose/2 JSON。</p>
         </div>
         <div class="pg-actions">
           <button class="button primary" type="button" id="pg-export">导出 compose.json</button>
           <button class="button" type="button" id="pg-import">导入 compose.json</button>
           <input type="file" id="pg-import-file" accept="application/json,.json" hidden>
           <button class="button" type="button" id="pg-copy">复制 JSON</button>
+          <button class="button" type="button" id="pg-submit">投稿</button>
           <button class="button" type="button" id="pg-clear">清空图层</button>
         </div>
       </header>
@@ -1487,6 +1676,13 @@ function renderPlayground() {
             <input type="search" id="pg-filter" placeholder="搜模板名 / 分类 / 标签" value="${escapeHtml(pgState.filter)}">
             <div class="pg-list" id="pg-list" data-lenis-prevent></div>
           </section>
+          <section class="pg-panel pg-ext-panel">
+            <h3>外部图层 <span class="pg-zone-sub">任何 Agent 的动效都能进</span></h3>
+            <p class="pg-ext-hint">粘贴一段自包含动效 HTML（单文件、无外部依赖、透明底），即成可编辑图层。规范见「开放标准」页。</p>
+            <input type="text" id="pg-ext-name" placeholder="图层名（如：我的 Agent 做的标题）" maxlength="40">
+            <textarea id="pg-ext-html" placeholder="粘贴 HTML……" spellcheck="false"></textarea>
+            <button class="button primary" type="button" id="pg-ext-add">加为外部图层</button>
+          </section>
         </aside>
         <section class="pg-console-h">${pgConsoleMarkup()}</section>
       </div>
@@ -1506,13 +1702,13 @@ function renderPlayground() {
           </article>
           <article class="pg-about-card">
             <strong>清单长这样</strong>
-            <pre class="pg-sample">${escapeHtml(JSON.stringify({ version: "compose/1", canvas: { width: 1920, height: 1080 }, duration: 15, base: { type: "video", src: "app/assets/bg/01-window-silhouette.mp4" }, layers: [{ templateId: "docu-stat-counter", position: "cc", x: 0, y: 0, scale: 100, start: 0, end: 6, motion: { type: "line", dx: 200, dy: 0, secs: 1.2, ease: "out" }, values: { title: "2024 营收", value: 91 } }] }, null, 2))}</pre>
+            <pre class="pg-sample">${escapeHtml(JSON.stringify({ version: "compose/2", canvas: { width: 1920, height: 1080 }, duration: 15, base: { type: "video", src: "app/assets/bg/01-window-silhouette.mp4" }, layers: [{ templateId: "docu-stat-counter", position: "cc", x: 0, y: 0, scale: 100, start: 0, end: 6, motion: { type: "line", dx: 200, dy: 0, secs: 1.2, ease: "out" }, values: { title: "2024 营收", value: 91 } }, { type: "external", name: "Agent 做的徽章", html: "<!doctype html>...", position: "tr", x: 0, y: 0, scale: 80, start: 1, end: 5, motion: null, values: {} }] }, null, 2))}</pre>
           </article>
         </div>
       </section>
       <footer class="site-footer">
-        <span>编辑器试玩器 · 产出 compose.json 编排清单 · 本地 HyperFrames 渲染出片</span>
-        <span>模板与 Skill 获取方式见首页「关注我们」</span>
+        <span>开放编辑器 · 产出 compose/2 编排清单 · 本地 HyperFrames 渲染出片</span>
+        <span>素材与 Skill 获取方式见首页「关注我们」</span>
       </footer>
     </div>`;
 
@@ -1628,22 +1824,43 @@ function renderPlayground() {
         const ANCHORS = new Set(["tl", "tc", "tr", "cl", "cc", "cr", "bl", "bc", "br"]);
         let skipped = 0;
         pgState.layers = [];
+        pgState.unknownLayers = [];
         for (const raw of j.layers) {
-          const template = state.catalog.templates.find((t) => t.id === raw.templateId);
-          if (!template) { skipped++; continue; }
           const motion = raw.motion && (raw.motion.type === "line" || raw.motion.type === "path")
             ? { ...raw.motion, secs: Math.max(0.1, Number(raw.motion.secs) || 1.5), ease: raw.motion.ease === "linear" ? "linear" : "out" }
             : null;
-          pgState.layers.push({
-            templateId: template.id, name: template.name, preview: template.preview,
+          const common = {
             position: ANCHORS.has(raw.position) ? raw.position : "cc",
             x: Math.max(-45, Math.min(45, Number(raw.x) || 0)),
             y: Math.max(-45, Math.min(45, Number(raw.y) || 0)),
             scale: Math.max(20, Math.min(200, Number(raw.scale) || 100)),
             start: Math.max(0, Number(raw.start) || 0),
-            end: Math.max(0, Math.min(pgState.duration, Number(raw.end) || Math.min(template.duration || 6, pgState.duration))),
             motion,
             motionMode: motion ? motion.type : (raw.motionMode === "path" ? "path" : "line"),
+          };
+          // compose/2 外部图层：HTML 内联自包含，直接收
+          if (raw.type === "external" && typeof raw.html === "string" && raw.html.trim()) {
+            pgState.layers.push({
+              ...common,
+              type: "external",
+              name: String(raw.name || "外部图层").slice(0, 40),
+              html: raw.html,
+              end: Math.max(0, Math.min(pgState.duration, Number(raw.end) || Math.min(6, pgState.duration))),
+              values: (typeof raw.values === "object" && raw.values) ? raw.values : {},
+            });
+            continue;
+          }
+          const template = state.catalog.templates.find((t) => t.id === raw.templateId);
+          if (!template) {
+            // 开放编辑器：未知层不再静默跳过——进「未识别层」待转区，粘贴 HTML 即可转外部图层
+            skipped++;
+            pgState.unknownLayers.push({ templateId: String(raw.templateId || "未命名层").slice(0, 60), raw });
+            continue;
+          }
+          pgState.layers.push({
+            ...common,
+            templateId: template.id, name: template.name, preview: template.preview,
+            end: Math.max(0, Math.min(pgState.duration, Number(raw.end) || Math.min(template.duration || 6, pgState.duration))),
             values: { ...defaults(template), ...(typeof raw.values === "object" && raw.values ? raw.values : {}) },
           });
         }
@@ -1653,7 +1870,12 @@ function renderPlayground() {
         }
         pgState.picked = null;
         renderPlayground();
-        button.textContent = skipped ? `导入完成 · ${skipped} 层未识别` : "导入完成 ✓";
+        // 反馈写在重渲染后的新按钮上（renderPlayground 会重建 DOM）
+        const freshBtn = stageContent.querySelector("#pg-import");
+        if (freshBtn) {
+          freshBtn.textContent = skipped ? `导入完成 · ${skipped} 层待转换` : "导入完成 ✓";
+          setTimeout(() => { const b = stageContent.querySelector("#pg-import"); if (b) b.textContent = "导入 compose.json"; }, 2200);
+        }
       } catch (err) {
         button.textContent = "导入失败：" + (err.message || "格式错误").slice(0, 18);
       }
@@ -1681,11 +1903,59 @@ function renderPlayground() {
     }
     setTimeout(() => { button.textContent = "复制 JSON"; }, 1600);
   });
+  stageContent.querySelector("#pg-submit").addEventListener("click", (event) => {
+    const button = event.currentTarget;
+    if (!pgState.layers.length) { button.textContent = "先叠图层再投稿"; setTimeout(() => { button.textContent = "投稿"; }, 1600); return; }
+    const compose = pgComposeJson();
+    const pkg = {
+      type: "motion-deck-submission/1",
+      submittedAt: new Date().toISOString(),
+      author: "",                       // 填你的名字/ID，收录后署名展示
+      contact: "",                      // 填微信号，方便收录时联系
+      note: "",                         // 一句话说明这个作品适合什么场景
+      card: {
+        layers: compose.layers.length,
+        externalLayers: compose.layers.filter((l) => l.type === "external").length,
+        duration: compose.duration,
+        names: compose.layers.map((l) => l.name || l.templateId),
+      },
+      compose,
+      rules: "收录标准：① 契约与合规双闸门 PASS ② 与任何已知出处有两处以上明显差异（风格独立）③ 可复用度 ⭐⭐ 起（变量自描述、默认好看、锚点自适应）。投稿方式：把本文件微信发给老马。",
+    };
+    const blob = new Blob([JSON.stringify(pkg, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `submission-${new Date().toISOString().slice(0, 10)}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+    button.textContent = "投稿包已下载 ✓ 微信发给老马";
+    setTimeout(() => { button.textContent = "投稿"; }, 2600);
+  });
   stageContent.querySelector("#pg-clear").addEventListener("click", () => {
     pgSetPlaying(false);
     pgState.layers = [];
     pgState.picked = null;
     pgClock.t = 0;
+    renderPlayground();
+  });
+
+  /* 外部图层：粘贴 HTML 上屏 */
+  stageContent.querySelector("#pg-ext-add").addEventListener("click", () => {
+    const nameInput = stageContent.querySelector("#pg-ext-name");
+    const htmlInput = stageContent.querySelector("#pg-ext-html");
+    const html = htmlInput.value.trim();
+    if (!html) { htmlInput.placeholder = "先粘贴 HTML 再添加"; htmlInput.focus(); return; }
+    const n = pgState.layers.length;
+    pgState.layers.push({
+      type: "external",
+      name: (nameInput.value.trim() || "外部图层").slice(0, 40),
+      html,
+      position: "cc", x: ((n % 5) - 2) * 5, y: ((n % 3) - 1) * 5,
+      scale: 100, start: 0, end: Math.min(6, pgState.duration),
+      motion: null, motionMode: "line", values: {},
+    });
+    pgPick(pgState.layers.length - 1, true);
     renderPlayground();
   });
 
@@ -1749,6 +2019,7 @@ document.querySelector("#template-count").textContent = state.catalog.templates.
 if (location.hash === "#library") renderGallery();
 else if (location.hash === "#modes") renderModes();
 else if (location.hash === "#playground") renderPlayground();
+else if (location.hash === "#standard") renderStandard();
 else if (location.hash === "#new") { state.series = "new"; state.category = ALL_CATEGORY; renderGallery(); }
 else renderHome();
 
@@ -1757,6 +2028,7 @@ window.addEventListener("hashchange", () => {
   if (h === "#library") renderGallery();
   else if (h === "#modes") renderModes();
   else if (h === "#playground") renderPlayground();
+  else if (h === "#standard") renderStandard();
   else if (h === "#new") { state.series = "new"; state.category = ALL_CATEGORY; renderGallery(); }
   else renderHome();
 });
