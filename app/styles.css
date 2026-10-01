@@ -860,7 +860,7 @@ body.modes-full-page { height: auto; overflow: auto; }
 /* ── 操作台：舞台正下方通栏固定高度横条 ── */
 .pg-console-h {
   flex: 0 0 auto;
-  height: clamp(190px, 21.5vh, 240px);
+  height: clamp(216px, 22vh, 250px);
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
   gap: 9px;
@@ -957,3 +957,29 @@ body.modes-full-page { height: auto; overflow: auto; }
   .pg-con-body-h .pg-con-body > * { border-left: none; border-top: 1px solid rgba(255, 255, 255, .07); padding-top: 10px; }
   .pg-zone-fx { grid-template-columns: 1fr; }
 }
+
+/* ── v33 运动路线三层机制：来源标记 / 还原导入 / 层内动画徽标 ── */
+.pg-motion-head { display: flex; align-items: center; gap: 7px; height: 22px; line-height: 1; }
+.pg-motion-head > label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; }
+.pg-motion-origin {
+  font-style: normal; font-size: 9.5px; line-height: 1.3; padding: 2px 5px;
+  border-radius: 4px; letter-spacing: .02em; white-space: nowrap;
+}
+.pg-motion-origin.is-imported { background: rgba(74,222,128,.14); color: #4ade80; border: 1px solid rgba(74,222,128,.42); }
+.pg-motion-origin.is-drawn { background: #1e1a14; color: rgba(244,239,231,.55); border: 1px solid #2f2a20; }
+.pg-motion-restore {
+  flex: none; background: transparent; border: 1px solid rgba(74,222,128,.45); color: #4ade80;
+  font-size: 9.5px; line-height: 1.3; padding: 2px 6px; border-radius: 5px;
+  cursor: pointer; white-space: nowrap; transition: 140ms ease;
+}
+.pg-motion-restore:hover { background: rgba(74,222,128,.12); }
+.pg-motion-note { margin: 0; font-size: 10px; line-height: 1.4; color: #ffb020; }
+.pg-anim-tag {
+  font-style: normal; font-size: 9.5px; line-height: 1.4; padding: 1px 5px; border-radius: 4px;
+  background: rgba(255,176,32,.16); color: #ffb020; border: 1px solid rgba(255,176,32,.4);
+  margin-right: 4px; white-space: nowrap; flex: none;
+}
+.pg-anim-tag[hidden] { display: none; }
+/* chips 要同时放下「外部」+「自带动画」+ 图层名 + 删除键 */
+.pg-con-body-h .pg-chips-zone { width: 196px; }
+.pg-chip span { max-width: 118px; }

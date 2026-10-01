@@ -1019,6 +1019,39 @@ function pgBuildSrcdoc(html, baseHref, variables) {
   return /<\/body>/i.test(doc) ? doc.replace(/<\/body>/i, player + "</body>") : doc + player;
 }
 
+/* ── F2：外部图层「层内动画」探测（__timelines 或 CSS/WAAPI 动画） ── */
+const pgAnimProbeTimers = new Map();
+function pgClearAnimProbes() {
+  pgAnimProbeTimers.forEach((t) => clearTimeout(t));
+  pgAnimProbeTimers.clear();
+}
+function pgProbeInnerAnim(index, gen, requireComplete) {
+  const layer = pgState.layers[index];
+  const el = stageContent.querySelector(`.pg-stage-layer[data-layer="${index}"] iframe`);
+  if (!layer || !el || pgGeneration.get(index) !== gen) return;
+  let doc = null;
+  try {
+    doc = el.contentDocument;
+    if (requireComplete && (!doc || doc.readyState !== "complete")) return;
+    const win = el.contentWindow;
+    let has = false;
+    const tls = win && win.__timelines;
+    if (tls && typeof tls === "object" && Object.keys(tls).length > 0) has = true;
+    if (!has && doc && typeof doc.getAnimations === "function" && doc.getAnimations({ subtree: true }).length > 0) has = true;
+    if (layer.hasInnerAnim === has) return;
+    layer.hasInnerAnim = has;
+    const tag = stageContent.querySelector(`.pg-layer-chips .pg-layer[data-layer="${index}"] [data-anim-tag]`);
+    if (tag) tag.hidden = !has;
+  } catch (e) { /* 沙箱未就绪：交给 load 事件或下次探测 */ }
+}
+function pgArmAnimProbe(index, gen) {
+  const el = stageContent.querySelector(`.pg-stage-layer[data-layer="${index}"] iframe`);
+  if (el) el.addEventListener("load", () => pgProbeInnerAnim(index, gen, false), { once: true });
+  const old = pgAnimProbeTimers.get(index);
+  if (old) clearTimeout(old);
+  pgAnimProbeTimers.set(index, setTimeout(() => { pgAnimProbeTimers.delete(index); pgProbeInnerAnim(index, gen, true); }, 600));
+}
+
 function pgRenderLayerFrame(index) {
   const layer = pgState.layers[index];
   const el = stageContent.querySelector(`.pg-stage-layer[data-layer="${index}"] iframe`);
@@ -1029,6 +1062,7 @@ function pgRenderLayerFrame(index) {
   if (layer.type === "external") {
     // compose/2 外部图层：HTML 内联自包含，直接走同一 srcdoc 沙箱管线
     el.srcdoc = pgBuildSrcdoc(layer.html || "<!doctype html><html><body></body></html>", "./", variables);
+    pgArmAnimProbe(index, mine);
     return;
   }
   pgFetchTemplate(layer.templateId).then((html) => {
@@ -1210,7 +1244,7 @@ function pgCommitDraw() {
   const baseY = ((ay + (layer.y || 0)) / 100) * r.height;
   const raw = points.map(([px, py]) => [(px - baseX) / r.width, (py - baseY) / r.height]);
   const motion = pgNormalizeMotion({ type: "path", points: raw, secs: Math.max(0.5, Number(layer.motion?.secs) || 1.5), ease: layer.motion?.ease || "out" });
-  if (motion) layer.motion = motion;
+  if (motion) { pgSnapshotMotion(layer); layer.motion = motion; layer.motionOrigin = "drawn"; }
   renderPlayground();
 }
 function pgStartDraw(index) {
@@ -1277,7 +1311,7 @@ function pgComposeJson() {
     base: pgState.base.type === "upload"
       ? { type: "upload", name: pgState.base.name, note: "本地文件不出站，请与 compose.json 放在同一目录" }
       : { type: "video", src: pgState.base.src },
-    layers: pgState.layers.map(({ name, preview, ...layer }) =>
+    layers: pgState.layers.map(({ name, preview, motionOrigin, motionSnapshot, hasInnerAnim, ...layer }) =>
       layer.type === "external"
         ? { name, ...layer, motion: layer.motion || null }
         : { ...layer, motion: layer.motion || null }),
@@ -1349,13 +1383,77 @@ function pgFieldMarkup(declaration, layer, index) {
   return `<div class="pg-var"><label>${escapeHtml(declaration.label)}</label><input type="${type}" data-var="${index}:${declaration.id}" value="${escapeHtml(String(value))}"></div>`;
 }
 
+/* ── 路线来源（编辑器内部状态，不进导出 JSON）：
+   motionOrigin = "imported" 表示当前 motion 就是导入时带进来的那条；
+   用户一旦改写/清空，先把原 motion 深拷贝进 motionSnapshot，操作台出现「还原导入路线」。 ── */
+function pgMotionClone(m) { return m ? JSON.parse(JSON.stringify(m)) : null; }
+
+function pgSnapshotMotion(layer) {
+  if (!layer) return;
+  if (!layer.motionSnapshot && layer.motionOrigin === "imported" && layer.motion) {
+    layer.motionSnapshot = pgMotionClone(layer.motion);
+  }
+}
+
+/* 改直线/时长/缓动这几条路径刻意不整块重渲染（会把用户正在编辑的输入框焦点弄丢），
+   所以就地刷新运动区头部的「来源标签 / 还原按钮」。 */
+function pgRefreshMotionHead(index) {
+  const layer = pgState.layers[Number(index)];
+  const head = stageContent.querySelector(`.pg-motion[data-motion="${index}"] .pg-motion-head`);
+  if (!layer || !head) return;
+  const anchor = head.querySelector("label");
+  let tag = head.querySelector(".pg-motion-origin");
+  let restore = head.querySelector(".pg-motion-restore");
+  if (layer.motion) {
+    const imported = layer.motionOrigin === "imported";
+    if (!tag) { tag = document.createElement("em"); tag.className = "pg-motion-origin"; head.insertBefore(tag, anchor.nextSibling); }
+    tag.className = "pg-motion-origin " + (imported ? "is-imported" : "is-drawn");
+    tag.textContent = imported ? "导入的路线" : "自绘路线";
+    tag.title = imported ? "这条路线来自导入的 compose.json" : "这条路线是你在编辑器里画的";
+  } else if (tag) { tag.remove(); }
+  if (layer.motionSnapshot) {
+    if (!restore) {
+      restore = document.createElement("button");
+      restore.type = "button";
+      restore.className = "pg-motion-restore";
+      restore.dataset.restore = String(index);
+      restore.textContent = "还原导入路线";
+      restore.title = "丢弃当前路线，恢复导入时带进来的那条";
+      restore.addEventListener("click", () => pgRestoreMotion(index));
+      head.appendChild(restore);
+    }
+  } else if (restore) { restore.remove(); }
+}
+
+function pgRestoreMotion(index) {  const layer = pgState.layers[Number(index)];
+  if (!layer || !layer.motionSnapshot) return;
+  layer.motion = pgMotionClone(layer.motionSnapshot);
+  layer.motionSnapshot = null;
+  layer.motionOrigin = layer.motion ? "imported" : "drawn";
+  if (layer.motion) layer.motionMode = layer.motion.type;
+  renderPlayground();
+}
+
 function pgMotionMarkup(layer, index) {
   const m = layer.motion;
   const isPath = (layer.motionMode || "line") === "path";
   const hasPath = m && m.type === "path";
+  const originTag = m
+    ? `<em class="pg-motion-origin ${layer.motionOrigin === "imported" ? "is-imported" : "is-drawn"}" title="${layer.motionOrigin === "imported" ? "这条路线来自导入的 compose.json" : "这条路线是你在编辑器里画的"}">${layer.motionOrigin === "imported" ? "导入的路线" : "自绘路线"}</em>`
+    : "";
+  const restoreBtn = layer.motionSnapshot
+    ? `<button type="button" class="pg-motion-restore" data-restore="${index}" title="丢弃当前路线，恢复导入时带进来的那条">还原导入路线</button>`
+    : "";
+  const animNote = (m && layer.hasInnerAnim)
+    ? `<p class="pg-motion-note">该层有层内动画，整层路线将叠加播放</p>`
+    : "";
   return `
     <div class="pg-motion ${m ? "" : "off"}" data-motion="${index}">
-      <label class="pg-motion-head"><input type="checkbox" data-mon="${index}" ${m ? "checked" : ""}> 运动轨迹</label>
+      <div class="pg-motion-head">
+        <label><input type="checkbox" data-mon="${index}" ${m ? "checked" : ""}> 运动轨迹</label>
+        ${originTag}${restoreBtn}
+      </div>
+      ${animNote}
       <div class="pg-motion-body">
         <div class="pg-row2">
           <label><input type="radio" name="pmmode${index}" value="line" ${!isPath ? "checked" : ""} data-mmode="${index}"> 直线平移</label>
@@ -1385,7 +1483,7 @@ function pgConsoleMarkup() {
   const PAD_ARROWS = { tl: "↖", tc: "↑", tr: "↗", cl: "←", cc: "●", cr: "→", bl: "↙", bc: "↓", br: "↘" };
   const layerChips = pgState.layers.map((layer, index) => `
     <div class="pg-layer pg-chip ${pgState.picked === index ? "active" : ""}" data-layer="${index}" title="点选该层">
-      ${layer.type === "external" ? '<em class="pg-ext-tag">外部</em>' : ""}<span>${escapeHtml(layer.name)}</span>
+      ${layer.type === "external" ? '<em class="pg-ext-tag">外部</em>' : ""}${layer.type === "external" ? `<em class="pg-anim-tag" data-anim-tag="${index}" ${layer.hasInnerAnim ? "" : "hidden"} title="该层内部有动画在播放；你的整层路线会叠加在它之上——想让内容先静止，用「让 AI 改这层」把位移拆出来">自带动画</em>` : ""}<span>${escapeHtml(layer.name)}</span>
       <button class="pg-layer-del" type="button" data-del="${index}" aria-label="删除图层">×</button>
     </div>`).join("");
   const unknownZone = (pgState.unknownLayers && pgState.unknownLayers.length) ? `
@@ -1470,6 +1568,7 @@ function pgWireConsole() {
       end: Math.max(0, Math.min(pgState.duration, Number(raw.end) || Math.min(6, pgState.duration))),
       motion: raw.motion && (raw.motion.type === "line" || raw.motion.type === "path") ? raw.motion : null,
       motionMode: raw.motion && raw.motion.type === "path" ? "path" : "line",
+      motionOrigin: (raw.motion && (raw.motion.type === "line" || raw.motion.type === "path")) ? "imported" : "drawn",
       values: (typeof raw.values === "object" && raw.values) ? raw.values : {},
     });
     pgState.unknownLayers.splice(ui, 1);
@@ -1558,6 +1657,7 @@ function pgWireConsole() {
   stageContent.querySelectorAll("[data-mon]").forEach((cb) => cb.addEventListener("change", () => {
     const index = Number(cb.dataset.mon);
     const layer = pgState.layers[index];
+    pgSnapshotMotion(layer);
     if (cb.checked) {
       const mode = stageContent.querySelector(`input[name="pmmode${index}"]:checked`)?.value || "line";
       layer.motionMode = mode;
@@ -1572,12 +1672,14 @@ function pgWireConsole() {
     } else {
       layer.motion = null;
     }
+    layer.motionOrigin = "drawn";
     renderPlayground();
   }));
   stageContent.querySelectorAll("[data-mmode]").forEach((radio) => radio.addEventListener("change", () => {
     if (!radio.checked) return;
     const index = Number(radio.dataset.mmode);
     const layer = pgState.layers[index];
+    pgSnapshotMotion(layer);
     const secs = Math.max(0.1, Number(stageContent.querySelector(`[data-msecs="${index}"]`)?.value) || 1.5);
     const ease = stageContent.querySelector(`[data-mease="${index}"]`)?.value || "out";
     layer.motionMode = radio.value;
@@ -1585,26 +1687,32 @@ function pgWireConsole() {
       layer.motion = pgNormalizeMotion({ type: "line", dx: Number(stageContent.querySelector(`[data-mdx="${index}"]`)?.value) || 0, dy: Number(stageContent.querySelector(`[data-mdy="${index}"]`)?.value) || 0, secs, ease })
         || { type: "line", dx: 0, dy: -80, secs, ease };
     }
+    layer.motionOrigin = "drawn";
     renderPlayground();
   }));
   stageContent.querySelectorAll("[data-mdx],[data-mdy]").forEach((input) => input.addEventListener("change", () => {
     const index = Number(input.dataset.mdx ?? input.dataset.mdy);
     const layer = pgState.layers[index];
+    pgSnapshotMotion(layer);
     if (!layer.motion || layer.motion.type !== "line") return;
     layer.motion.dx = Number(stageContent.querySelector(`[data-mdx="${index}"]`)?.value) || 0;
     layer.motion.dy = Number(stageContent.querySelector(`[data-mdy="${index}"]`)?.value) || 0;
+    layer.motionOrigin = "drawn";
+    pgRefreshMotionHead(index);
     pgApplyPositions();
   }));
   stageContent.querySelectorAll("[data-msecs]").forEach((input) => input.addEventListener("change", () => {
     const index = Number(input.dataset.msecs);
     const layer = pgState.layers[index];
-    if (layer.motion) layer.motion.secs = Math.max(0.1, Number(input.value) || 1.5);
+    pgSnapshotMotion(layer);
+    if (layer.motion) { layer.motion.secs = Math.max(0.1, Number(input.value) || 1.5); layer.motionOrigin = "drawn"; pgRefreshMotionHead(index); }
     pgApplyPositions();
   }));
   stageContent.querySelectorAll("[data-mease]").forEach((input) => input.addEventListener("change", () => {
     const index = Number(input.dataset.mease);
     const layer = pgState.layers[index];
-    if (layer.motion) layer.motion.ease = input.value === "linear" ? "linear" : "out";
+    pgSnapshotMotion(layer);
+    if (layer.motion) { layer.motion.ease = input.value === "linear" ? "linear" : "out"; layer.motionOrigin = "drawn"; pgRefreshMotionHead(index); }
     pgApplyPositions();
   }));
   stageContent.querySelectorAll("[data-mdraw]").forEach((btn) => btn.addEventListener("click", () => {
@@ -1612,8 +1720,14 @@ function pgWireConsole() {
     pgStartDraw(Number(btn.dataset.mdraw));
   }));
   stageContent.querySelectorAll("[data-mclear]").forEach((btn) => btn.addEventListener("click", () => {
-    pgState.layers[Number(btn.dataset.mclear)].motion = null;
+    const layer = pgState.layers[Number(btn.dataset.mclear)];
+    pgSnapshotMotion(layer);
+    layer.motion = null;
+    layer.motionOrigin = "drawn";
     renderPlayground();
+  }));
+  stageContent.querySelectorAll("[data-restore]").forEach((btn) => btn.addEventListener("click", () => {
+    pgRestoreMotion(btn.dataset.restore);
   }));
   stageContent.querySelectorAll(".pg-layer-chips .pg-layer").forEach((row) => row.addEventListener("click", (event) => {
     if (event.target.closest("button")) return;
@@ -1627,6 +1741,7 @@ function renderPlayground() {
   updateNav();
   stopPlaying();
   tabbar.style.display = "none";
+  pgClearAnimProbes();
   document.documentElement.style.setProperty("--topbar-h", `${Math.round(document.querySelector(".topbar").offsetHeight)}px`);
   const baseButtons = PG_BASES.map((base) => `
     <button type="button" class="pg-base ${pgState.base.type === "builtin" && pgState.base.id === base.id ? "on" : ""}" data-base="${base.id}">
@@ -1851,6 +1966,7 @@ function renderPlayground() {
             start: Math.max(0, Number(raw.start) || 0),
             motion,
             motionMode: motion ? motion.type : (raw.motionMode === "path" ? "path" : "line"),
+            motionOrigin: motion ? "imported" : "drawn",
           };
           // compose/2 外部图层：HTML 内联自包含，直接收
           if (raw.type === "external" && typeof raw.html === "string" && raw.html.trim()) {
