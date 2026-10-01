@@ -364,6 +364,7 @@ function buildCard(template) {
 
 function renderGallery() {
   state.view = "gallery";
+  syncHash(state.series === "new" ? "#new" : "#library");
   updateNav();
   stopPlaying();
   tabbar.style.display = state.series === "all" || state.series === "new" ? "none" : "";
@@ -529,6 +530,7 @@ function showcaseTemplates() {
 
 function renderHome() {
   state.view = "home";
+  syncHash("#home");
   updateNav();
   stopPlaying();
   tabbar.style.display = "none";
@@ -710,6 +712,7 @@ function renderHome() {
 
 function renderModes() {
   state.view = "modes";
+  syncHash("#modes");
   updateNav();
   stopPlaying();
   tabbar.style.display = "none";
@@ -824,6 +827,7 @@ const COMPOSE2_AI_PROMPT = `你是一名动效编排助手。请把用户的成�
 
 function renderStandard() {
   state.view = "standard";
+  syncHash("#standard");
   updateNav();
   stopPlaying();
   tabbar.style.display = "none";
@@ -1619,6 +1623,7 @@ function pgWireConsole() {
 
 function renderPlayground() {
   state.view = "playground";
+  syncHash("#playground");
   updateNav();
   stopPlaying();
   tabbar.style.display = "none";
@@ -2014,16 +2019,15 @@ function renderPlayground() {
   scrollStageTop();
 }
 
-state.catalog = await loadCatalog();
-document.querySelector("#template-count").textContent = state.catalog.templates.filter((template) => template.status === "ready").length;
-if (location.hash === "#library") renderGallery();
-else if (location.hash === "#modes") renderModes();
-else if (location.hash === "#playground") renderPlayground();
-else if (location.hash === "#standard") renderStandard();
-else if (location.hash === "#new") { state.series = "new"; state.category = ALL_CATEGORY; renderGallery(); }
-else renderHome();
+/* ── 视图路由：每个视图一个 URL hash，分享链接直达对应视图 ── */
+let hashFromRender = false;
+function syncHash(hash) {
+  if (location.hash === hash) return;
+  hashFromRender = true;
+  location.hash = hash;
+}
 
-window.addEventListener("hashchange", () => {
+function routeHash() {
   const h = location.hash;
   if (h === "#library") renderGallery();
   else if (h === "#modes") renderModes();
@@ -2031,4 +2035,13 @@ window.addEventListener("hashchange", () => {
   else if (h === "#standard") renderStandard();
   else if (h === "#new") { state.series = "new"; state.category = ALL_CATEGORY; renderGallery(); }
   else renderHome();
+}
+
+state.catalog = await loadCatalog();
+document.querySelector("#template-count").textContent = state.catalog.templates.filter((template) => template.status === "ready").length;
+routeHash();
+
+window.addEventListener("hashchange", () => {
+  if (hashFromRender) { hashFromRender = false; return; }
+  routeHash();
 });
