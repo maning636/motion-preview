@@ -1,0 +1,88 @@
+<!doctype html>
+<!--
+  动效工作站 · 外部图层变量自描述约定 v1
+  规则见开放标准页「外部 HTML 变量自描述约定」章节。
+  本文件同时是：① 规范样例 ② 测试夹具 ③ 给 AI 的参考实现。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  html,body{margin:0;height:100%;background:transparent;overflow:hidden}
+  #root{position:relative;width:1920px;height:1080px;font-family:"PingFang SC","Microsoft YaHei",sans-serif}
+  .wrap{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px}
+  .headline{font-size:132px;font-weight:800;letter-spacing:2px;line-height:1.05;text-align:center}
+  .num{display:flex;align-items:baseline;gap:14px}
+  .num b{font-size:220px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .num i{font-size:72px;font-style:normal;font-weight:700}
+  .note{font-size:34px;opacity:.72;max-width:1400px;text-align:center;line-height:1.5}
+</style>
+
+<!-- ↓↓↓ 变量自描述声明：编辑器静态解析这块 JSON，生成表单控件 ↓↓↓
+     · 键名 = 变量 id（运行时 window.__hyperframes.getVariables() 的键）
+     · type  : string | number | color | enum
+     · label : 面板上显示的名字
+     · default: 编辑器载入时的初值
+     · options: 仅 enum 需要，形如 [{"value":"a","label":"甲"}]
+     也接受数组写法 [{"id":"a","type":"string",...}]，与素材池 schema 同构。 -->
+<script type="application/json" data-hyperframes-variables>
+{
+  "headline": { "type": "string", "label": "主标题",     "default": "2026 年度复盘" },
+  "count":    { "type": "number", "label": "核心数字",   "default": 128 },
+  "unit":     { "type": "string", "label": "数字单位",   "default": "单" },
+  "accent":   { "type": "color",  "label": "强调色",     "default": "#4ade80" },
+  "align":    { "type": "enum",   "label": "水平对齐",   "default": "center",
+                "options": [ {"value":"left","label":"居左"}, {"value":"center","label":"居中"} ] },
+  "note":     { "type": "string", "label": "脚注",       "default": "数据来源：内部统计" }
+}
+</script>
+</head>
+<body>
+<div id="root"><div class="wrap">
+  <div class="headline" id="headline"></div>
+  <div class="num"><b id="count"></b><i id="unit"></i></div>
+  <div class="note"  id="note"></div>
+</div></div>
+
+<script>
+/* 读取约定：编辑器在沙箱里注入 window.__hyperframes.getVariables()，
+   它返回用户在面板里改过的值；没改过的键请用本文件的 FALLBACK 兜底，
+   这样 HTML 单独打开（不经编辑器）也能正常显示。 */
+(function () {
+  var FALLBACK = {
+    headline: "2026 年度复盘",
+    count: 128,
+    unit: "单",
+    accent: "#4ade80",
+    align: "center",
+    note: "数据来源：内部统计"
+  };
+  var v = FALLBACK;
+  try {
+    if (window.__hyperframes && typeof window.__hyperframes.getVariables === "function") {
+      v = Object.assign({}, FALLBACK, window.__hyperframes.getVariables());
+    }
+  } catch (e) { /* 沙箱未就绪：用 FALLBACK */ }
+
+  var root = document.getElementById("root");
+  document.getElementById("headline").textContent = v.headline;
+  document.getElementById("count").textContent    = v.count;
+  document.getElementById("unit").textContent     = v.unit;
+  document.getElementById("note").textContent     = v.note;
+  document.getElementById("headline").style.color = v.accent;
+
+  var wrap = document.querySelector(".wrap");
+  if (v.align === "left") { wrap.style.alignItems = "flex-start"; wrap.style.paddingLeft = "180px"; }
+  else { wrap.style.alignItems = "center"; }
+})();
+
+/* 如需循环动画：把 timeline 挂到 window.__timelines，编辑器会自动循环播放 */
+if (window.gsap && document.getElementById("count")) {
+  window.__timelines = window.__timelines || {};
+  window.__timelines.count = gsap.fromTo("#count",
+    { scale: 0.86, opacity: 0.4 },
+    { scale: 1, opacity: 1, duration: 1.2, ease: "back.out(1.7)", repeat: -1, yoyo: true });
+}
+</script>
+</body>
+</html>

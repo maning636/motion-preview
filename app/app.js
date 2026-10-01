@@ -89,6 +89,80 @@ function defaults(template) {
   return Object.fromEntries(template.schema.map((item) => [item.id, item.default]));
 }
 
+/* ── P1 外部 HTML 变量自描述约定 ──────────────────────────────────
+   外部图层在 HTML 里用 <script type="application/json" data-hyperframes-variables>
+   声明可变字段，编辑器静态解析（不执行 HTML）后自动生成表单控件：
+     { "标题id": { "type": "string|number|color|enum", "label": "显示名", "default": 初值,
+                   "options": [{"value":"a","label":"甲"}] } }
+   同时接受与素材池同构的数组写法 [{"id":"a","type":"string",...}]。
+   解析结果缓存在 extSchemaCache，避免同一段 HTML 反复解析。          ── */
+const PG_EXT_SCHEMA_MAX = 12;
+const extSchemaCache = new Map();
+
+function pgNormalizeDecl(id, decl) {
+  if (!id || typeof id !== "string" || !decl || typeof decl !== "object") return null;
+  const type = ["string", "number", "color", "enum"].includes(decl.type) ? decl.type : "string";
+  const out = { id, type, label: String(decl.label == null ? id : decl.label).slice(0, 24) };
+  if (type === "enum") {
+    if (!Array.isArray(decl.options) || !decl.options.length) return null;   // enum 缺选项无法渲染
+    out.options = decl.options
+      .filter((o) => o && o.value != null)
+      .slice(0, 12)
+      .map((o) => ({ value: String(o.value), label: String(o.label == null ? o.value : o.label).slice(0, 24) }));
+    if (!out.options.length) return null;
+    const want = String(decl.default == null ? out.options[0].value : decl.default);
+    out.default = out.options.some((o) => o.value === want) ? want : out.options[0].value;
+  } else if (type === "number") {
+    const n = Number(decl.default);
+    out.default = Number.isFinite(n) ? n : 0;
+  } else if (type === "color") {
+    out.default = /^#[0-9a-f]{3,8}$/i.test(String(decl.default || "")) ? String(decl.default) : "#4ade80";
+  } else {
+    out.default = decl.default == null ? "" : String(decl.default).slice(0, 2000);
+  }
+  if (decl.hidden) out.hidden = true;
+  return out;
+}
+
+function pgParseExtSchema(html) {
+  const src = String(html || "");
+  if (!src) return [];
+  if (extSchemaCache.has(src)) return extSchemaCache.get(src);
+  let parsed = [];
+  const m = src.match(/<script\b[^>]*\bdata-hyperframes-variables\b[^>]*>([\s\S]*?)<\/script>/i);
+  if (m) {
+    try {
+      const raw = JSON.parse(m[1]);
+      const entries = Array.isArray(raw)
+        ? raw.map((d) => [d && d.id, d])
+        : Object.entries(raw || {});
+      const seen = new Set();
+      for (const [id, decl] of entries) {
+        if (seen.has(String(id))) continue;                 // 同 id 只认第一个，避免表单错位
+        const norm = pgNormalizeDecl(String(id), decl);
+        if (!norm) continue;
+        seen.add(norm.id);
+        parsed.push(norm);
+        if (parsed.length >= PG_EXT_SCHEMA_MAX) break;
+      }
+    } catch (e) { parsed = []; }                            // JSON 写错就当没声明，不阻断导入
+  }
+  extSchemaCache.set(src, parsed);
+  return parsed;
+}
+
+function pgSchemaDefaults(schema) {
+  return Object.fromEntries((schema || []).filter((d) => !d.hidden).map((d) => [d.id, d.default]));
+}
+
+/* 统一取 schema：站内层取素材池，外部层取 HTML 自描述 */
+function pgLayerSchema(layer) {
+  if (!layer) return [];
+  if (layer.type === "external") return layer.extSchema || pgParseExtSchema(layer.html);
+  const t = state.catalog && state.catalog.templates && state.catalog.templates.find((x) => x.id === layer.templateId);
+  return (t && t.schema) || [];
+}
+
 function escapeHtml(value) {
   return String(value).replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
@@ -813,7 +887,7 @@ const COMPOSE2_AI_PROMPT = `你是一名动效编排助手。请把用户的成�
 - scale：缩放，20–200（100 = 原始大小）
 - start / end：该层的显隐时段（秒），0 ≤ start < end ≤ duration
 - motion：null 或 { "type": "line", "dx": 10, "dy": 0, "secs": 2, "ease": "out" }（dx/dy 为舞台百分比位移；ease 枚举 out/linear）
-- values：该层变量的键值对（站内图层按模板 schema 填；外部图层可留空）
+- values：该层变量的键值对（站内图层按模板 schema 填；外部图层按下面第四节的「变量自描述」声明）
 
 四、外部图层的 HTML 约定
 - 单个完整 HTML 文档，所有 CSS/JS 内联，禁止引用外部 URL
@@ -821,7 +895,34 @@ const COMPOSE2_AI_PROMPT = `你是一名动效编排助手。请把用户的成�
 - 背景必须透明（编辑器会强制注入透明样式）
 - 画布按 1920×1080 设计，编辑器负责缩放适配
 
-五、输出要求
+五、外部图层的「变量自描述」约定（强烈建议遵守）
+在 HTML 里加一段 type="application/json" 的 script，声明哪些字段可以被用户改：
+
+<script type="application/json" data-hyperframes-variables>
+{
+  "headline": { "type": "string", "label": "主标题",   "default": "2026 年度复盘" },
+  "count":    { "type": "number", "label": "核心数字", "default": 128 },
+  "accent":   { "type": "color",  "label": "强调色",   "default": "#4ade80" },
+  "mode":     { "type": "enum",   "label": "版式",     "default": "grid",
+                "options": [ {"value":"grid","label":"网格"}, {"value":"list","label":"列表"} ] }
+}
+</script>
+
+然后在脚本里这样读（编辑器会在沙箱里注入 window.__hyperframes.getVariables()）：
+  const FALLBACK = { headline: "2026 年度复盘", count: 128, accent: "#4ade80", mode: "grid" };
+  const v = (window.__hyperframes && window.__hyperframes.getVariables)
+    ? Object.assign({}, FALLBACK, window.__hyperframes.getVariables())
+    : FALLBACK;
+
+规则：
+- 键名 = 变量 id，type 只能是 string / number / color / enum
+- label 是面板上给人看的名字，default 是载入时的初值
+- enum 必须给 options 数组，且 default 必须是某个 option 的 value
+- 也接受与素材池同构的数组写法 [{"id":"a","type":"string","label":"A","default":"x"}]
+- 遵守约定的 HTML 导入后，编辑器会自动生成对应控件：用户改表单 → 沙箱重渲 → 导出 JSON 的 values 同步更新，全程零代码改动
+- 不声明也能导入（只是面板不给变量控件），但声明了才"写一次、改一辈子"
+
+六、输出要求
 - 只输出 JSON 本体，不要 markdown 代码围栏，不要解释
 - 至少 1 个图层；优先使用站内图层，站内没有合适效果时才写外部图层`;
 
@@ -878,6 +979,36 @@ function renderStandard() {
           <li>外部图层与站内图层完全同权：缩放、拖动、锚点、时段、直线/手绘路径运动全部可编辑</li>
           <li>导出 roundtrip：外部层原样写回 JSON，自包含不丢信息</li>
         </ul>
+      </section>
+
+      <section class="std-section">
+        <h3>外部 HTML 变量自描述约定<span class="sec-period">。</span></h3>
+        <p>让外部动效也<strong>写一次、改一辈子</strong>：在 HTML 里声明哪些字段可改，编辑器导入后自动生成表单控件——用户改面板，沙箱重渲，导出 JSON 里的 <code>values</code> 同步更新，全程零代码改动。</p>
+        <p>声明：加一段 <code>type="application/json"</code> 的 script（编辑器静态解析，不执行你的 HTML）：</p>
+        <pre class="std-code">&lt;script type="application/json" data-hyperframes-variables&gt;
+{
+  "headline": { "type": "string", "label": "主标题",   "default": "2026 年度复盘" },
+  "count":    { "type": "number", "label": "核心数字", "default": 128 },
+  "accent":   { "type": "color",  "label": "强调色",   "default": "#4ade80" },
+  "mode":     { "type": "enum",   "label": "版式",     "default": "grid",
+                "options": [ {"value":"grid","label":"网格"},
+                             {"value":"list","label":"列表"} ] }
+}
+&lt;/script&gt;</pre>
+        <p>读取：在脚本里取编辑器注入的值，<code>FALLBACK</code> 兜底（这样 HTML 单独打开也正常）：</p>
+        <pre class="std-code">const FALLBACK = { headline: "2026 年度复盘", count: 128,
+                  accent: "#4ade80", mode: "grid" };
+const v = (window.__hyperframes &amp;&amp; window.__hyperframes.getVariables)
+  ? Object.assign({}, FALLBACK, window.__hyperframes.getVariables())
+  : FALLBACK;</pre>
+        <ul class="std-notes">
+          <li><strong>键名</strong> = 变量 id；<strong>type</strong> 只能是 <code>string</code> / <code>number</code> / <code>color</code> / <code>enum</code></li>
+          <li><strong>label</strong> 是面板显示名，<strong>default</strong> 是载入初值；<code>enum</code> 必须给 <code>options</code>，且 default 必须是某个 option 的 value</li>
+          <li>也接受与素材池同构的数组写法：<code>[{"id":"a","type":"string","label":"A","default":"x"}]</code></li>
+          <li>解析失败（JSON 写错、enum 缺 options、type 非法）只丢该字段，<strong>不会阻断导入</strong>；不声明也能用，只是面板不给变量控件</li>
+          <li>单层最多解析 12 个字段，面板显示前 6 个（首屏红线），其余在导出的 JSON 里改</li>
+        </ul>
+        <p><a class="std-sample-link" href="./fixtures/self-describe-demo.html" target="_blank" rel="noopener">打开一份可运行的完整样例 ↗</a></p>
       </section>
 
       <section class="std-section">
@@ -1311,7 +1442,8 @@ function pgComposeJson() {
     base: pgState.base.type === "upload"
       ? { type: "upload", name: pgState.base.name, note: "本地文件不出站，请与 compose.json 放在同一目录" }
       : { type: "video", src: pgState.base.src },
-    layers: pgState.layers.map(({ name, preview, motionOrigin, motionSnapshot, hasInnerAnim, ...layer }) =>
+    // extSchema 由 HTML 静态解析派生、随 html 一起走，不进 JSON（与 motionOrigin 等内部状态同规则）
+    layers: pgState.layers.map(({ name, preview, motionOrigin, motionSnapshot, hasInnerAnim, extSchema, ...layer }) =>
       layer.type === "external"
         ? { name, ...layer, motion: layer.motion || null }
         : { ...layer, motion: layer.motion || null }),
@@ -1372,15 +1504,17 @@ function pgGlobalKey(e) {
 function pgFieldMarkup(declaration, layer, index) {
   if (declaration.hidden) return "";
   const value = layer.values[declaration.id];
+  // 标签列只有 52px，长标签走省略号；完整文案挂 title，悬停可见
+  const lab = `<label title="${escapeHtml(declaration.label)}">${escapeHtml(declaration.label)}</label>`;
   if (declaration.type === "color") {
-    return `<div class="pg-var"><label>${escapeHtml(declaration.label)}</label><input type="color" data-var="${index}:${declaration.id}" value="${escapeHtml(String(value))}"></div>`;
+    return `<div class="pg-var">${lab}<input type="color" data-var="${index}:${declaration.id}" value="${escapeHtml(String(value))}"></div>`;
   }
   if (declaration.type === "enum") {
     const options = declaration.options.map((o) => `<option value="${escapeHtml(o.value)}" ${o.value === value ? "selected" : ""}>${escapeHtml(o.label)}</option>`).join("");
-    return `<div class="pg-var"><label>${escapeHtml(declaration.label)}</label><select data-var="${index}:${declaration.id}">${options}</select></div>`;
+    return `<div class="pg-var">${lab}<select data-var="${index}:${declaration.id}">${options}</select></div>`;
   }
   const type = declaration.type === "number" ? "number" : "text";
-  return `<div class="pg-var"><label>${escapeHtml(declaration.label)}</label><input type="${type}" data-var="${index}:${declaration.id}" value="${escapeHtml(String(value))}"></div>`;
+  return `<div class="pg-var">${lab}<input type="${type}" data-var="${index}:${declaration.id}" value="${escapeHtml(String(value))}"></div>`;
 }
 
 /* ── 路线来源（编辑器内部状态，不进导出 JSON）：
@@ -1500,7 +1634,8 @@ function pgConsoleMarkup() {
         </div>`).join("")}
     </div>` : "";
   const picked = pgState.picked != null ? pgState.layers[pgState.picked] : null;
-  const pickedTemplate = picked ? state.catalog.templates.find((t) => t.id === picked.templateId) : null;
+  const pickedSchema = picked ? pgLayerSchema(picked).filter((s) => !s.hidden) : [];
+  const isExtPicked = !!(picked && picked.type === "external");
   const controlsZone = picked ? `
     <div class="pg-con-body">
       <div class="pg-zone pg-zone-pos">
@@ -1529,7 +1664,10 @@ function pgConsoleMarkup() {
       <div class="pg-zone pg-zone-fx">
         <h4>运动 · 内容</h4>
         ${pgMotionMarkup(picked, pgState.picked)}
-        ${pickedTemplate ? `<div class="pg-vars">${pickedTemplate.schema.filter((s) => !s.hidden).slice(0, 6).map((sd) => pgFieldMarkup(sd, picked, pgState.picked)).join("")}</div>` : ""}
+        ${pickedSchema.length ? `<div class="pg-vars">${pickedSchema.slice(0, PG_EXT_SCHEMA_MAX).map((sd) => pgFieldMarkup(sd, picked, pgState.picked)).join("")}</div>` : ""}
+        ${isExtPicked ? `<p class="pg-hintline pg-vars-note">${pickedSchema.length
+          ? (pickedSchema.length > 6 ? `本层自描述 ${pickedSchema.length} 个字段，面板显示前 6 个，其余在导出的 JSON 里改` : `外部层自描述字段 ${pickedSchema.length} 个，改这里即改 HTML 里的同名变量`)
+          : "这层 HTML 没有声明变量（无 data-hyperframes-variables），所以面板只给运动与位置控制"}</p>` : ""}
       </div>
     </div>` : `<p class="pg-empty-layer">在右侧素材库点一行，图层会叠到舞台上；这一条就变成它的操作台（位置 / 大小 / 入出点 / 运动 / 变量）。</p>`;
   return `
@@ -1556,10 +1694,12 @@ function pgWireConsole() {
     const html = (ta && ta.value || "").trim();
     if (!u || !html) { if (ta) ta.placeholder = "先粘贴 HTML 再转换"; return; }
     const raw = u.raw || {};
+    const extSchema = pgParseExtSchema(html);
     pgState.layers.push({
       type: "external",
       name: u.templateId.slice(0, 40),
       html,
+      extSchema,
       position: ["tl", "tc", "tr", "cl", "cc", "cr", "bl", "bc", "br"].includes(raw.position) ? raw.position : "cc",
       x: Math.max(-45, Math.min(45, Number(raw.x) || 0)),
       y: Math.max(-45, Math.min(45, Number(raw.y) || 0)),
@@ -1569,7 +1709,7 @@ function pgWireConsole() {
       motion: raw.motion && (raw.motion.type === "line" || raw.motion.type === "path") ? raw.motion : null,
       motionMode: raw.motion && raw.motion.type === "path" ? "path" : "line",
       motionOrigin: (raw.motion && (raw.motion.type === "line" || raw.motion.type === "path")) ? "imported" : "drawn",
-      values: (typeof raw.values === "object" && raw.values) ? raw.values : {},
+      values: { ...pgSchemaDefaults(extSchema), ...(typeof raw.values === "object" && raw.values ? raw.values : {}) },
     });
     pgState.unknownLayers.splice(ui, 1);
     pgPick(pgState.layers.length - 1, true);
@@ -1645,13 +1785,19 @@ function pgWireConsole() {
     pgState.layers[Number(input.dataset.end)].end = Math.max(0, Number(input.value) || 0);
     pgApplyPositions();
   }));
-  stageContent.querySelectorAll("[data-var]").forEach((input) => input.addEventListener("input", () => {
-    const [index, key] = input.dataset.var.split(":");
-    const layer = pgState.layers[Number(index)];
-    const decl = (state.catalog.templates.find((t) => t.id === layer.templateId) || { schema: [] }).schema.find((s) => s.id === key);
-    layer.values[key] = decl && decl.type === "number" ? Number(input.value) : input.value;
-    pgScheduleLayer(Number(index), false);
-  }));
+  stageContent.querySelectorAll("[data-var]").forEach((input) => {
+    const commit = () => {
+      const [index, key] = input.dataset.var.split(":");
+      const layer = pgState.layers[Number(index)];
+      if (!layer) return;
+      const decl = pgLayerSchema(layer).find((s) => s.id === key);
+      layer.values[key] = decl && decl.type === "number" ? Number(input.value) : input.value;
+      pgScheduleLayer(Number(index), false);
+    };
+    input.addEventListener("input", commit);
+    // color / select 的 input 事件在部分浏览器不连续触发，补一个 change 兜底
+    input.addEventListener("change", commit);
+  });
 
   /* 运动轨迹事件 */
   stageContent.querySelectorAll("[data-mon]").forEach((cb) => cb.addEventListener("change", () => {
@@ -1970,13 +2116,16 @@ function renderPlayground() {
           };
           // compose/2 外部图层：HTML 内联自包含，直接收
           if (raw.type === "external" && typeof raw.html === "string" && raw.html.trim()) {
+            const extSchema = pgParseExtSchema(raw.html);
             pgState.layers.push({
               ...common,
               type: "external",
               name: String(raw.name || "外部图层").slice(0, 40),
               html: raw.html,
+              extSchema,
               end: Math.max(0, Math.min(pgState.duration, Number(raw.end) || Math.min(6, pgState.duration))),
-              values: (typeof raw.values === "object" && raw.values) ? raw.values : {},
+              // values 以 schema 默认值为底，再叠导入值：导出的旧文件没有 values 也不会空表单
+              values: { ...pgSchemaDefaults(extSchema), ...(typeof raw.values === "object" && raw.values ? raw.values : {}) },
             });
             continue;
           }
@@ -2077,13 +2226,15 @@ function renderPlayground() {
     const html = htmlInput.value.trim();
     if (!html) { htmlInput.placeholder = "先粘贴 HTML 再添加"; htmlInput.focus(); return; }
     const n = pgState.layers.length;
+    const extSchema = pgParseExtSchema(html);
     pgState.layers.push({
       type: "external",
       name: (nameInput.value.trim() || "外部图层").slice(0, 40),
       html,
+      extSchema,
       position: "cc", x: ((n % 5) - 2) * 5, y: ((n % 3) - 1) * 5,
       scale: 100, start: 0, end: Math.min(6, pgState.duration),
-      motion: null, motionMode: "line", values: {},
+      motion: null, motionMode: "line", values: pgSchemaDefaults(extSchema),
     });
     pgPick(pgState.layers.length - 1, true);
     renderPlayground();

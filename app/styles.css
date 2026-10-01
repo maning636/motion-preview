@@ -909,19 +909,35 @@ body.modes-full-page { height: auto; overflow: auto; }
 .pg-zone-pos .pg-row2 { justify-content: space-between; }
 .pg-zone-pos .pg-row2 label { flex: 0 1 auto; }
 .pg-zone-pos .pg-row2 input[type="number"] { width: 44px; padding: 4px 5px; }
+
+/* 位置区数字框只有 44px：number 的上下微调箭头吃掉约 13px，"-10" 会被切掉末位。
+   这里去掉箭头（该区本身用方向键按钮与滑杆调值，箭头是冗余交互），换回完整显示宽度。 */
+.pg-zone-pos .pg-row2 input[type="number"]::-webkit-outer-spin-button,
+.pg-zone-pos .pg-row2 input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.pg-zone-pos .pg-row2 input[type="number"] { -moz-appearance: textfield; appearance: textfield; width: 44px; padding: 4px 5px; }
 .pg-zone-size .pg-row2 input[type="range"] { min-width: 60px; }
 .pg-motion { display: grid; gap: 5px; }
 .pg-motion-head { height: 22px; align-items: center; line-height: 1; }
 .pg-motion-body { gap: 5px; }
 .pg-zone-fx .pg-motion { width: auto; }
 .pg-zone-fx .pg-vars {
-  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+  /* 变量列数按断点定死，不再用 auto-fit：
+     auto-fit 在 1920 会把 6 个字段摊成 6 列、每列只剩 71px 的输入框（标签吃掉 58px），
+     宽屏反而比窄屏更挤。定 2 列（1366）/ 3 列（≥1700）后输入框有 91~177px。
+     行数变化不影响操作台高度——fx 区高度由运动块（4 行）主导，变量最多 3 行。 */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   border-top: none;
   padding-top: 0;
   gap: 6px 8px;
   align-content: start;
 }
-.pg-var { grid-template-columns: 58px minmax(0, 1fr); font-size: 11px; }
+@media (min-width: 1700px) {
+  .pg-zone-fx .pg-vars { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+.pg-var { grid-template-columns: 52px minmax(0, 1fr); font-size: 11px; }
+/* 标签过长时省略而不是换行——换行会把 26px 的控件撑成两行，顶破一屏红线。
+   完整文案挂在 title 上，悬停可见（title 由 pgFieldMarkup 写入）。 */
+.pg-var label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* 未识别层（导入外来 templateId 时出现） */
 .pg-unknown-zone { flex: 0 0 auto; width: 296px; align-self: stretch; overflow-y: auto; padding: 10px 12px; }
@@ -983,3 +999,26 @@ body.modes-full-page { height: auto; overflow: auto; }
 /* chips 要同时放下「外部」+「自带动画」+ 图层名 + 删除键 */
 .pg-con-body-h .pg-chips-zone { width: 196px; }
 .pg-chip span { max-width: 118px; }
+
+/* P1 外部层变量自描述：字段说明行，压在变量区下方不占额外高度 */
+.pg-zone-fx .pg-vars-note {
+  grid-column: 1 / -1;
+  margin: 1px 0 0;
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: rgba(244, 239, 231, .42);
+}
+
+/* 开放标准页 · 自描述样例下载链接 */
+.std-sample-link {
+  display: inline-block;
+  margin: 4px 0 0;
+  padding: 7px 14px;
+  border: 1px solid rgba(74, 222, 128, .45);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.std-sample-link:hover { background: rgba(74, 222, 128, .1); }
