@@ -1000,14 +1000,8 @@ body.modes-full-page { height: auto; overflow: auto; }
 .pg-con-body-h .pg-chips-zone { width: 196px; }
 .pg-chip span { max-width: 118px; }
 
-/* P1 外部层变量自描述：字段说明行，压在变量区下方不占额外高度 */
-.pg-zone-fx .pg-vars-note {
-  grid-column: 1 / -1;
-  margin: 1px 0 0;
-  font-size: 10.5px;
-  line-height: 1.35;
-  color: rgba(244, 239, 231, .42);
-}
+/* P1 的字段说明走 h4 里的 .pg-zone-sub（与「位置 方向键」同一行，零高度成本）。
+   早先用过独立的 .pg-vars-note 行，会让最坏情况操作台内容高出 18px 被裁，已撤。 */
 
 /* 开放标准页 · 自描述样例下载链接 */
 .std-sample-link {

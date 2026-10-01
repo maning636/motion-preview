@@ -1662,12 +1662,13 @@ function pgConsoleMarkup() {
         </div>
       </div>
       <div class="pg-zone pg-zone-fx">
-        <h4>运动 · 内容</h4>
+        <h4>运动 · 内容${isExtPicked ? ` <span class="pg-zone-sub">${pickedSchema.length
+          ? (pickedSchema.length > 6
+              ? `自描述 ${pickedSchema.length} 字段·面板显示前 6`
+              : `自描述 ${pickedSchema.length} 字段`)
+          : "本层无自描述变量"}</span>` : ""}</h4>
         ${pgMotionMarkup(picked, pgState.picked)}
         ${pickedSchema.length ? `<div class="pg-vars">${pickedSchema.slice(0, PG_EXT_SCHEMA_MAX).map((sd) => pgFieldMarkup(sd, picked, pgState.picked)).join("")}</div>` : ""}
-        ${isExtPicked ? `<p class="pg-hintline pg-vars-note">${pickedSchema.length
-          ? (pickedSchema.length > 6 ? `本层自描述 ${pickedSchema.length} 个字段，面板显示前 6 个，其余在导出的 JSON 里改` : `外部层自描述字段 ${pickedSchema.length} 个，改这里即改 HTML 里的同名变量`)
-          : "这层 HTML 没有声明变量（无 data-hyperframes-variables），所以面板只给运动与位置控制"}</p>` : ""}
       </div>
     </div>` : `<p class="pg-empty-layer">在右侧素材库点一行，图层会叠到舞台上；这一条就变成它的操作台（位置 / 大小 / 入出点 / 运动 / 变量）。</p>`;
   return `
