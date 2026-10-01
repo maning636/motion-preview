@@ -1433,7 +1433,7 @@ function pgConsoleMarkup() {
         ${pgMotionMarkup(picked, pgState.picked)}
         ${pickedTemplate ? `<div class="pg-vars">${pickedTemplate.schema.filter((s) => !s.hidden).slice(0, 6).map((sd) => pgFieldMarkup(sd, picked, pgState.picked)).join("")}</div>` : ""}
       </div>
-    </div>` : `<p class="pg-empty-layer">在上方素材带点一个素材，图层会叠到舞台上；这里变成它的操作台。</p>`;
+    </div>` : `<p class="pg-empty-layer">在右侧素材库点一行，图层会叠到舞台上；这一条就变成它的操作台（位置 / 大小 / 入出点 / 运动 / 变量）。</p>`;
   return `
         <div class="pg-con-head">
           <h3>操作台</h3>
@@ -1627,18 +1627,21 @@ function renderPlayground() {
   updateNav();
   stopPlaying();
   tabbar.style.display = "none";
+  document.documentElement.style.setProperty("--topbar-h", `${Math.round(document.querySelector(".topbar").offsetHeight)}px`);
   const baseButtons = PG_BASES.map((base) => `
     <button type="button" class="pg-base ${pgState.base.type === "builtin" && pgState.base.id === base.id ? "on" : ""}" data-base="${base.id}">
       <video muted loop playsinline preload="metadata" src="${base.src}"></video><span>${base.name}</span>
     </button>`).join("");
   stageContent.innerHTML = `
     <div class="pg-wrap">
+      <div class="pg-work">
       <header class="pg-head">
-        <div>
-          <p class="kicker">OPEN PLAYGROUND</p>
+        <div class="pg-bar-id">
+          <span class="pg-bar-dot" aria-hidden="true"></span>
           <h2>开放编辑器<span class="sec-period">。</span></h2>
-          <p class="pg-desc">挑一条底片，把动效叠上去——素材池的 449 个契约资产、或任何 Agent 做的动效（粘贴 HTML 成外部图层）都行。舞台上直接拖动摆位、手柄缩放，每层可加直线/手绘运动轨迹，玩出你的 compose/2 JSON。</p>
+          <span class="pg-tag">OPEN PLAYGROUND</span>
         </div>
+        <p class="pg-desc">挑底片 → 点素材库上屏 → 舞台拖动摆位缩放 → 每层可加运动轨迹 → 产出 compose/2</p>
         <div class="pg-actions">
           <button class="button primary" type="button" id="pg-export">导出 compose.json</button>
           <button class="button" type="button" id="pg-import">导入 compose.json</button>
@@ -1649,12 +1652,24 @@ function renderPlayground() {
         </div>
       </header>
       <div class="pg-main">
-        <section class="pg-panel pg-con-base">
-          <h3>底片</h3>
-          <div class="pg-bases">${baseButtons}</div>
-          <label class="pg-upload">上传底片<input type="file" id="pg-file" accept="video/*,image/*" hidden></label>
-          <p class="pg-upload-name">${pgState.base.type === "upload" ? escapeHtml(pgState.base.name) : "内置氛围底片"}</p>
-        </section>
+        <div class="pg-left">
+          <section class="pg-panel pg-con-base">
+            <h3>底片</h3>
+            <div class="pg-bases">${baseButtons}</div>
+            <div class="pg-con-base-foot">
+              <label class="pg-upload">上传底片<input type="file" id="pg-file" accept="video/*,image/*" hidden></label>
+              <p class="pg-upload-name">${pgState.base.type === "upload" ? escapeHtml(pgState.base.name) : "内置氛围底片"}</p>
+            </div>
+          </section>
+          <section class="pg-panel pg-ext-panel">
+            <h3>外部图层 <span class="pg-zone-sub">自包含 HTML · 透明底</span></h3>
+            <div class="pg-ext-row">
+              <input type="text" id="pg-ext-name" placeholder="图层名" maxlength="40">
+              <button class="button primary" type="button" id="pg-ext-add">加为图层</button>
+            </div>
+            <textarea id="pg-ext-html" placeholder="粘贴动效 HTML……" spellcheck="false" title="粘贴一段自包含动效 HTML（单文件、无外部依赖、透明底）"></textarea>
+          </section>
+        </div>
         <div class="pg-center">
           <div class="pg-stage" id="pg-stage">
             ${pgState.base.type === "upload" && pgState.base.dataUrl && pgState.base.kind === "image"
@@ -1676,20 +1691,14 @@ function renderPlayground() {
           </div>
         </div>
         <aside class="pg-right">
-          <section class="pg-panel">
+          <section class="pg-panel pg-lib-panel">
             <h3>素材库</h3>
             <input type="search" id="pg-filter" placeholder="搜模板名 / 分类 / 标签" value="${escapeHtml(pgState.filter)}">
             <div class="pg-list" id="pg-list" data-lenis-prevent></div>
           </section>
-          <section class="pg-panel pg-ext-panel">
-            <h3>外部图层 <span class="pg-zone-sub">任何 Agent 的动效都能进</span></h3>
-            <p class="pg-ext-hint">粘贴一段自包含动效 HTML（单文件、无外部依赖、透明底），即成可编辑图层。规范见「开放标准」页。</p>
-            <input type="text" id="pg-ext-name" placeholder="图层名（如：我的 Agent 做的标题）" maxlength="40">
-            <textarea id="pg-ext-html" placeholder="粘贴 HTML……" spellcheck="false"></textarea>
-            <button class="button primary" type="button" id="pg-ext-add">加为外部图层</button>
-          </section>
         </aside>
-        <section class="pg-console-h">${pgConsoleMarkup()}</section>
+      </div>
+      <section class="pg-console-h">${pgConsoleMarkup()}</section>
       </div>
       <section class="pg-about">
         <div class="howto-head">
