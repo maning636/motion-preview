@@ -1806,6 +1806,64 @@ const PG_TRACK = {
   },
 };
 
+/* ── P4 一键整片：骨架 → compose/2 镜头序列 ────────────────────────
+   骨架是自描述的 AI 契约 JSON（storyboards/*.json），字段含义与校验规则见
+   _build/skeleton_check.py。铺层策略：每镜变成一个图层，按镜序排时段；
+   变量直接用骨架里给的初值，用户可在操作台上逐镜改。
+   骨架 JSON 里出现 catalog 里不存在的 templateId 时**跳过并明说**，
+   绝不静默丢镜——用户要知道自己的片少了几镜。                        ── */
+const PG_STORYBOARDS = [
+  { id: "launch", name: "发布会", file: "./storyboards/launch.json" },
+  { id: "suspense", name: "悬念", file: "./storyboards/suspense.json" },
+  { id: "seeding", name: "种草", file: "./storyboards/seeding.json" },
+];
+const sbCache = new Map();
+
+async function pgLoadStoryboard(file) {
+  if (sbCache.has(file)) return sbCache.get(file);
+  try {
+    const r = await fetch(file, { cache: "no-cache" });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    const sb = await r.json();
+    if (!sb || sb.kind !== "hyperframes-storyboard" || !Array.isArray(sb.shots)) throw new Error("不是合法骨架");
+    sbCache.set(file, sb);
+    return sb;
+  } catch (e) {
+    sbCache.set(file, null);
+    return null;
+  }
+}
+
+/* 把一个骨架铺成图层数组。返回 { layers, skipped, duration, sb } */
+function pgStoryboardToLayers(sb) {
+  const layers = [];
+  const skipped = [];
+  let t = 0;
+  for (const shot of sb.shots) {
+    const template = state.catalog.templates.find((x) => x.id === shot.templateId);
+    if (!template || template.status !== "ready") { skipped.push(shot); continue; }
+    const dur = Math.max(0.3, Math.min(30, Number(shot.duration) || template.duration || 5));
+    layers.push({
+      type: "template",
+      templateId: template.id,
+      name: String(shot.note || template.name).slice(0, 40),
+      preview: template.preview,
+      position: ["tl", "tc", "tr", "cl", "cc", "cr", "bl", "bc", "br"].includes(shot.position) ? shot.position : "cc",
+      x: 0, y: 0, scale: 100,
+      start: Number(t.toFixed(2)),
+      end: Number(Math.min(t + dur, sb.duration || 600).toFixed(2)),
+      motion: null,
+      motionMode: "line",
+      motionOrigin: "imported",
+      // 骨架给的变量优先，缺失的用模板 schema 默认值补齐
+      values: { ...defaults(template), ...(typeof shot.values === "object" && shot.values ? shot.values : {}) },
+      storyboard: { id: sb.id, shotId: shot.id, role: shot.role || "body" },
+    });
+    t += dur;
+  }
+  return { layers, skipped, duration: Math.max(3, Math.min(600, Number(sb.duration) || t)), sb };
+}
+
 function pgLayerWidthPct(layer) {
   return 34 * (Math.max(20, Math.min(200, layer.scale)) / 100);
 }
@@ -2276,6 +2334,11 @@ function renderPlayground() {
             <button class="button" type="button" id="pg-proj-toggle" aria-expanded="false">工程</button>
             <div class="pg-proj-panel" id="pg-proj-panel" hidden></div>
           </div>
+          <div class="pg-proj-wrap">
+            <button class="button pg-oneclick-btn" type="button" id="pg-oneclick-toggle" aria-expanded="false"
+              title="选一个整片骨架，自动铺好全部镜头，你只管微调">一键整片</button>
+            <div class="pg-proj-panel" id="pg-oneclick-panel" hidden></div>
+          </div>
           <button class="button pg-track-btn" type="button" id="pg-track-toggle" aria-pressed="true"
             title="匿名统计你用了哪类素材，用来决定我们开发什么。不收集任何内容。">统计：开</button>
         </div>
@@ -2629,6 +2692,82 @@ function renderPlayground() {
   });
   document.addEventListener("click", (e) => {
     if (!regenHost.hidden && !regenHost.contains(e.target) && !e.target.closest("[data-regen]")) closeRegen();
+  });
+
+  /* ── P4 一键整片 ── */
+  const ocPanel = stageContent.querySelector("#pg-oneclick-panel");
+  const ocToggle = stageContent.querySelector("#pg-oneclick-toggle");
+  const closeOc = () => { ocPanel.hidden = true; ocToggle.setAttribute("aria-expanded", "false"); };
+  let ocPreview = null;
+
+  const drawOcPanel = () => {
+    const cards = PG_STORYBOARDS.map((s) => `
+      <div class="pg-oc-card" data-sb="${escapeHtml(s.id)}" data-sb-file="${escapeHtml(s.file)}" role="button" tabindex="0">
+        <strong>${escapeHtml(s.name)}骨架</strong>
+        <span class="pg-oc-load">读取中…</span>
+      </div>`).join("");
+    const prev = ocPreview && ocPreview.layers.length ? `
+      <div class="pg-oc-preview">
+        <h4>${escapeHtml(ocPreview.sb.name)} · 预览</h4>
+        <ol class="pg-oc-shots">${ocPreview.layers.map((l, i) => `
+          <li${ocPreview.skipped.some((s) => s.id === l.storyboard.shotId) ? ' class="skipped"' : ''}>
+            <em>${i + 1}</em>
+            <span class="pg-oc-shot-id">${escapeHtml(l.storyboard.shotId)}</span>
+            <span class="pg-oc-shot-note">${escapeHtml(l.name)}</span>
+            <span class="pg-oc-shot-time">${l.start.toFixed(1)}–${l.end.toFixed(1)}s</span>
+          </li>`).join("")}</ol>
+        ${ocPreview.skipped.length ? `<p class="pg-oc-warn">有 ${ocPreview.skipped.length} 镜被跳过（模板不存在或未就绪）：${ocPreview.skipped.map((s) => escapeHtml(s.id)).join("、")}</p>` : ""}
+        <div class="pg-oc-ops">
+          <button class="button primary" type="button" data-oc-act="apply">铺到舞台上</button>
+          <button class="button" type="button" data-oc-act="replace">清空并铺上</button>
+          <button class="button" type="button" data-oc-act="close">关闭</button>
+        </div>
+      </div>` : `<p class="pg-proj-note">选一个骨架 → 自动铺好全部镜头（每镜一个图层、按镜序排好时段、变量用骨架给的初值）→ 你在操作台上逐镜微调 → 导出 compose.json。</p>`;
+    ocPanel.innerHTML = `<div class="pg-oc-list">${cards}</div>${prev}`;
+    // 异步把每个骨架的镜数/时长读出来
+    PG_STORYBOARDS.forEach(async (s) => {
+      const sb = await pgLoadStoryboard(s.file);
+      const el = ocPanel.querySelector(`.pg-oc-card[data-sb="${s.id}"] .pg-oc-load`);
+      if (!el) return;
+      if (!sb) { el.textContent = "读取失败"; el.classList.add("is-err"); return; }
+      el.textContent = `${sb.shots.length} 镜 · ${sb.duration}s · ${sb.summary || ""}`.slice(0, 60);
+    });
+  };
+  const openOcPanel = () => { drawOcPanel(); ocPanel.hidden = false; ocToggle.setAttribute("aria-expanded", "true"); };
+  if (ocToggle.dataset.want === "1") openOcPanel();
+
+  ocToggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (ocPanel.hidden) openOcPanel(); else closeOc();
+  });
+  document.addEventListener("click", (e) => {
+    if (!ocPanel.hidden && !ocPanel.contains(e.target) && e.target !== ocToggle) closeOc();
+  });
+  ocPanel.addEventListener("click", async (e) => {
+    const act = e.target.dataset.ocAct;
+    if (act) {
+      e.stopPropagation();
+      if (act === "close") { closeOc(); return; }
+      if (!ocPreview) { pgToast("先选一个骨架"); return; }
+      if (act === "apply" || act === "replace") {
+        if (act === "replace") pgState.layers = [];
+        pgState.layers = pgState.layers.concat(ocPreview.layers);
+        pgState.duration = ocPreview.duration;
+        pgState.picked = null;
+        closeOc();
+        renderPlayground();
+        PG_TRACK.track("regen", { action: "oneclick:" + act, layer_type: "skeleton" });
+        pgToast(`已铺 ${ocPreview.layers.length} 镜${ocPreview.skipped.length ? `（跳过 ${ocPreview.skipped.length} 镜）` : ""} · 逐镜微调后导出`, 3000);
+      }
+      return;
+    }
+    const card = e.target.closest(".pg-oc-card");
+    if (!card) return;
+    e.stopPropagation();
+    const sb = await pgLoadStoryboard(card.dataset.sbFile);
+    if (!sb) { pgToast("骨架读取失败"); return; }
+    ocPreview = pgStoryboardToLayers(sb);
+    drawOcPanel();
   });
 
   /* ── P3 工程面板 ── */
