@@ -1104,6 +1104,7 @@ const pgState = {
   duration: 15,
   layers: [],
   picked: null,
+  projOpen: false,
   filter: "",
   shown: 60,
   unknownLayers: [],
@@ -1450,6 +1451,246 @@ function pgComposeJson() {
   };
 }
 
+/* 载入一份 compose/2：导入 JSON、工程文件打开、刷新恢复全部走这一条路径，
+   避免"导入能开、工程打不开"这类两套解析逻辑漂移。
+   返回 { skipped, needBase }：skipped=进待转区的未知层数；needBase=true 表示原工程用的是上传底片。 */
+function pgLoadCompose(j) {
+  if (!j || !Array.isArray(j.layers)) throw new Error("缺少 layers 数组");
+  pgSetPlaying(false);
+  pgClock.t = 0;
+  pgState.duration = Math.max(3, Math.min(600, Number(j.duration) || 15));
+  const ANCHORS = new Set(["tl", "tc", "tr", "cl", "cc", "cr", "bl", "bc", "br"]);
+  let skipped = 0;
+  pgState.layers = [];
+  pgState.unknownLayers = [];
+  for (const raw of j.layers) {
+    if (!raw || typeof raw !== "object") { skipped++; continue; }
+    const motion = raw.motion && (raw.motion.type === "line" || raw.motion.type === "path")
+      ? { ...raw.motion, secs: Math.max(0.1, Number(raw.motion.secs) || 1.5), ease: raw.motion.ease === "linear" ? "linear" : "out" }
+      : null;
+    const common = {
+      position: ANCHORS.has(raw.position) ? raw.position : "cc",
+      x: Math.max(-45, Math.min(45, Number(raw.x) || 0)),
+      y: Math.max(-45, Math.min(45, Number(raw.y) || 0)),
+      scale: Math.max(20, Math.min(200, Number(raw.scale) || 100)),
+      start: Math.max(0, Number(raw.start) || 0),
+      motion,
+      motionMode: motion ? motion.type : (raw.motionMode === "path" ? "path" : "line"),
+      motionOrigin: motion ? "imported" : "drawn",
+    };
+    // compose/2 外部图层：HTML 内联自包含，直接收
+    if (raw.type === "external" && typeof raw.html === "string" && raw.html.trim()) {
+      const extSchema = pgParseExtSchema(raw.html);
+      pgState.layers.push({
+        ...common,
+        type: "external",
+        name: String(raw.name || "外部图层").slice(0, 40),
+        html: raw.html,
+        extSchema,
+        end: Math.max(0, Math.min(pgState.duration, Number(raw.end) || Math.min(6, pgState.duration))),
+        // values 以 schema 默认值为底，再叠导入值：导出的旧文件没有 values 也不会空表单
+        values: { ...pgSchemaDefaults(extSchema), ...(typeof raw.values === "object" && raw.values ? raw.values : {}) },
+      });
+      continue;
+    }
+    const template = state.catalog.templates.find((t) => t.id === raw.templateId);
+    if (!template) {
+      // 开放编辑器：未知层不再静默跳过——进「未识别层」待转区，粘贴 HTML 即可转外部图层
+      skipped++;
+      pgState.unknownLayers.push({ templateId: String(raw.templateId || "未命名层").slice(0, 60), raw });
+      continue;
+    }
+    pgState.layers.push({
+      ...common,
+      templateId: template.id, name: template.name, preview: template.preview,
+      end: Math.max(0, Math.min(pgState.duration, Number(raw.end) || Math.min(template.duration || 6, pgState.duration))),
+      values: { ...defaults(template), ...(typeof raw.values === "object" && raw.values ? raw.values : {}) },
+    });
+  }
+  let needBase = false;
+  if (j.base && j.base.type === "video" && typeof j.base.src === "string") {
+    const hit = PG_BASES.find((b) => j.base.src.includes(b.src.replace("./app/assets/bg/", "")));
+    if (hit) pgState.base = { type: "builtin", id: hit.id, src: hit.src, name: hit.name };
+  } else if (j.base && j.base.type === "upload") {
+    // 上传底片是 dataUrl，不进工程文件（体积与隐私），打开后需重新选一次
+    needBase = true;
+    pgState.base = { type: "builtin", id: PG_BASES[0].id, src: PG_BASES[0].src, name: PG_BASES[0].name };
+  }
+  pgState.picked = null;
+  renderPlayground();
+  return { skipped, needBase };
+}
+
+/* ── P3 工程保存 v1 ────────────────────────────────────────────────
+   两层存储，都在这台机器的浏览器里，不上服务器（账号体系后置）：
+   ① 工程库：命名保存的工程，可列、可改名、可重开、可删
+   ② 会话草稿：编辑中的状态自动存，刷新/关标签不丢
+   上传底片是 dataUrl（体积大 + 隐私），不进存储——打开后需重选底片，
+   这个限制在 UI 上明说，不假装能恢复。                                   ── */
+const PG_LS = {
+  index: "pg.projects.v1",
+  proj: (id) => "pg.project.v1." + id,
+  session: "pg.session.v1",
+};
+const PG_PROJECT_MAX = 40;
+
+const pgStore = {
+  _timer: null,
+  _available() {
+    try { const k = "__pg_t"; localStorage.setItem(k, "1"); localStorage.removeItem(k); return true; }
+    catch (e) { return false; }
+  },
+  _read(key, fallback) {
+    try { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+    catch (e) { return fallback; }
+  },
+  _write(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+    catch (e) {
+      // 配额爆掉：最常见是外部层 HTML 太大。逐个删最旧的再试一次。
+      const idx = this.list();
+      while (idx.length) {
+        try { localStorage.removeItem(PG_LS.proj(idx.pop().id)); } catch { }
+        try { localStorage.setItem(key, JSON.stringify(value)); return true; } catch { }
+      }
+      return false;
+    }
+  },
+  list() {
+    const idx = this._read(PG_LS.index, []);
+    return Array.isArray(idx) ? idx.filter((p) => p && p.id) : [];
+  },
+  meta(compose) {
+    return { layerCount: compose.layers.length, duration: compose.duration };
+  },
+  save(name, compose) {
+    const idx = this.list();
+    const clean = String(name || "").trim().slice(0, 40) || `未命名工程 ${idx.length + 1}`;
+    // 同名覆盖：避免存出一堆"发布会 2/发布会 3"
+    const hit = idx.find((p) => p.name === clean);
+    const id = hit ? hit.id : "p" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    const rec = { id, name: clean, updatedAt: Date.now(), ...this.meta(compose) };
+    if (!this._write(PG_LS.proj(id), compose)) return { ok: false, error: "浏览器存储空间不足，请先删掉几个旧工程" };
+    const next = [rec, ...idx.filter((p) => p.id !== id && p.name !== clean)].slice(0, PG_PROJECT_MAX);
+    this._write(PG_LS.index, next);
+    return { ok: true, id, name: clean, replaced: !!hit };
+  },
+  open(id) { return this._read(PG_LS.proj(id), null); },
+  rename(id, name) {
+    const idx = this.list();
+    const p = idx.find((x) => x.id === id);
+    if (!p) return false;
+    p.name = String(name || "").trim().slice(0, 40) || p.name;
+    this._write(PG_LS.index, idx);
+    return true;
+  },
+  remove(id) {
+    try { localStorage.removeItem(PG_LS.proj(id)); } catch { }
+    this._write(PG_LS.index, this.list().filter((p) => p.id !== id));
+  },
+  /* 会话草稿：去抖 900ms，跟着 renderPlayground 走 */
+  scheduleSession() {
+    clearTimeout(this._timer);
+    this._timer = setTimeout(() => this.saveSession(), 900);
+  },
+  saveSession() {
+    // 空工程要**清掉**旧草稿而不是留着——否则「清空图层」后刷新会凭空恢复出已删的层
+    if (!pgState.layers.length) { this.clearSession(); return; }
+    this._write(PG_LS.session, { savedAt: Date.now(), compose: pgComposeJson() });
+  },
+  readSession() { return this._read(PG_LS.session, null); },
+  clearSession() { try { localStorage.removeItem(PG_LS.session); } catch { } },
+  usage() {
+    let bytes = 0;
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.indexOf("pg.") === 0) bytes += (localStorage.getItem(k) || "").length;
+      }
+    } catch { }
+    return bytes;
+  },
+};
+
+/* 轻提示：绝对定位浮层，不参与布局（动操作台/一屏红线的安全做法） */
+let pgToastTimer = null;
+function pgToast(text, ms) {
+  let el = document.getElementById("pg-toast");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "pg-toast";
+    el.className = "pg-toast";
+    document.body.appendChild(el);
+  }
+  el.textContent = text;
+  el.classList.add("on");
+  clearTimeout(pgToastTimer);
+  pgToastTimer = setTimeout(() => el.classList.remove("on"), ms || 2200);
+}
+
+/* ── P2 单图层重生成：提示词包 ────────────────────────────────────
+   三档成本里的"单点 Token"档：只把不满意的那一层的 HTML 递回 AI，
+   消耗约是整页重生成的 1/10。包里装四样东西：
+     ① 这一层的完整 HTML  ② 它的变量约定  ③ 用户填的修改意图
+     ④ 硬约束（保持自描述块 / 保持画布尺寸 / 只改被要求的）
+   会员通道走服务端垫 Token（Wave 3 建），未配置时明确说未配置，不假装。 ── */
+const pgRegenCache = new Map();
+
+async function pgLayerHtml(layer) {
+  if (layer.type === "external") return layer.html || "";
+  if (pgRegenCache.has(layer.templateId)) return pgRegenCache.get(layer.templateId);
+  const entry = state.catalog.templates.find((t) => t.id === layer.templateId);
+  const url = (entry && entry.component === true) ? `./components/${entry.path}.html` : `./templates/${layer.templateId}/index.html`;
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return "";
+    const html = await r.text();
+    pgRegenCache.set(layer.templateId, html);
+    return html;
+  } catch { return ""; }
+}
+
+function pgLayerSchemaForPack(layer) {
+  return pgLayerSchema(layer).filter((s) => !s.hidden);
+}
+
+function pgBuildRegenPack(layer, intent) {
+  const schema = pgLayerSchemaForPack(layer);
+  const hasSelfDescribe = /data-hyperframes-variables/.test(layer.html || "");
+  const schemaBlock = hasSelfDescribe
+    ? `这段 HTML 自己已经声明了变量（<script type="application/json" data-hyperframes-variables>）。
+必须原样保留这个声明块：键名、type、label、default 一个都不能改，否则编辑器面板会失去控件。
+用户改过的值会通过 window.__hyperframes.getVariables() 传给你的 HTML，读取方式照旧。`
+    : schema.length
+      ? `这一层有变量约定（来自素材池 schema），改的时候不要把取值方式改掉：
+${JSON.stringify(Object.fromEntries(schema.map((s) => [s.id, s.default])), null, 2)}`
+      : `这一层没有声明变量。如果你改出了新的可调参数（文案/数字/颜色），
+请顺便加上自描述声明块，让用户能在面板里改：
+<script type="application/json" data-hyperframes-variables>
+{ "新字段id": { "type": "string|number|color|enum", "label": "显示名", "default": 初值 } }
+</script>
+并在脚本里用 window.__hyperframes.getVariables() 读取。`;
+
+  return `你是一名动效工程师。下面给你一个已经能跑的 HTML 动效图层，请按用户意图修改它。
+
+【用户想改成什么样】
+${(intent || "").trim() || "（用户还没写修改意图——请先问他要改什么，或按下面的硬约束原样返回）"}
+
+【硬约束，违反任何一条都算失败】
+1. 只改用户要求改的，其余部分（结构、配色、动画节奏）保持原样。
+2. 必须是单个自包含 HTML 文档：CSS/JS 全内联，禁止任何外部 URL。
+3. 画布按 1920×1080 设计，背景透明。
+4. ${schemaBlock}
+5. 保留 gsap 用法：把 timeline 挂到 window.__timelines，编辑器会自动循环播放。
+6. 只输出 HTML 本身，不要 markdown 代码围栏，不要解释文字。
+
+【这一层当前的 HTML】
+${layer.html || "（见下方素材池模板）"}
+
+/* ── 用户填的修改意图（必填，会随包一起发给 AI） ── */
+${(intent || "").trim() || "（空）"}`;
+}
+
 function pgLayerWidthPct(layer) {
   return 34 * (Math.max(20, Math.min(200, layer.scale)) / 100);
 }
@@ -1581,11 +1822,13 @@ function pgMotionMarkup(layer, index) {
   const animNote = (m && layer.hasInnerAnim)
     ? `<p class="pg-motion-note">该层有层内动画，整层路线将叠加播放</p>`
     : "";
+  // P2：单图层重生成入口挂运动头同一行，零高度成本（运动区高度由下面的行数决定）
+  const regenBtn = `<button type="button" class="pg-regen-open" data-regen="${index}" title="只把这层的 HTML 递回 AI 重生成，消耗约整页的 1/10">让 AI 改这层</button>`;
   return `
     <div class="pg-motion ${m ? "" : "off"}" data-motion="${index}">
       <div class="pg-motion-head">
         <label><input type="checkbox" data-mon="${index}" ${m ? "checked" : ""}> 运动轨迹</label>
-        ${originTag}${restoreBtn}
+        ${originTag}${restoreBtn}${regenBtn}
       </div>
       ${animNote}
       <div class="pg-motion-body">
@@ -1908,11 +2151,17 @@ function renderPlayground() {
           <button class="button primary" type="button" id="pg-export">导出 compose.json</button>
           <button class="button" type="button" id="pg-import">导入 compose.json</button>
           <input type="file" id="pg-import-file" accept="application/json,.json" hidden>
+          <input type="file" id="pg-proj-file" accept="application/json,.json,.hfproj" hidden>
           <button class="button" type="button" id="pg-copy">复制 JSON</button>
           <button class="button" type="button" id="pg-submit">投稿</button>
           <button class="button" type="button" id="pg-clear">清空图层</button>
+          <div class="pg-proj-wrap">
+            <button class="button" type="button" id="pg-proj-toggle" aria-expanded="false">工程</button>
+            <div class="pg-proj-panel" id="pg-proj-panel" hidden></div>
+          </div>
         </div>
       </header>
+      <div class="pg-regen-host" id="pg-regen-host" hidden></div>
       <div class="pg-main">
         <div class="pg-left">
           <section class="pg-panel pg-con-base">
@@ -2080,6 +2329,9 @@ function renderPlayground() {
 
   requestAnimationFrame(() => { pgFitPanels(); pgApplyPositions(); pgFitIframes(); pgUpdateClockUI(); });
   window.addEventListener("resize", () => { clearTimeout(pgFitTimer); pgFitTimer = setTimeout(() => { pgFitPanels(); pgApplyPositions(); pgFitIframes(); }, 120); });
+  // 唯一的状态变更汇聚点：几乎每次改动图层/底片/时长都会走到这里。
+  // 挂在这里做去抖自动存，刷新/关标签不丢工程。
+  pgStore.scheduleSession();
 
   /* 顶栏：导出 */
   stageContent.querySelector("#pg-import").addEventListener("click", () => {
@@ -2093,67 +2345,10 @@ function renderPlayground() {
     reader.onload = () => {
       try {
         const j = JSON.parse(String(reader.result));
-        if (!j || !Array.isArray(j.layers)) throw new Error("缺少 layers 数组");
-        pgSetPlaying(false);
-        pgClock.t = 0;
-        pgState.duration = Math.max(3, Math.min(600, Number(j.duration) || 15));
-        const ANCHORS = new Set(["tl", "tc", "tr", "cl", "cc", "cr", "bl", "bc", "br"]);
-        let skipped = 0;
-        pgState.layers = [];
-        pgState.unknownLayers = [];
-        for (const raw of j.layers) {
-          const motion = raw.motion && (raw.motion.type === "line" || raw.motion.type === "path")
-            ? { ...raw.motion, secs: Math.max(0.1, Number(raw.motion.secs) || 1.5), ease: raw.motion.ease === "linear" ? "linear" : "out" }
-            : null;
-          const common = {
-            position: ANCHORS.has(raw.position) ? raw.position : "cc",
-            x: Math.max(-45, Math.min(45, Number(raw.x) || 0)),
-            y: Math.max(-45, Math.min(45, Number(raw.y) || 0)),
-            scale: Math.max(20, Math.min(200, Number(raw.scale) || 100)),
-            start: Math.max(0, Number(raw.start) || 0),
-            motion,
-            motionMode: motion ? motion.type : (raw.motionMode === "path" ? "path" : "line"),
-            motionOrigin: motion ? "imported" : "drawn",
-          };
-          // compose/2 外部图层：HTML 内联自包含，直接收
-          if (raw.type === "external" && typeof raw.html === "string" && raw.html.trim()) {
-            const extSchema = pgParseExtSchema(raw.html);
-            pgState.layers.push({
-              ...common,
-              type: "external",
-              name: String(raw.name || "外部图层").slice(0, 40),
-              html: raw.html,
-              extSchema,
-              end: Math.max(0, Math.min(pgState.duration, Number(raw.end) || Math.min(6, pgState.duration))),
-              // values 以 schema 默认值为底，再叠导入值：导出的旧文件没有 values 也不会空表单
-              values: { ...pgSchemaDefaults(extSchema), ...(typeof raw.values === "object" && raw.values ? raw.values : {}) },
-            });
-            continue;
-          }
-          const template = state.catalog.templates.find((t) => t.id === raw.templateId);
-          if (!template) {
-            // 开放编辑器：未知层不再静默跳过——进「未识别层」待转区，粘贴 HTML 即可转外部图层
-            skipped++;
-            pgState.unknownLayers.push({ templateId: String(raw.templateId || "未命名层").slice(0, 60), raw });
-            continue;
-          }
-          pgState.layers.push({
-            ...common,
-            templateId: template.id, name: template.name, preview: template.preview,
-            end: Math.max(0, Math.min(pgState.duration, Number(raw.end) || Math.min(template.duration || 6, pgState.duration))),
-            values: { ...defaults(template), ...(typeof raw.values === "object" && raw.values ? raw.values : {}) },
-          });
-        }
-        if (j.base && j.base.type === "video" && typeof j.base.src === "string") {
-          const hit = PG_BASES.find((b) => j.base.src.includes(b.src.replace("./app/assets/bg/", "")));
-          pgState.base = hit ? { type: "builtin", id: hit.id, src: hit.src, name: hit.name } : pgState.base;
-        }
-        pgState.picked = null;
-        renderPlayground();
-        // 反馈写在重渲染后的新按钮上（renderPlayground 会重建 DOM）
+        const r = pgLoadCompose(j);
         const freshBtn = stageContent.querySelector("#pg-import");
         if (freshBtn) {
-          freshBtn.textContent = skipped ? `导入完成 · ${skipped} 层待转换` : "导入完成 ✓";
+          freshBtn.textContent = r.skipped ? `导入完成 · ${r.skipped} 层待转换` : "导入完成 ✓";
           setTimeout(() => { const b = stageContent.querySelector("#pg-import"); if (b) b.textContent = "导入 compose.json"; }, 2200);
         }
       } catch (err) {
@@ -2164,6 +2359,7 @@ function renderPlayground() {
     };
     reader.readAsText(file);
   });
+
   stageContent.querySelector("#pg-export").addEventListener("click", () => {
     const blob = new Blob([JSON.stringify(pgComposeJson(), null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -2218,6 +2414,216 @@ function renderPlayground() {
     pgState.picked = null;
     pgClock.t = 0;
     renderPlayground();
+  });
+
+  /* ── P2 单图层重生成 ── */
+  const regenHost = stageContent.querySelector("#pg-regen-host");
+  const regenState = { index: null, html: "", pack: "" };
+  const closeRegen = () => { regenHost.hidden = true; regenState.index = null; };
+
+  const drawRegen = (index) => {
+    const layer = pgState.layers[index];
+    if (!layer) { closeRegen(); return; }
+    regenState.index = index;
+    regenHost.hidden = false;
+    regenHost.innerHTML = `
+      <div class="pg-regen-panel">
+        <div class="pg-regen-head">
+          <h4>让 AI 改这层<span>·</span>只递回这一层，消耗约整页的 1/10</h4>
+          <button type="button" class="pg-regen-x" data-regen-act="close" title="关闭">×</button>
+        </div>
+        <p class="pg-regen-layer">图层：<strong>${escapeHtml(layer.name || "未命名")}</strong>
+          ${layer.type === "external" ? "（外部层 · 自带 HTML）" : "（站内模板）"}</p>
+        <label class="pg-regen-intent">想把它改成什么样
+          <textarea id="pg-regen-intent" rows="2" placeholder="例：标题换成「2026 Q3 复盘」，数字改 486，强调色换成暖橙，动画再慢一点"></textarea>
+        </label>
+        <div class="pg-regen-preview">
+          <span>提示词包预览</span>
+          <pre id="pg-regen-pack">${escapeHtml(regenState.pack)}</pre>
+        </div>
+        <div class="pg-regen-ops">
+          <button class="button primary" type="button" data-regen-act="copy">复制提示词包</button>
+          <button class="button" type="button" data-regen-act="download">导出 .regen</button>
+          <button class="button" type="button" data-regen-act="wechat">会员代加工</button>
+        </div>
+        <p class="pg-regen-note" id="pg-regen-note">免费路径：复制提示词包，喂给你自己的 AI（豆包 / DeepSeek / Claude 都行），
+把返回的 HTML 粘进左栏「外部图层 → 粘贴动效 HTML → 加为图层」即可替换。
+会员路径我们垫 Token，服务端通道建设中（Wave 3），现在先走代加工。</p>
+      </div>`;
+  };
+
+  const rebuildPack = async () => {
+    const index = regenState.index;
+    if (index == null) return;
+    const layer = pgState.layers[index];
+    if (!layer) { closeRegen(); return; }
+    if (layer.type !== "external") {
+      const html = await pgLayerHtml(layer);
+      layer.html = layer.html || html;    // 站内模板取一次原文，之后跟外部层同路径
+    }
+    const intentEl = stageContent.querySelector("#pg-regen-intent");
+    regenState.pack = pgBuildRegenPack(layer, intentEl ? intentEl.value : "");
+    const pre = stageContent.querySelector("#pg-regen-pack");
+    if (pre) pre.textContent = regenState.pack;
+  };
+
+  stageContent.querySelectorAll("[data-regen]").forEach((btn) => btn.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    const index = Number(btn.dataset.regen);
+    regenHost.hidden = false;
+    drawRegen(index);
+    await rebuildPack();
+  }));
+
+  regenHost.addEventListener("input", (e) => { if (e.target.id === "pg-regen-intent") rebuildPack(); });
+
+  regenHost.addEventListener("click", (e) => {
+    const act = e.target.dataset.regenAct;
+    if (!act) return;
+    e.stopPropagation();
+    const layer = regenState.index != null ? pgState.layers[regenState.index] : null;
+    if (act === "close") { closeRegen(); return; }
+    if (!layer) return;
+    if (act === "copy") {
+      navigator.clipboard.writeText(regenState.pack)
+        .then(() => pgToast("提示词包已复制 ✓ 喂给你自己的 AI"))
+        .catch(() => pgToast("复制失败，用「导出 .regen」"));
+    } else if (act === "download") {
+      const blob = new Blob([regenState.pack], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `regen-${(layer.name || "layer").replace(/[^\w一-龥-]+/g, "").slice(0, 20)}.regen.txt`;
+      link.click();
+      URL.revokeObjectURL(url);
+      pgToast("已导出 ✓");
+    } else if (act === "wechat") {
+      const intent = (stageContent.querySelector("#pg-regen-intent") || {}).value || "";
+      const brief = `【单层重生成需求】\n图层：${layer.name}\n我想改成：${intent || "（待补充）"}\n`;
+      navigator.clipboard.writeText(brief)
+        .then(() => pgToast("需求已复制，加微信发给老马，我们代改", 3200))
+        .catch(() => pgToast("复制失败，请手动记下需求"));
+    }
+  });
+  document.addEventListener("click", (e) => {
+    if (!regenHost.hidden && !regenHost.contains(e.target) && !e.target.closest("[data-regen]")) closeRegen();
+  });
+
+  /* ── P3 工程面板 ── */
+  const projPanel = stageContent.querySelector("#pg-proj-panel");
+  const projToggle = stageContent.querySelector("#pg-proj-toggle");
+  const closeProj = () => { projPanel.hidden = true; pgState.projOpen = false; projToggle.setAttribute("aria-expanded", "false"); };
+  const fmtTime = (ts) => {
+    const d = new Date(ts);
+    const p = (n) => String(n).padStart(2, "0");
+    return `${d.getMonth() + 1}/${d.getDate()} ${p(d.getHours())}:${p(d.getMinutes())}`;
+  };
+  const kb = (n) => (n < 1024 ? n + " B" : (n / 1024).toFixed(0) + " KB");
+
+  const drawProjPanel = () => {
+    const list = pgStore.list();
+    const avail = pgStore._available();
+    projPanel.innerHTML = `
+      <div class="pg-proj-save">
+        <input type="text" id="pg-proj-name" placeholder="给工程起个名，如 发布会开场" maxlength="40" value="">
+        <button class="button primary" type="button" data-proj-act="save">保存当前</button>
+      </div>
+      <div class="pg-proj-io">
+        <button class="button" type="button" data-proj-act="file-export">导出工程文件</button>
+        <button class="button" type="button" data-proj-act="file-import">导入工程文件</button>
+      </div>
+      <div class="pg-proj-list">${list.length ? list.map((p) => `
+        <div class="pg-proj-row" data-proj-id="${escapeHtml(p.id)}">
+          <div class="pg-proj-info">
+            <strong title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</strong>
+            <span>${p.layerCount} 层 · ${p.duration}s · ${fmtTime(p.updatedAt)}</span>
+          </div>
+          <div class="pg-proj-ops">
+            <button class="button" type="button" data-proj-act="open">打开</button>
+            <button class="button" type="button" data-proj-act="rename">改名</button>
+            <button class="button danger" type="button" data-proj-act="del">删</button>
+          </div>
+        </div>`).join("") : `<p class="pg-proj-empty">还没有保存的工程。改几层之后点「保存当前」，刷新页面也不会丢。</p>`}</div>
+      <p class="pg-proj-note">${avail
+        ? `工程存在这台电脑的浏览器里，不上服务器；已占 ${kb(pgStore.usage())}。上传的底片不随工程保存（文件不出站），重开需再选一次底片。`
+        : "浏览器禁用了本地存储（无痕模式？），工程保存不可用。"}</p>`;
+  };
+  const openProjPanel = () => {
+    drawProjPanel();
+    projPanel.hidden = false;
+    pgState.projOpen = true;
+    projToggle.setAttribute("aria-expanded", "true");
+  };
+  // renderPlayground 会整块重建 DOM，面板会被冲掉；把展开态存在 pgState 里，重建后复原
+  if (pgState.projOpen) openProjPanel();
+
+  projToggle.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (projPanel.hidden) openProjPanel(); else closeProj();
+  });
+  document.addEventListener("click", (e) => {
+    if (!projPanel.hidden && !projPanel.contains(e.target) && e.target !== projToggle) closeProj();
+  });
+
+  projPanel.addEventListener("click", (e) => {
+    const act = e.target.dataset.projAct;
+    if (!act) return;
+    const row = e.target.closest(".pg-proj-row");
+    const id = row && row.dataset.projId;
+    if (act === "save") {
+      const name = stageContent.querySelector("#pg-proj-name").value;
+      const r = pgStore.save(name, pgComposeJson());
+      if (!r.ok) { alert(r.error); return; }
+      drawProjPanel();
+      projToggle.textContent = `工程 ✓`;
+      setTimeout(() => { projToggle.textContent = "工程"; }, 1500);
+    } else if (act === "open" && id) {
+      const compose = pgStore.open(id);
+      if (!compose) { alert("这个工程读不出来了，可能被浏览器清理了"); return; }
+      const r = pgLoadCompose(compose);
+      closeProj();
+      if (r.needBase) pgToast("工程已打开 · 原底片是上传的视频，需重新选一次");
+      else pgToast("工程已打开 ✓");
+    } else if (act === "rename" && id) {
+      const cur = pgStore.list().find((p) => p.id === id);
+      const next = prompt("工程改名", cur ? cur.name : "");
+      if (next != null) { pgStore.rename(id, next); drawProjPanel(); }
+    } else if (act === "del" && id) {
+      const cur = pgStore.list().find((p) => p.id === id);
+      if (confirm(`删掉工程「${cur ? cur.name : id}」？不可恢复。`)) { pgStore.remove(id); drawProjPanel(); }
+    } else if (act === "file-export") {
+      const compose = pgComposeJson();
+      const payload = { kind: "hyperframes-project", version: 1, savedAt: new Date().toISOString(), compose };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `project-${new Date().toISOString().slice(0, 10)}.hfproj.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } else if (act === "file-import") {
+      stageContent.querySelector("#pg-proj-file").click();
+    }
+  });
+
+  stageContent.querySelector("#pg-proj-file").addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const raw = JSON.parse(String(reader.result));
+        const compose = raw && raw.kind === "hyperframes-project" ? raw.compose : raw;
+        const r = pgLoadCompose(compose);
+        closeProj();
+        if (r.needBase) pgToast("工程文件已导入 · 底片需重新选一次");
+        else pgToast("工程文件已导入 ✓");
+      } catch (err) {
+        alert("工程文件读不了：" + (err.message || "格式错误"));
+      }
+      event.target.value = "";
+    };
+    reader.readAsText(file);
   });
 
   /* 外部图层：粘贴 HTML 上屏 */
@@ -2316,6 +2722,20 @@ function routeHash() {
 
 state.catalog = await loadCatalog();
 document.querySelector("#template-count").textContent = state.catalog.templates.filter((template) => template.status === "ready").length;
+
+/* P3 刷新恢复：catalog 就绪后（pgLoadCompose 依赖素材池）再还原会话草稿 */
+(function pgRestoreSession() {
+  if (!location.hash || location.hash !== "#playground") return;   // 分享链接优先，不劫持直达
+  const s = pgStore.readSession();
+  if (!s || !s.compose || !Array.isArray(s.compose.layers) || !s.compose.layers.length) return;
+  try {
+    const r = pgLoadCompose(s.compose);
+    const when = new Date(s.savedAt);
+    const p = (n) => String(n).padStart(2, "0");
+    pgToast(`已恢复上次编辑 · ${s.compose.layers.length} 层 · ${p(when.getHours())}:${p(when.getMinutes())}${r.needBase ? " · 底片需重选" : ""}`, 3200);
+  } catch (e) { /* 草稿坏了就当没有，不挡启动 */ }
+})();
+
 routeHash();
 
 window.addEventListener("hashchange", () => {

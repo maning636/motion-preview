@@ -952,8 +952,78 @@ body.modes-full-page { height: auto; overflow: auto; }
   .pg-main { grid-template-columns: 232px minmax(0, 1fr) 396px; }
 }
 
-/* ── 窄屏兜底：单列堆叠，允许滚动 ── */
-@media (max-width: 1180px) {
+/* ── 窄屏一屏方案（901–1180px，解冻线之一） ──────────────────────
+   原来这里是"兜底堆叠"：单列 + 允许滚动，1180 下 .pg-work 高 2425px，
+   时长/播放/舞台/素材库四个关键控件全掉出首屏。
+   现在改成真一屏：保住三栏 + 通栏操作台，靠**收窄侧栏 + 压缩头 + 压字号**腾空间，
+   不靠缩放。1180×800 实测：舞台 756×425（16:9），操作台余量 > 0。
+   900px 以下仍是堆叠——手机上"一屏"不是正确目标，滚动才是。            ── */
+@media (max-width: 1180px) and (min-width: 901px) {
+  /* 顶栏：901–1180 之间原本没有任何适配，1024 实测 docScrollX=152（导航胶囊溢出）。
+     这里压缩间距与字号，不隐藏任何一个视图入口——六个视图都是主路径。 */
+  .topbar { gap: 12px; padding: 10px 16px; }
+  .topbar .brand { gap: 9px; }
+  .topbar .brand-text .kicker { font-size: 9px; letter-spacing: .12em; }
+  .topbar .brand-text h1 { font-size: 17px; }
+  .search-wrap { max-width: 190px; }
+  .topbar-right { gap: 8px; }
+  .topbar-actions { gap: 6px; }
+  .nav-pill { padding: 6px 10px; font-size: 12.5px; }
+  .nav-pill.nav-home { display: none; }        /* "前往老马官网"在窄屏是重复出口 */
+  .library-count { font-size: 12px; }
+  .library-count small { display: none; }
+
+  /* 头部压缩：营销长句移到首屏以下，标题与按钮留在同一行 */
+  .pg-work { height: calc(100vh - var(--topbar-h, 77px)); min-height: 0; padding: 7px 12px 6px; }
+  .pg-head { flex-wrap: wrap; row-gap: 6px; align-items: center; padding-bottom: 6px; }
+  .pg-head h2 { font-size: 24px; margin: 0; }
+  .pg-head .pg-tag { font-size: 9.5px; padding: 2px 6px; }
+  .pg-bar-id { gap: 8px; }
+  .pg-desc { display: none; }              /* 营销文案对操作者无用，下沉 */
+  .pg-actions { margin-left: auto; gap: 5px; }
+  .pg-actions .button { padding: 5px 9px; font-size: 11.5px; }
+
+  /* 三栏收窄：210/280 → 168/216，把宽度让给舞台 */
+  .pg-main { grid-template-columns: 168px minmax(0, 1fr) 216px; grid-template-areas: "base stage lib" "console console console"; gap: 8px; }
+  .pg-left { gap: 8px; }
+  .pg-panel { padding: 8px 9px; }
+  .pg-panel h3, .pg-con-head h3 { font-size: 12px; }
+  .pg-bases { grid-template-columns: repeat(2, 1fr); }
+  .pg-con-base .pg-bases { grid-template-columns: repeat(2, 1fr); }
+  .pg-base { height: 44px; }
+  .pg-ext-panel textarea { flex: 0 0 auto; height: 62px; min-height: 62px; resize: none; font-size: 10.5px; }
+
+  /* 舞台：让高度由行高决定，宽度吃掉富余 */
+  .pg-center { min-height: 0; }
+  .pg-stage { height: auto; width: 100%; }
+  .pg-player { height: 38px; }
+
+  /* 素材库：行更矮，一屏多露几行 */
+  .pg-item { grid-template-columns: 52px minmax(0, 1fr); height: 40px; }
+  .pg-item-info strong { font-size: 11.5px; }
+  .pg-item-info span { font-size: 10px; }
+
+  /* 操作台：位置/大小/运动三段一起收窄，行数不变。
+     注意不要写 .pg-console-h{height:auto}——那是下面 900px 堆叠块才需要的；
+     这里必须保住一屏红线规定的 clamp(190px,21.5vh,240px)。 */
+  .pg-con-head { padding-bottom: 5px; }
+  .pg-con-hint { display: none; }
+  .pg-con-body-h { flex-wrap: nowrap; }
+  .pg-con-body-h .pg-con-body { grid-template-columns: 152px 186px minmax(0, 1fr); }
+  .pg-con-body-h .pg-chips-zone { width: 132px; }
+  .pg-zone-fx { grid-template-columns: 232px minmax(0, 1fr); }
+  .pg-pad { grid-template-columns: repeat(3, 21px); gap: 3px; }
+  .pg-pad .pg-pos { width: 21px; height: 21px; font-size: 10px; border-radius: 5px; }
+  .pg-zone-pos .pg-row2 input[type="number"] { width: 38px; }
+  .pg-var { grid-template-columns: 44px minmax(0, 1fr); font-size: 10.5px; }
+  .pg-var input[type="text"], .pg-var input[type="number"], .pg-var select,
+  .pg-var input[type="color"] { height: 23px; }
+  .pg-motion-head .pg-regen-open { padding: 2px 7px; font-size: 10px; }
+  .pg-zone-fx .pg-vars { gap: 4px 6px; }
+}
+
+/* ── 手机（≤900px）：堆叠 + 滚动，这是一屏方案不追求的场景 ── */
+@media (max-width: 900px) {
   .pg-work { height: auto; min-height: 0; padding-bottom: 10px; }
   .pg-head { flex-wrap: wrap; row-gap: 8px; }
   .pg-desc { white-space: normal; flex-basis: 100%; order: 3; }
@@ -972,6 +1042,12 @@ body.modes-full-page { height: auto; overflow: auto; }
   .pg-con-body-h .pg-con-body { grid-template-columns: 1fr; row-gap: 12px; }
   .pg-con-body-h .pg-con-body > * { border-left: none; border-top: 1px solid rgba(255, 255, 255, .07); padding-top: 10px; }
   .pg-zone-fx { grid-template-columns: 1fr; }
+  /* 顶栏同样要能换行：.topbar 换行了但 .topbar-right 内部 6 个胶囊是 nowrap，
+     820 实测 docScrollX=71 就是它撑出来的 */
+  .topbar-right { flex-wrap: wrap; }
+  .topbar-actions { flex-wrap: wrap; }
+  .nav-pill.nav-home { display: none; }
+  .library-count small { display: none; }
 }
 
 /* ── v33 运动路线三层机制：来源标记 / 还原导入 / 层内动画徽标 ── */
@@ -1016,3 +1092,116 @@ body.modes-full-page { height: auto; overflow: auto; }
   text-decoration: none;
 }
 .std-sample-link:hover { background: rgba(74, 222, 128, .1); }
+
+/* ── P3 工程面板：绝对定位浮层，展开时也不参与布局（不碰一屏红线） ── */
+.pg-proj-wrap { position: relative; }
+.pg-proj-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 60;
+  width: 380px;
+  max-width: 84vw;
+  max-height: 70vh;
+  overflow-y: auto;
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  background: #171512;
+  border: 1px solid #2f2a20;
+  border-radius: 12px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .5);
+  color: #f4efe7;
+  font-size: 12.5px;
+}
+.pg-proj-panel[hidden] { display: none; }
+.pg-proj-save { display: flex; gap: 8px; }
+.pg-proj-save input {
+  flex: 1 1 auto; min-width: 0;
+  background: #1e1a14; border: 1px solid #2f2a20; border-radius: 8px;
+  color: #f4efe7; padding: 7px 10px; font-size: 12.5px;
+}
+.pg-proj-save input:focus { border-color: #4ade80; outline: none; }
+.pg-proj-io { display: flex; gap: 8px; flex-wrap: wrap; }
+.pg-proj-list { display: grid; gap: 6px; }
+.pg-proj-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px; background: #1e1a14; border: 1px solid #2f2a20; border-radius: 9px;
+}
+.pg-proj-info { flex: 1 1 auto; min-width: 0; display: grid; gap: 2px; }
+.pg-proj-info strong { font-size: 12.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pg-proj-info span { color: rgba(244, 239, 231, .5); font-size: 11px; }
+.pg-proj-ops { display: flex; gap: 5px; flex: 0 0 auto; }
+.pg-proj-ops .button { padding: 4px 8px; font-size: 11px; }
+.pg-proj-ops .button.danger { color: #f87171; }
+.pg-proj-ops .button.danger:hover { border-color: #f87171; background: rgba(248, 113, 113, .1); }
+.pg-proj-empty, .pg-proj-note {
+  margin: 0; color: rgba(244, 239, 231, .48); font-size: 11.5px; line-height: 1.55;
+}
+.pg-proj-note { border-top: 1px dashed #2f2a20; padding-top: 9px; }
+
+/* 轻提示浮层 */
+.pg-toast {
+  position: fixed; left: 50%; bottom: 28px; z-index: 90;
+  transform: translate(-50%, 14px);
+  padding: 10px 18px; border-radius: 999px;
+  background: #1e1a14; border: 1px solid rgba(74, 222, 128, .5); color: #f4efe7;
+  font-size: 13px; box-shadow: 0 12px 30px rgba(0, 0, 0, .45);
+  opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .18s ease;
+}
+.pg-toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+/* ── P2 单图层重生成 ── */
+/* 入口按钮挂在运动头同一行，零高度成本 */
+.pg-motion-head .pg-regen-open {
+  margin-left: auto; flex: 0 0 auto;
+  background: rgba(74, 222, 128, .1);
+  border: 1px solid rgba(74, 222, 128, .45);
+  color: #4ade80; font-size: 10.5px; font-weight: 700;
+  padding: 3px 9px; border-radius: 999px; cursor: pointer; white-space: nowrap;
+}
+.pg-motion-head .pg-regen-open:hover { background: rgba(74, 222, 128, .2); }
+
+/* 面板：视口级模态 + 轻微遮罩，展开不影响操作台高度。
+   用 fixed 而非 absolute——.pg-wrap 没有定位上下文，absolute 会跑到最近的祖先上错位。 */
+.pg-regen-host { position: fixed; inset: 0; z-index: 80; background: rgba(10, 8, 6, .55); }
+.pg-regen-host[hidden] { display: none; }
+.pg-regen-panel {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: 560px; max-width: calc(100vw - 48px);
+  max-height: 82vh; overflow-y: auto;
+  display: grid; gap: 10px;
+  padding: 16px 18px;
+  background: #171512; border: 1px solid #2f2a20; border-radius: 14px;
+  box-shadow: 0 22px 60px rgba(0, 0, 0, .58);
+  color: #f4efe7; font-size: 12.5px;
+}
+.pg-regen-head { display: flex; align-items: center; gap: 10px; }
+.pg-regen-head h4 { margin: 0; font-size: 14px; color: #4ade80; letter-spacing: .04em; }
+.pg-regen-head h4 span { color: rgba(244, 239, 231, .4); margin: 0 5px; font-weight: 400; }
+.pg-regen-head h4 { flex: 1 1 auto; font-weight: 400; color: rgba(244, 239, 231, .6); font-size: 11.5px; }
+.pg-regen-x {
+  flex: 0 0 auto; background: none; border: none; color: rgba(244, 239, 231, .5);
+  font-size: 20px; line-height: 1; cursor: pointer; padding: 0 2px;
+}
+.pg-regen-x:hover { color: #f4efe7; }
+.pg-regen-layer { margin: 0; color: rgba(244, 239, 231, .6); font-size: 12px; }
+.pg-regen-layer strong { color: #f4efe7; }
+.pg-regen-intent { display: grid; gap: 5px; color: rgba(244, 239, 231, .6); font-size: 11.5px; }
+.pg-regen-intent textarea {
+  background: #1e1a14; border: 1px solid #2f2a20; border-radius: 8px;
+  color: #f4efe7; padding: 8px 10px; font-size: 12.5px; resize: vertical; min-height: 52px;
+}
+.pg-regen-intent textarea:focus { border-color: #4ade80; outline: none; }
+.pg-regen-preview { display: grid; gap: 5px; }
+.pg-regen-preview > span { color: rgba(244, 239, 231, .45); font-size: 11px; }
+.pg-regen-preview pre {
+  margin: 0; max-height: 200px; overflow: auto;
+  background: #100e0b; border: 1px solid #2f2a20; border-radius: 8px;
+  padding: 10px 12px; color: rgba(244, 239, 231, .78);
+  font: 11.5px/1.6 "SFMono-Regular", Consolas, "Courier New", monospace;
+  white-space: pre-wrap; word-break: break-word;
+}
+.pg-regen-ops { display: flex; gap: 8px; flex-wrap: wrap; }
+.pg-regen-note { margin: 0; color: rgba(244, 239, 231, .45); font-size: 11px; line-height: 1.6; }
