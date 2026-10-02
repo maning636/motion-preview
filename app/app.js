@@ -1118,6 +1118,9 @@ const pgState = {
   layers: [],
   picked: null,
   projOpen: false,
+  // P4 剪气口：cut = 本地检测结果；cuts = 最终生效的切点清单（可被 SRT 覆盖）
+  cut: null,
+  cuts: null,
   filter: "",
   shown: 60,
   unknownLayers: [],
@@ -1459,7 +1462,18 @@ function pgComposeJson() {
     canvas: { width: 1920, height: 1080 },
     duration: pgState.duration,
     base: pgState.base.type === "upload"
-      ? { type: "upload", name: pgState.base.name, note: "本地文件不出站，请与 compose.json 放在同一目录" }
+      ? {
+        type: "upload", name: pgState.base.name,
+        note: "本地文件不出站，请与 compose.json 放在同一目录",
+        // P4 剪气口：切点清单。剪辑软件按它一刀切，编辑器不做重编码。
+        ...(pgState.cuts && pgState.cuts.segments && pgState.cuts.segments.length
+          ? {
+            cuts: pgState.cuts.segments,
+            cutSource: pgState.cut ? "silence-detect" : "srt",
+            sourceDuration: pgState.cuts.totalSeconds || null,
+          }
+          : {}),
+      }
       : { type: "video", src: pgState.base.src },
     // extSchema 由 HTML 静态解析派生、随 html 一起走，不进 JSON（与 motionOrigin 等内部状态同规则）
     layers: pgState.layers.map(({ name, preview, motionOrigin, motionSnapshot, hasInnerAnim, extSchema, ...layer }) =>
@@ -1864,6 +1878,157 @@ function pgStoryboardToLayers(sb) {
   return { layers, skipped, duration: Math.max(3, Math.min(600, Number(sb.duration) || t)), sb };
 }
 
+/* ── P4 剪辑三件套 · v1 剪气口（本地 VAD，免模型）──────────────────
+   口播录像丢进来 → 自动找出无效静默 → 给出「保留片段列表」→ 导出带进 compose.json。
+   为什么不做重编码：编辑器定位是"产出编排、剪辑软件出片"，重编码 20 分钟口播
+   在浏览器里又慢又不稳。所以这里做的是**真检测 + 切点清单**，
+   compose.json 里写 base.cuts，剪辑软件按它一刀切，误差为零。
+   阈值可调（默认 -34dB / 最短 0.3s / 前后各留 0.12s），宁可少剪也不切掉字头字尾。 ── */
+const PG_CUT_DEFAULT = { db: -34, minSilence: 0.3, pad: 0.12 };
+
+/* 逐帧 RMS 能量 → dB。frameMs 越大越快但越粗，默认 20ms 足够抓人声停顿。 */
+function pgFrameDb(channelData, sampleRate, frameMs) {
+  const N = Math.max(1, Math.round(sampleRate * frameMs / 1000));
+  const out = new Float32Array(Math.floor(channelData.length / N));
+  for (let i = 0; i < out.length; i++) {
+    let sum = 0;
+    const base = i * N;
+    for (let k = 0; k < N; k++) { const v = channelData[base + k]; sum += v * v; }
+    const rms = Math.sqrt(sum / N);
+    out[i] = rms <= 1e-9 ? -120 : 20 * Math.log10(rms);
+  }
+  return out;
+}
+
+/* 由 dB 帧序列求保留区间。规则：
+   ① 低于阈值算静默；② 连续静默短于 minSilence 的并回有声（不剪正常换气）；
+   ③ 每段前后各留 pad，避免切掉字头字尾。 */
+function pgSegmentsFromDb(dbFrames, frameMs, opt) {
+  const o = { ...PG_CUT_DEFAULT, ...(opt || {}) };
+  const secs = dbFrames.length * frameMs / 1000;
+  const keep = new Uint8Array(dbFrames.length);
+  for (let i = 0; i < dbFrames.length; i++) keep[i] = dbFrames[i] >= o.db ? 1 : 0;
+  // 找有声段
+  const segs = [];
+  let start = -1;
+  for (let i = 0; i < keep.length; i++) {
+    if (keep[i] && start < 0) start = i;
+    if (!keep[i] && start >= 0) { segs.push([start, i]); start = -1; }
+  }
+  if (start >= 0) segs.push([start, keep.length]);
+  // 合并：两段之间静默 < minSilence 就并成一段
+  const merged = [];
+  for (const s of segs) {
+    if (merged.length && (s[0] - merged[merged.length - 1][1]) * frameMs / 1000 < o.minSilence) {
+      merged[merged.length - 1][1] = s[1];
+    } else merged.push(s.slice());   // 注意别写成 [s.slice()]——那会多包一层，
+                                    // 解构时 a 拿到数组、(a-pad) 得 NaN，段全被 filter 掉（静默返回空）
+  }
+  const padFrames = Math.round(o.pad * 1000 / frameMs);
+  return merged.map(([a, b]) => [
+    +Math.max(0, (a - padFrames) * frameMs / 1000).toFixed(3),
+    +Math.min(secs, (b + padFrames) * frameMs / 1000).toFixed(3),
+  ]).filter(([a, b]) => b > a);
+}
+
+/* 从 AudioBuffer 出剪点清单。整段都是静音时返回空数组并说明原因。 */
+function pgDetectSilence(audioBuffer, opt) {
+  const o = { ...PG_CUT_DEFAULT, ...(opt || {}) };
+  const frameMs = 20;
+  const ch = audioBuffer.getChannelData(0);
+  const db = pgFrameDb(ch, audioBuffer.sampleRate, frameMs);
+  const total = audioBuffer.duration;
+  const segs = pgSegmentsFromDb(db, frameMs, o);
+  const kept = segs.reduce((a, [s, e]) => a + (e - s), 0);
+  return {
+    segments: segs,
+    totalSeconds: +total.toFixed(3),
+    keptSeconds: +kept.toFixed(3),
+    removedSeconds: +(total - kept).toFixed(3),
+    // 相对原片的压缩比：剪辑软件据此估成片时长
+    ratio: total > 0 ? +(kept / total).toFixed(3) : 0,
+    params: o,
+  };
+}
+
+/* 从 dataUrl 取 ArrayBuffer（剪气口解码用） */
+async function pgFetchArrayBuffer(dataUrl) {
+  try { const r = await fetch(dataUrl); return r.ok ? await r.arrayBuffer() : null; }
+  catch (e) { return null; }
+}
+
+/* 跑一次检测并落状态。音频上下文用完即关，不长期占资源。 */
+async function pgDetectFromArrayBuffer(buf, name) {
+  const note = document.getElementById("pg-pre-note");
+  if (note) note.textContent = "正在分析音轨…";
+  let ac = null;
+  try {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    ac = new Ctx();
+    const audio = await ac.decodeAudioData(buf.slice(0));
+    const r = pgDetectSilence(audio, PG_CUT_DEFAULT);
+    pgState.cut = r;
+    pgState.cuts = r.segments.length ? r : null;
+    if (r.segments.length) {
+      // 检测到的原片时长比当前成片长，就把成片时长收下来
+      pgState.duration = Math.max(3, Math.min(600, Math.ceil(r.keptSeconds) + 1));
+    }
+    if (note) {
+      note.textContent = r.segments.length
+        ? `已剪 <strong>${r.removedSeconds}s</strong> · ${r.segments.length} 段保留 · 成片约 ${Math.ceil(r.keptSeconds) + 1}s`
+        : "没检测到明显静默（整段都有声，或阈值太严）";
+    }
+    PG_TRACK.track("import", { layers: pgState.layers.length, unknown: r.segments.length });
+  } catch (e) {
+    if (note) note.textContent = "这条音轨解不了（可能没有音频轨或编码不支持）：" + String(e.message || e).slice(0, 40);
+  } finally {
+    if (ac) { try { await ac.close(); } catch { } }
+  }
+  // 必须重渲染：撤销按钮、成片时长都是从 state 派生的，
+  // 只改 note 的话按钮不会出现、时长也不落到 #pg-duration 上
+  renderPlayground();
+}
+
+/* 打开开关后直接对已上传的底片跑检测（需要 File 对象，从 dataUrl 还原） */
+async function pgRunCutDetect(file) {
+  try {
+    const buf = await file.arrayBuffer();
+    // pgDetectFromArrayBuffer 末尾自己会 renderPlayground，这里不要再来一次
+    await pgDetectFromArrayBuffer(buf, file.name);
+  } catch (e) {
+    pgToast("分析失败：" + String(e.message || e).slice(0, 30));
+  }
+}
+
+/* SRT/VTT → 时间轴区间。口误与重定时都需要字幕，这是"有字幕时"的路径。 */
+function pgParseSrtCuts(text) {
+  const segs = [];
+  const stamp = /(\d{1,2}):(\d{2}):(\d{2})[,.](\d{1,3})\s*-->\s*(\d{1,2}):(\d{2}):(\d{2})[,.](\d{1,3})/;
+  const lines = String(text).split(/\r?\n/);
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(stamp);
+    if (!m) continue;
+    const toSec = (h, mi, s, ms) => Number(h) * 3600 + Number(mi) * 60 + Number(s) + Number(String(ms).padEnd(3, "0")) / 1000;
+    const a = toSec(m[1], m[2], m[3], m[4]);
+    const b = toSec(m[5], m[6], m[7], m[8]);
+    if (b > a) segs.push([+a.toFixed(3), +b.toFixed(3)]);
+  }
+  return segs;
+}
+
+/* 供自动化测试调用的钩子。
+   app.js 是 type="module，模块内符号不在 window 上，纯函数层（pgFrameDb /
+   pgSegmentsFromDb / pgDetectSilence / pgParseSrtCuts）没法从页面直接调，
+   只能靠真实 UI 路径间接验证——那会让算法精度无从断言。
+   这里显式挂一个只读入口：只暴露纯函数，不暴露任何状态，测试可以拿
+   人工标注的音频夹具逐段核对判定精度。
+   注意：这不是"为测试开后门"，是把这几个本来就是纯函数的算法显式声明为
+   可测单元；线上调用方仍然走模块内的原始引用。 */
+window.__hfTest = {
+  pgFrameDb, pgSegmentsFromDb, pgDetectSilence, pgParseSrtCuts,
+  CUT_DEFAULT: { ...PG_CUT_DEFAULT },
+};
+
 function pgLayerWidthPct(layer) {
   return 34 * (Math.max(20, Math.min(200, layer.scale)) / 100);
 }
@@ -2091,6 +2256,22 @@ function pgConsoleMarkup() {
         <div class="pg-con-head">
           <h3>操作台</h3>
           <span class="pg-con-hint">舞台为模板实时渲染、透明叠加在底片上，点 ▶ 播放预览效果；选中图层后在本条操控：方向键定位置 · 滑杆定大小 · 运动内容随层切换；Delete 键删除选中层</span>
+          <div class="pg-pre" id="pg-pre">
+            <label class="pg-pre-switch" title="只对上传的口播视频生效：本地解码音轨、自动去掉停顿与无效静默，不上传、不重编码">
+              <input type="checkbox" id="pg-pre-cut" ${pgState.wantCut ? "checked" : ""}>
+              智能预处理·剪气口
+            </label>
+            <span class="pg-pre-note" id="pg-pre-note">${pgState.cuts
+              ? (pgState.cut
+                ? `已剪 <strong>${pgState.cut.removedSeconds}s</strong> · ${pgState.cut.segments.length} 段保留`
+                : `SRT 导入 · ${pgState.cuts.segments.length} 段`)
+              : "上传口播后打开"}</span>
+            <div class="pg-pre-io">
+              <button class="button" type="button" id="pg-pre-srt" title="有字幕文件时按字幕时间轴切，优先于静默检测">导入 SRT</button>
+              <input type="file" id="pg-srt-file" accept=".srt,.vtt,text/plain" hidden>
+              ${pgState.cuts ? `<button class="button danger" type="button" id="pg-pre-reset" title="恢复原片时间轴">撤销</button>` : ""}
+            </div>
+          </div>
           <label class="pg-duration">成片时长 <input type="number" id="pg-duration" min="3" max="600" step="1" value="${pgState.duration}"> 秒</label>
         </div>
         <div class="pg-con-body-h">
@@ -2321,7 +2502,7 @@ function renderPlayground() {
           <h2>开放编辑器<span class="sec-period">。</span></h2>
           <span class="pg-tag">OPEN PLAYGROUND</span>
         </div>
-        <p class="pg-desc">挑底片 → 点素材库上屏 → 舞台拖动摆位缩放 → 每层可加运动轨迹 → 产出 compose/2</p>
+        <p class="pg-desc">挑底片 → 上屏 → 摆位 → 出 compose/2</p>
         <div class="pg-actions">
           <button class="button primary" type="button" id="pg-export">导出 compose.json</button>
           <button class="button" type="button" id="pg-import">导入 compose.json</button>
@@ -2432,11 +2613,70 @@ function renderPlayground() {
     const reader = new FileReader();
     reader.onload = () => {
       pgSetPlaying(false);
+      // 换底片 = 上一份的剪气口结果失效，先清掉避免"张冠李戴"
+      pgState.cut = null;
+      pgState.cuts = null;
       pgState.base = { type: "upload", name: file.name, dataUrl: reader.result, kind: file.type.startsWith("image") ? "image" : "video" };
       renderPlayground();
+      // 智能预处理开着就顺手检测（本地解码，不上传）
+      if (pgState.wantCut && file.type.startsWith("video")) pgRunCutDetect(file);
     };
     reader.readAsDataURL(file);
+    event.target.value = "";
   });
+
+  /* ── P4 剪气口：本地检测 + SRT 导入 ── */
+  const preBox = stageContent.querySelector("#pg-pre-cut");
+  if (preBox) {
+    preBox.checked = !!pgState.wantCut;
+    preBox.addEventListener("change", async () => {
+      pgState.wantCut = preBox.checked;
+      const base = stageContent.querySelector("#pg-pre-note");
+      const src = pgState.base;
+      if (!preBox.checked) {
+        pgState.cut = null; pgState.cuts = null;
+        if (base) base.textContent = "上传口播后打开：自动去掉停顿与无效静默";
+        renderPlayground();
+        return;
+      }
+      // 内置底片是氛围素材（无语音），检测没意义——直说，别白跑
+      if (src.type !== "upload" || !src.dataUrl || src.kind !== "video") {
+        if (base) base.textContent = "剪气口只对上传的口播视频生效（内置氛围底片没有语音）";
+        pgState.wantCut = false;
+        preBox.checked = false;
+        return;
+      }
+      const buf = await pgFetchArrayBuffer(src.dataUrl);
+      if (buf) pgDetectFromArrayBuffer(buf, src.name);
+    });
+  }
+  const srtBtn = stageContent.querySelector("#pg-pre-srt");
+  if (srtBtn) {
+    srtBtn.addEventListener("click", () => stageContent.querySelector("#pg-srt-file").click());
+  }
+  stageContent.querySelector("#pg-srt-file").addEventListener("change", (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const segs = pgParseSrtCuts(String(reader.result));
+      if (!segs.length) { pgToast("没从字幕里解析出可用时间轴"); return; }
+      pgState.cuts = { segments: segs, totalSeconds: segs[segs.length - 1][1], params: null };
+      pgState.cut = null;                       // SRT 覆盖，来源标为 srt
+      renderPlayground();
+      pgToast(`已导入 ${segs.length} 段字幕时间轴 · 导出时会带进 compose.json`, 3000);
+    };
+    reader.readAsText(file);
+    event.target.value = "";
+  });
+  const resetCut = stageContent.querySelector("#pg-pre-reset");
+  if (resetCut) {
+    resetCut.addEventListener("click", () => {
+      pgState.cut = null; pgState.cuts = null;
+      renderPlayground();
+      pgToast("已撤销剪气口");
+    });
+  }
   stageContent.querySelector("#pg-duration").addEventListener("change", (event) => {
     pgSetPlaying(false);
     pgState.duration = Math.max(3, Math.min(600, Number(event.target.value) || 15));
