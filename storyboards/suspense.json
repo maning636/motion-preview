@@ -1,0 +1,84 @@
+{
+  "kind": "hyperframes-storyboard",
+  "version": 1,
+  "id": "suspense",
+  "name": "悬念",
+  "tier": "free",
+  "summary": "先抛结果再倒叙 → 逐步加码 → 关键转折 → 揭底 → 反转收尾。适合剧情向、探店、故事类口播。",
+  "tone": "节奏紧、信息延迟、一镜一钩",
+  "duration": 24,
+  "shots": [
+    {
+      "id": "cold-open",
+      "role": "hook",
+      "note": "直接给最反常识的结论，观众不划走",
+      "templateId": "big-type-hero",
+      "duration": 3,
+      "position": "cc",
+      "values": { "headline": "这件事我瞒了三年", "accentWord": "三年", "subheadline": "", "chapter": "" }
+    },
+    {
+      "id": "flashback",
+      "role": "setup",
+      "note": "倒叙起点，给一个时间锚",
+      "templateId": "docu-title-chapter",
+      "duration": 3,
+      "position": "cc",
+      "values": { "chapterNo": "T-3", "chapterTitle": "三年前的今天", "subtitle": "", "accent": "#ffb020" }
+    },
+    {
+      "id": "hint-1",
+      "role": "clue",
+      "note": "第一个线索，只给一半",
+      "templateId": "concept-spotlight",
+      "duration": 3,
+      "position": "cc",
+      "values": { "label": "线索 1/3", "term": "一条被忽略的通知", "definition": "那天晚上 23:47", "note": "" }
+    },
+    {
+      "id": "climb",
+      "role": "escalation",
+      "note": "加码：数字变大，紧张感上来",
+      "templateId": "number-impact",
+      "duration": 3,
+      "position": "cc",
+      "values": { "hero": "", "label": "那天我重试了", "value": 47, "unit": "次" }
+    },
+    {
+      "id": "hint-2",
+      "role": "clue",
+      "note": "第二个线索，指向人",
+      "templateId": "pull-quote-hero",
+      "duration": 3,
+      "position": "cc",
+      "values": { "quote": "你当时也收到了，对吧", "author": "", "role": "", "sourceLabel": "" }
+    },
+    {
+      "id": "turn",
+      "role": "turn",
+      "note": "转折点，1.5 秒砸下去",
+      "templateId": "inversion-flash",
+      "duration": 2,
+      "position": "cc",
+      "values": { "phrase": "但发通知的人是我", "flashAt": 0.3 }
+    },
+    {
+      "id": "reveal",
+      "role": "reveal",
+      "note": "揭底，把话说完整",
+      "templateId": "concept-spotlight",
+      "duration": 4,
+      "position": "cc",
+      "values": { "label": "真相", "term": "我一直在替你兜底", "definition": "直到那天系统撑不住了", "note": "" }
+    },
+    {
+      "id": "cost",
+      "role": "cost",
+      "note": "代价，让故事有重量",
+      "templateId": "metric-pulse",
+      "duration": 3,
+      "position": "cc",
+      "values": { "headline": "那晚我删掉了", "value": 1, "unit": "整年记录", "note": "" }
+    }
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "kind": "hyperframes-storyboard",
+  "version": 1,
+  "id": "launch",
+  "name": "发布会",
+  "tier": "free",
+  "summary": "开场钩子 → 问题放大 → 数据佐证 → 方案揭晓 → 收尾 CTA。适合产品发布、课程上线、活动开场。",
+  "tone": "克制、有分量，不喊口号",
+  "duration": 30,
+  "shots": [
+    {
+      "id": "hook",
+      "role": "hook",
+      "note": "一屏大字把最扎心的那句话砸出来，制造停留",
+      "templateId": "big-type-hero",
+      "duration": 3,
+      "position": "cc",
+      "values": { "headline": "我们做的从来不只是工具", "accentWord": "不只是", "subheadline": "", "chapter": "" }
+    },
+    {
+      "id": "turn",
+      "role": "inversion",
+      "note": "反转卡，1.5 秒，制造认知落差",
+      "templateId": "inversion-flash",
+      "duration": 2,
+      "position": "cc",
+      "values": { "phrase": "但大部分人卡在这一步", "flashAt": 0.4 }
+    },
+    {
+      "id": "problem",
+      "role": "problem",
+      "note": "把痛点说具体，越具体越有共鸣",
+      "templateId": "pull-quote-hero",
+      "duration": 4,
+      "position": "cc",
+      "values": { "quote": "不是不想做，是做一半就放弃了", "author": "", "role": "", "sourceLabel": "" }
+    },
+    {
+      "id": "chapter",
+      "role": "chapter",
+      "note": "章节转场，告诉观众进入正题",
+      "templateId": "docu-title-chapter",
+      "duration": 3,
+      "position": "cc",
+      "values": { "chapterNo": "01", "chapterTitle": "问题到底在哪", "subtitle": "三个被忽略的事实", "accent": "#4ade80" }
+    },
+    {
+      "id": "metric-1",
+      "role": "evidence",
+      "note": "先给一个能立刻理解的核心数字",
+      "templateId": "metric-pulse",
+      "duration": 4,
+      "position": "cc",
+      "values": { "headline": "平均流失发生在这一步", "value": 68, "unit": "%", "note": "超过三分之二的人在首屏后离开" }
+    },
+    {
+      "id": "metric-2",
+      "role": "evidence",
+      "note": "第二个数字做支撑，和上一个形成对照",
+      "templateId": "number-impact",
+      "duration": 3,
+      "position": "cc",
+      "values": { "hero": "", "label": "做完的人平均多花", "value": 12, "unit": "小时" }
+    },
+    {
+      "id": "reveal",
+      "role": "solution",
+      "note": "方案揭晓，一句话讲清",
+      "templateId": "big-type-hero",
+      "duration": 3,
+      "position": "cc",
+      "values": { "headline": "让这 12 小时变成 1 次", "accentWord": "1 次", "subheadline": "", "chapter": "" }
+    },
+    {
+      "id": "how",
+      "role": "mechanism",
+      "note": "三步说清怎么做到",
+      "templateId": "three-step-flow",
+      "duration": 4,
+      "position": "cc",
+      "values": { "title": "怎么做到的", "step1": "挑底片", "desc1": "丢一条 20 分钟口播", "step2": "选骨架", "desc2": "一键铺完整片编排" }
+    },
+    {
+      "id": "cta",
+      "role": "cta",
+      "note": "收尾只留一个动作",
+      "templateId": "follow-cta",
+      "duration": 4,
+      "position": "cc",
+      "values": { "brand": "动效工作站", "cta": "现在就把你的第一条片子做出来", "btnText": "进测试区", "btnDone": "已加入" }
+    }
+  ]
+}

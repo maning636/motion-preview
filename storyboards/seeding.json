@@ -1,0 +1,84 @@
+{
+  "kind": "hyperframes-storyboard",
+  "version": 1,
+  "id": "seeding",
+  "name": "种草",
+  "tier": "free",
+  "summary": "痛点共鸣 → 使用前后对比 → 参数拆解 → 决策辅助 → 收口。适合好物、工具、课程、任何「你值得试试」的内容。",
+  "tone": "真诚、给证据、不喊必买",
+  "duration": 29,
+  "shots": [
+    {
+      "id": "hook",
+      "role": "hook",
+      "note": "从使用者视角切入，不要品牌视角",
+      "templateId": "big-type-hero",
+      "duration": 3,
+      "position": "cc",
+      "values": { "headline": "我踩过的坑，你别再踩", "accentWord": "别再踩", "subheadline": "", "chapter": "" }
+    },
+    {
+      "id": "pain",
+      "role": "problem",
+      "note": "痛点要具体到场景",
+      "templateId": "pull-quote-hero",
+      "duration": 3,
+      "position": "cc",
+      "values": { "quote": "每周花 3 小时剪一条视频", "author": "", "role": "", "sourceLabel": "" }
+    },
+    {
+      "id": "before-after",
+      "role": "comparison",
+      "note": "前后对比是种草的核心说服结构",
+      "templateId": "stat-duel",
+      "duration": 4,
+      "position": "cc",
+      "values": { "leftLabel": "以前", "leftValue": 3, "leftUnit": "小时/条", "rightLabel": "现在", "rightValue": 20, "rightUnit": "分钟" }
+    },
+    {
+      "id": "chapter-how",
+      "role": "chapter",
+      "note": "进入方法论",
+      "templateId": "docu-title-chapter",
+      "duration": 3,
+      "position": "cc",
+      "values": { "chapterNo": "02", "chapterTitle": "它到底快在哪", "subtitle": "三个环节被砍掉了", "accent": "#4ade80" }
+    },
+    {
+      "id": "mechanism-1",
+      "role": "mechanism",
+      "note": "第一步",
+      "templateId": "three-step-flow",
+      "duration": 4,
+      "position": "cc",
+      "values": { "title": "三个环节被砍掉", "step1": "剪气口", "desc1": "自动去掉停顿和口误", "step2": "一键铺层", "desc2": "骨架直接生成整片编排" }
+    },
+    {
+      "id": "evidence",
+      "role": "evidence",
+      "note": "给可验证的数据，不要形容词",
+      "templateId": "bar-chart-grow",
+      "duration": 4,
+      "position": "cc",
+      "values": { "title": "连续 4 周的实际耗时", "subtitle": "单位：分钟/条", "labels": "W1,W2,W3,W4", "values": "95,72,41,20" }
+    },
+    {
+      "id": "who",
+      "role": "audience",
+      "note": "说清楚谁适合、谁不适合——反向筛选反而更可信",
+      "templateId": "swot-grid",
+      "duration": 4,
+      "position": "cc",
+      "values": { "title": "谁适合", "subtitle": "以及谁别买", "strengths": "每周要出片的内容创作者", "weaknesses": "只做一条就完事的，先别买" }
+    },
+    {
+      "id": "cta",
+      "role": "cta",
+      "note": "收口只留一个动作，不做多选",
+      "templateId": "follow-cta",
+      "duration": 4,
+      "position": "cc",
+      "values": { "brand": "动效工作站", "cta": "编辑永远免费，先进去试一条", "btnText": "免费试", "btnDone": "已开始" }
+    }
+  ]
+}

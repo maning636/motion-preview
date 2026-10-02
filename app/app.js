@@ -1012,6 +1012,19 @@ const v = (window.__hyperframes &amp;&amp; window.__hyperframes.getVariables)
       </section>
 
       <section class="std-section">
+        <h3>我们统计什么，不统计什么<span class="sec-period">。</span></h3>
+        <p>我们靠「你实际用了哪类素材」来决定下一批开发什么——这是开源站唯一的选品依据，替代了过去拍脑袋排产。统计是匿名的，而且刻意做得很小：</p>
+        <ul class="std-notes">
+          <li><strong>会统计</strong>：你点了哪一类素材（系列/分类）、有没有粘贴外部 HTML、这个 HTML 有没有声明自描述变量、你在面板上改的是文字/数字还是颜色、导出了几次、你的屏幕宽度档位</li>
+          <li><strong>绝不统计</strong>：你粘贴的 HTML 原文、你在面板里改出来的文案和数字、你上传的底片和它的文件名、你的 IP、你的浏览器指纹、你的任何账号信息</li>
+          <li>统计里有一个会话编号，用来算「今天有多少人来过」——<strong>它每天换一次</strong>，隔天就对不上同一个人，我们也无法把它还原成你</li>
+          <li>不需要账号，不设 Cookie，不做跨站追踪，不接任何第三方统计</li>
+        </ul>
+        <p><strong>不想统计：</strong>测试区工具条右侧有个「统计：开 / 统计：关」开关，点一下即全站停止上报，之后你在这里做的所有操作都不会发出去任何数据。开关状态存在你自己的浏览器里。</p>
+        <p class="std-fineprint">数据落在我们自己的服务器上，只用于决定开发什么，不会用于任何其它用途，也不会提供给别人。</p>
+      </section>
+
+      <section class="std-section">
         <h3>给 AI 的一段话<span class="sec-period">。</span></h3>
         <p>复制下面这段，粘贴给任何大模型（Claude / GPT / 豆包 / DeepSeek……）作为系统提示，再告诉它你的成片需求——它输出的 JSON 直接就能导入测试区：</p>
         <button class="button primary std-copy" type="button" id="std-copy-prompt">复制这段提示词</button>
@@ -1425,6 +1438,11 @@ const PG_ANCHORS = {
 
 function pgLayerDefaults(template) {
   const n = pgState.layers.length;
+  // 选品信号：用户主动从素材库点了哪一类。只发公开目录分类（series/category），
+  // 不发用户内容——见文件头 PG_TRACK 注释的隐私红线。
+  PG_TRACK.track("add_layer", {
+    template: template.id, series: template.series, category: template.category, source: "catalog",
+  });
   return {
     templateId: template.id, name: template.name, preview: template.preview,
     position: "cc", x: ((n % 5) - 2) * 5, y: ((n % 3) - 1) * 5,
@@ -1518,6 +1536,7 @@ function pgLoadCompose(j) {
   }
   pgState.picked = null;
   renderPlayground();
+  PG_TRACK.track("import", { layers: pgState.layers.length, unknown: skipped });
   return { skipped, needBase };
 }
 
@@ -1690,6 +1709,102 @@ ${layer.html || "（见下方素材池模板）"}
 /* ── 用户填的修改意图（必填，会随包一起发给 AI） ── */
 ${(intent || "").trim() || "（空）"}`;
 }
+
+/* ── 埋点选品（解冻线之一）────────────────────────────────────────
+   存在的理由：素材开发已从"按蓝图批量生产"改为"数据驱动条件触发"，
+   用户叠了什么、改了什么，就是我们该开发什么的信号。
+
+   隐私红线（对应服务端 fde_api.py 的同一套白名单，这里是第一道闸）：
+   · 只发**事件类型 + 公开目录分类**，一个字的用户内容都不发
+     ——你粘的 HTML、改的文案、上传的底片文件名，全部留在本地
+   · 匿名会话号**每天轮换**，只能算"当日独立会话数"，不能跨天关联到你
+   · 不想被统计：一个开关关掉即全站不再上报（下面的「不统计」按钮）
+   · 服务端不可达 / 用户拒绝 → 静默失败，绝不影响任何编辑功能
+                                                                    ── */
+const PG_TRACK = {
+  ENDPOINT: "/api/telemetry",
+  LS_OPT_OUT: "pg.track.optout",
+  LS_DAY: "pg.track.day",
+  LS_SID: "pg.track.sid",
+  BATCH: 20,
+  FLUSH_MS: 8000,
+  _buf: [],
+  _timer: null,
+  _day: null,
+  _sid: null,
+
+  optedOut() { try { return localStorage.getItem(this.LS_OPT_OUT) === "1"; } catch (e) { return true; } },
+  setOptOut(on) {
+    try { localStorage.setItem(this.LS_OPT_OUT, on ? "1" : "0"); } catch (e) { }
+    if (on) { this._buf.length = 0; clearInterval(this._timer); this._timer = null; }
+    else this.start();
+    this.paintToggle();
+  },
+
+  /* 每天换一个随机号：同一天内跨标签页算同一会话，隔天必然对不上同一个人 */
+  sessionId() {
+    const today = new Date().toISOString().slice(0, 10);
+    try {
+      if (localStorage.getItem(this.LS_DAY) !== today) {
+        localStorage.setItem(this.LS_DAY, today);
+        localStorage.setItem(this.LS_SID, "d" + Math.random().toString(36).slice(2, 10));
+      }
+      return localStorage.getItem(this.LS_SID) || "anon";
+    } catch (e) { return "anon"; }
+  },
+
+  track(type, fields) {
+    if (this.optedOut()) return;
+    if (!type || typeof type !== "string") return;
+    const ev = { type };
+    if (fields && typeof fields === "object") {
+      for (const k of Object.keys(fields)) {
+        const v = fields[k];
+        if (v == null) continue;
+        // 布尔必须原样保留成布尔：服务端 fde_api.sanitize_event 有专门的 bool 分支，
+        // 客户端一旦转成字符串 "true"，那条分支就永远走不到
+        if (typeof v === "boolean") ev[k] = v;
+        else if (typeof v === "number") ev[k] = Math.round(v * 100) / 100;
+        else ev[k] = String(v).slice(0, 60);
+      }
+    }
+    this._buf.push(ev);
+    if (this._buf.length >= this.BATCH) this.flush();
+  },
+
+  flush() {
+    if (this.optedOut() || !this._buf.length) return;
+    const events = this._buf.splice(0, this.BATCH);
+    const payload = JSON.stringify({ sid: this.sessionId(), events });
+    try {
+      if (navigator.sendBeacon) {
+        // sendBeacon 在页面关闭时也能送达，且不阻塞导航
+        navigator.sendBeacon(this.ENDPOINT, new Blob([payload], { type: "application/json" }));
+        return;
+      }
+    } catch (e) { }
+    fetch(this.ENDPOINT, { method: "POST", body: payload, headers: { "Content-Type": "application/json" }, keepalive: true })
+      .catch(() => { /* 收不到就算了，绝不影响编辑 */ });
+  },
+
+  start() {
+    if (this._timer || this.optedOut()) return;
+    this._timer = setInterval(() => this.flush(), this.FLUSH_MS);
+    window.addEventListener("pagehide", () => this.flush());
+    document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") this.flush(); });
+  },
+
+  paintToggle() {
+    const btn = document.getElementById("pg-track-toggle");
+    if (!btn) return;
+    const off = this.optedOut();
+    btn.textContent = off ? "统计：关" : "统计：开";
+    btn.title = off
+      ? "当前不向服务器发送任何使用统计。点一下开启——只统计你用了哪类素材，不收集任何内容。"
+      : "当前会匿名统计你用了哪类素材（不收集任何内容）。点一下彻底关闭。";
+    btn.setAttribute("aria-pressed", off ? "false" : "true");
+  },
+};
 
 function pgLayerWidthPct(layer) {
   return 34 * (Math.max(20, Math.min(200, layer.scale)) / 100);
@@ -2037,6 +2152,8 @@ function pgWireConsole() {
       const decl = pgLayerSchema(layer).find((s) => s.id === key);
       layer.values[key] = decl && decl.type === "number" ? Number(input.value) : input.value;
       pgScheduleLayer(Number(index), false);
+      // 只发"这个字段是什么类型"，不发用户改出来的值（值可能就是他公司的机密文案）
+      PG_TRACK.track("change_var", { var_type: decl ? decl.type : "string", field_type: layer.type });
     };
     input.addEventListener("input", commit);
     // color / select 的 input 事件在部分浏览器不连续触发，补一个 change 兜底
@@ -2159,6 +2276,8 @@ function renderPlayground() {
             <button class="button" type="button" id="pg-proj-toggle" aria-expanded="false">工程</button>
             <div class="pg-proj-panel" id="pg-proj-panel" hidden></div>
           </div>
+          <button class="button pg-track-btn" type="button" id="pg-track-toggle" aria-pressed="true"
+            title="匿名统计你用了哪类素材，用来决定我们开发什么。不收集任何内容。">统计：开</button>
         </div>
       </header>
       <div class="pg-regen-host" id="pg-regen-host" hidden></div>
@@ -2361,6 +2480,7 @@ function renderPlayground() {
   });
 
   stageContent.querySelector("#pg-export").addEventListener("click", () => {
+    PG_TRACK.track("export", { format: "compose/2" });
     const blob = new Blob([JSON.stringify(pgComposeJson(), null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -2485,6 +2605,7 @@ function renderPlayground() {
     if (act === "close") { closeRegen(); return; }
     if (!layer) return;
     if (act === "copy") {
+      PG_TRACK.track("regen", { action: "copy", layer_type: layer.type });
       navigator.clipboard.writeText(regenState.pack)
         .then(() => pgToast("提示词包已复制 ✓ 喂给你自己的 AI"))
         .catch(() => pgToast("复制失败，用「导出 .regen」"));
@@ -2498,6 +2619,7 @@ function renderPlayground() {
       URL.revokeObjectURL(url);
       pgToast("已导出 ✓");
     } else if (act === "wechat") {
+      PG_TRACK.track("regen", { action: "wechat", layer_type: layer.type });
       const intent = (stageContent.querySelector("#pg-regen-intent") || {}).value || "";
       const brief = `【单层重生成需求】\n图层：${layer.name}\n我想改成：${intent || "（待补充）"}\n`;
       navigator.clipboard.writeText(brief)
@@ -2510,6 +2632,17 @@ function renderPlayground() {
   });
 
   /* ── P3 工程面板 ── */
+  const trackBtn = stageContent.querySelector("#pg-track-toggle");
+  if (trackBtn) {
+    trackBtn.addEventListener("click", () => {
+      const willOptOut = !PG_TRACK.optedOut();
+      PG_TRACK.setOptOut(willOptOut);
+      pgToast(willOptOut
+        ? "已关闭统计 · 之后不再上报任何数据"
+        : "已开启统计 · 只记录用了哪类素材，不含任何内容", 2600);
+    });
+    PG_TRACK.paintToggle();
+  }
   const projPanel = stageContent.querySelector("#pg-proj-panel");
   const projToggle = stageContent.querySelector("#pg-proj-toggle");
   const closeProj = () => { projPanel.hidden = true; pgState.projOpen = false; projToggle.setAttribute("aria-expanded", "false"); };
@@ -2574,6 +2707,7 @@ function renderPlayground() {
       const name = stageContent.querySelector("#pg-proj-name").value;
       const r = pgStore.save(name, pgComposeJson());
       if (!r.ok) { alert(r.error); return; }
+      PG_TRACK.track("save_project", { layers: pgComposeJson().layers.length });
       drawProjPanel();
       projToggle.textContent = `工程 ✓`;
       setTimeout(() => { projToggle.textContent = "工程"; }, 1500);
@@ -2582,6 +2716,7 @@ function renderPlayground() {
       if (!compose) { alert("这个工程读不出来了，可能被浏览器清理了"); return; }
       const r = pgLoadCompose(compose);
       closeProj();
+      PG_TRACK.track("open_project", { layers: compose.layers.length });
       if (r.needBase) pgToast("工程已打开 · 原底片是上传的视频，需重新选一次");
       else pgToast("工程已打开 ✓");
     } else if (act === "rename" && id) {
@@ -2634,6 +2769,10 @@ function renderPlayground() {
     if (!html) { htmlInput.placeholder = "先粘贴 HTML 再添加"; htmlInput.focus(); return; }
     const n = pgState.layers.length;
     const extSchema = pgParseExtSchema(html);
+    // 只发体积、是否声明了自描述、声明了几个字段——**不发 HTML 本身**
+    PG_TRACK.track("paste_external", {
+      bytes: html.length, self_describe: extSchema.length > 0, schema_fields: extSchema.length,
+    });
     pgState.layers.push({
       type: "external",
       name: (nameInput.value.trim() || "外部图层").slice(0, 40),
@@ -2712,6 +2851,7 @@ function syncHash(hash) {
 
 function routeHash() {
   const h = location.hash;
+  PG_TRACK.track("view", { view: (h || "#home").replace("#", "") || "home" });
   if (h === "#library") renderGallery();
   else if (h === "#modes") renderModes();
   else if (h === "#playground") renderPlayground();
@@ -2735,6 +2875,22 @@ document.querySelector("#template-count").textContent = state.catalog.templates.
     pgToast(`已恢复上次编辑 · ${s.compose.layers.length} 层 · ${p(when.getHours())}:${p(when.getMinutes())}${r.needBase ? " · 底片需重选" : ""}`, 3200);
   } catch (e) { /* 草稿坏了就当没有，不挡启动 */ }
 })();
+
+/* ── 埋点选品：启动 ──
+   ① 视图维度 ② 窄屏档位 ③ 首次访问的一次性告知（fixed 浮层，零布局成本）
+   告知放在开放标准页有完整章节，这里只在首次访问时提醒一次。 */
+PG_TRACK.start();
+PG_TRACK.track("narrow", {
+  width_bucket: innerWidth <= 900 ? "phone" : innerWidth <= 1180 ? "narrow" : innerWidth >= 1920 ? "wide" : "desktop",
+});
+if (!PG_TRACK.optedOut()) {
+  try {
+    if (!localStorage.getItem("pg.track.notified")) {
+      localStorage.setItem("pg.track.notified", "1");
+      setTimeout(() => pgToast("我们会匿名统计你用了哪类素材（不含任何内容）· 不想统计点工具条右侧开关", 5200), 1600);
+    }
+  } catch (e) { }
+}
 
 routeHash();
 

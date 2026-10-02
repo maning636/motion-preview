@@ -1204,4 +1204,12 @@ body.modes-full-page { height: auto; overflow: auto; }
   white-space: pre-wrap; word-break: break-word;
 }
 .pg-regen-ops { display: flex; gap: 8px; flex-wrap: wrap; }
+/* ── 埋点开关（工具条内，与其它按钮同级，不额外占行） ── */
+.pg-track-btn { font-size: 11.5px; opacity: .75; }
+.pg-track-btn[aria-pressed="false"] { color: rgba(244, 239, 231, .5); border-style: dashed; }
+.pg-track-btn:hover { opacity: 1; }
+
+/* 开放标准页 · 统计说明的细则行 */
+.std-fineprint { font-size: 12.5px; color: rgba(244, 239, 231, .42) !important; margin-top: 10px !important; }
+
 .pg-regen-note { margin: 0; color: rgba(244, 239, 231, .45); font-size: 11px; line-height: 1.6; }
