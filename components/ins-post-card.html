@@ -560,6 +560,11 @@
 
           // 主循环
           const tl = gsap.timeline({ repeat: -1, delay: 0.25 });
+          // 注册到 window.__timelines：云渲染的 settle/逐帧定位靠它驱动时间轴。
+          // 组件此前全部没注册，导致渲染停在第 0 帧（主体初始 opacity:0 → 整层空）。
+          // gsap 时间轴就地 mutate，先存引用即可，后续 tl.to() 作用在同一对象上。
+          window.__timelines = window.__timelines || {};
+          window.__timelines.main = tl;
           tl.duration(totalDur);
 
           // 入场：玻璃卡从右侧滑入带 back.out

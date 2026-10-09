@@ -21,10 +21,10 @@
       "id": "flashback",
       "role": "setup",
       "note": "倒叙起点，给一个时间锚",
-      "templateId": "docu-title-chapter",
+      "templateId": "chapter-marker",
       "duration": 3,
       "position": "cc",
-      "values": { "chapterNo": "T-3", "chapterTitle": "三年前的今天", "subtitle": "", "accent": "#ffb020" }
+      "values": { "chapterNumber": "T-3", "chapterTitle": "三年前的今天", "accent": "#ffb020" }
     },
     {
       "id": "hint-1",

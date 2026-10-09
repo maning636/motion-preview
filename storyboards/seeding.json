@@ -39,10 +39,10 @@
       "id": "chapter-how",
       "role": "chapter",
       "note": "进入方法论",
-      "templateId": "docu-title-chapter",
+      "templateId": "chapter-marker",
       "duration": 3,
       "position": "cc",
-      "values": { "chapterNo": "02", "chapterTitle": "它到底快在哪", "subtitle": "三个环节被砍掉了", "accent": "#4ade80" }
+      "values": { "chapterNumber": "02", "chapterTitle": "它到底快在哪", "accent": "#4ade80" }
     },
     {
       "id": "mechanism-1",

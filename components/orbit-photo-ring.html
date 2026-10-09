@@ -390,6 +390,11 @@
       const phi = Math.PI * (1 - N / 2);             // 相位对齐：每张照片过正面时减速
       const orbit = { p: 0 };
       const master = gsap.timeline({ repeat: -1, delay: 0.1 });
+          // 注册到 window.__timelines：云渲染的 settle/逐帧定位靠它驱动时间轴。
+          // 组件此前全部没注册，导致渲染停在第 0 帧（主体初始 opacity:0 → 整层空）。
+          // gsap 时间轴就地 mutate，先存引用即可，后续 tl.to() 作用在同一对象上。
+          window.__timelines = window.__timelines || {};
+          window.__timelines.main = master;
 
       function updateCards() {
         const t = orbit.p;

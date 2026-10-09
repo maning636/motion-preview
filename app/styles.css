@@ -11,6 +11,10 @@
   --amber: #b45309;
   --line: #e9dcc3;
   --warm-shadow: 0 14px 34px rgba(120,90,40,.14);
+  /* 素材池整体放大倍数。**它只管卡片内部的排版，卡片本身多大由列数决定**——
+     这两件事经常被混为一谈，结果就是「以为改了变量卡片就会变大」。
+     1.12 而非 1.25：4 列下卡片约 374px（1584 视口），21px 的标题会挤到换行。 */
+  --gallery-scale: 1.12;
 }
 * { box-sizing: border-box; }
 body { margin: 0; height: 100vh; overflow: hidden; display: flex; flex-direction: column; background: var(--bg); color: var(--fg); font-family: "MiSans SemiBold", "PingFang SC", "Microsoft YaHei", sans-serif; }
@@ -42,6 +46,7 @@ h1 { margin: 0; font-size: 21px; letter-spacing: -.02em; }
 .tab.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 800; }
 .tab-count { font-size: 11px; opacity: .7; }
 .tab-result { margin-left: auto; flex: 0 0 auto; color: var(--muted); font-size: 12px; }
+.tab-scope { margin-left: auto; flex: 0 0 auto; color: var(--muted); font-size: 11.5px; white-space: nowrap; }
 
 /* ── 系列大类切换（视觉动效 / 标准版 / 奶油贴纸版） ── */
 .series-nav { display: grid; grid-template-columns: repeat(var(--series-count, 4), minmax(0, 1fr)) auto; gap: 12px; padding: 22px 28px 4px; }
@@ -50,12 +55,23 @@ h1 { margin: 0; font-size: 21px; letter-spacing: -.02em; }
 .series-pill:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: var(--warm-shadow); }
 .series-pill.active { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
 .series-pill .sp-title { font-size: 16px; font-weight: 800; letter-spacing: -.01em; }
-.series-pill .sp-sub { font-size: 11.5px; color: var(--muted); }
+/* 单行 + 省略号：这一行是「挡一下未来」的。
+   描述已经砍到 10 字以内，但这是布局里唯一一处**宽度会随文案变**的文字，
+   哪天有人把 subtitle 写长一点，整排卡片的高度就会跟着长——
+   「太长」这个毛病就是这么回来的。 */
+.series-pill .sp-sub { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .series-pill .sp-count { font-size: 11px; color: var(--accent); font-weight: 700; }
-.sp-vip { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 6px; background: #FFB020; color: #2C2417; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; vertical-align: 2px; }
-h2 .sp-vip { font-size: 11px; vertical-align: 3px; }
-.sp-free { display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 6px; background: #2E7CF6; color: #fff; font-size: 10.5px; font-weight: 800; letter-spacing: .05em; vertical-align: 2px; }
-h2 .sp-free { font-size: 11px; vertical-align: 3px; }
+/* 归档 324 条的小链接：它是一个开关，不是一个分类，所以不占卡片位。
+   单独占满一行、字号小、颜色淡——主排的 7 个用途档才是等权的那一排。 */
+.archive-link { grid-column: 1 / -1; justify-self: start; margin-top: -2px;
+  padding: 5px 0; border: 0; background: none; cursor: pointer;
+  color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+.archive-link b { color: var(--fg); font-weight: 800; }
+.archive-link:hover { color: var(--accent); }
+.archive-link.active { color: var(--accent); }
+.archive-link:hover b { color: var(--accent); }
+/* .sp-vip / .sp-free 已删：分类卡片和分节头都不再挂「会员 / 免费」角标。
+   素材本身没有收费免费之分，导航上就不该出现这两种标签。 */
 
 /* ── 主舞台 ── */
 #stage { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
@@ -67,28 +83,70 @@ h2 .sp-free { font-size: 11px; vertical-align: 3px; }
 .empty-state { padding: 90px 20px; text-align: center; color: var(--muted); }
 
 /* ── 模板画廊 ── */
-.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 18px; padding: 24px 28px 60px; }
-.template-card { padding: 0; overflow: hidden; display: flex; flex-direction: column; text-align: left; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 16px; cursor: pointer; transition: 180ms ease; }
+/* 列数：**固定 4 列**。
+   为什么不是 auto-fill：auto-fill 在宽屏上会自己涨到 5~6 列
+   （实测 1920 视口 5 列、2560 视口 6 列），那就不是「每行 4 个」了。
+   为什么不是 3 列：4 列 × 125%（460px）根本放不进 1584 视口——
+   「一行 4 个」和「放大 125%」在几何上**互斥**，这里按「一行 4 个」。
+   代价是把 gap 和 padding 一并收紧（18→16 / 28→20），
+   省下的宽度全给卡片本身，实测比原来��� 4 列**还大 1%**：
+       1366 视口 314.0 → 319.5
+       1584 视口 368.5 → 374.0
+       1920 视口 452.5 → 458.0
+   屏幕越宽卡片自然越大（2560 视口 618px），不需要额外规则。
+   --gallery-scale 同时降到 1.12：374px 的卡片里塞 21px 标题会挤到换行，
+   1.12 让字号仍比原来大一圈，但不至于把两行摘要压成一截。 */
+.gallery-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: calc(16px * var(--gallery-scale)); padding: calc(20px * var(--gallery-scale)) calc(20px * var(--gallery-scale)) calc(48px * var(--gallery-scale)); }
+/* 窄屏逐级降列，别让卡片被压到看不清 */
+@media (max-width: 1280px) { .gallery-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 1000px) { .gallery-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.template-card { padding: 0; overflow: hidden; display: flex; flex-direction: column; text-align: left; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: calc(16px * var(--gallery-scale)); cursor: pointer; transition: 180ms ease; }
 .template-card:hover { background: var(--panel-strong); border-color: var(--accent); transform: translateY(-3px); box-shadow: var(--warm-shadow), 0 0 22px rgba(15,157,63,.12); }
-.card-media { position: relative; display: block; aspect-ratio: 16/9; background: #14110d; }
+/* 卡片画面底。
+   为什么不是纯黑：这个库里的东西有三类——满屏深色模板（cream 是浅底）、
+   **可叠加的透明组件**、白底排版卡。全用深底预览的话，
+   透明组件（本身就没什么可看的像素）和白底卡片会糊成一片黑，
+   看不出是"内容少"还是"预览坏了"。
+   所以改成浅灰底 + 极淡棋盘格：深色模板照样有对比，透明/白底的东西也看得见。 */
+.card-media { position: relative; display: block; aspect-ratio: 16/9; background:
+    linear-gradient(45deg, #EDEBE6 25%, transparent 25%, transparent 75%, #EDEBE6 75%),
+    linear-gradient(45deg, #EDEBE6 25%, #F6F4F0 25%, #F6F4F0 75%, #EDEBE6 75%);
+  background-size: calc(20px * var(--gallery-scale)) calc(20px * var(--gallery-scale));
+  background-position: 0 0, calc(10px * var(--gallery-scale)) calc(10px * var(--gallery-scale)); }
 .card-media video { display: block; width: 100%; height: 100%; object-fit: contain; }
-.card-badge { position: absolute; padding: 6px 8px; border-radius: 8px; background: rgba(20,17,13,.72); backdrop-filter: blur(6px); font-size: 11px; line-height: 1; color: #f4efe7; }
-.card-duration { right: 10px; bottom: 10px; }
-.card-no { left: 10px; top: 10px; color: #4ade80; font-weight: 700; }
-.card-vip { right: 10px; top: 10px; color: #ffd166; border: 1px solid rgba(255,209,102,.45); }
-.card-free { right: 10px; top: 10px; color: #8ab8ff; border: 1px solid rgba(138,184,255,.5); }
-.card-fresh { right: 10px; top: 10px; color: #4ade80; border: 1px solid rgba(74,222,128,.55); font-weight: 800; }
-.card-fresh ~ .card-free { right: 10px; top: 42px; }
-.sp-new { display: inline-block; margin-left: 8px; padding: 3px 8px; border-radius: 999px; background: rgba(74,222,128,.14); color: #4ade80; font-size: 11px; font-weight: 800; letter-spacing: .08em; vertical-align: 2px; }
-.card-body { display: grid; gap: 6px; padding: 14px 16px 16px; }
-.template-name { font-size: 17px; }
-.template-description { color: var(--muted); font-size: 12.5px; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.template-meta { color: var(--muted); font-size: 11px; letter-spacing: .08em; }
-.card-footer { margin-top: auto; padding: 12px 16px 14px; }
-.copy-prompt { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: transparent; color: var(--accent); font-size: 12.5px; font-weight: 600; letter-spacing: .04em; cursor: pointer; transition: 160ms ease; }
-.copy-prompt:hover { border-color: var(--accent); background: var(--accent-soft); }
-.copy-prompt.copied { background: var(--accent); border-color: var(--accent); color: #fff; }
-.copy-prompt:disabled { cursor: default; }
+/* 组件与浅色系单独换底：组件本来就是透明件，深色格子会让人误以为画面没渲染出来。
+   但也不能用纯白——绝大多数组件的字色是浅米白 #F4F1EA，压在白底上等于看不见
+   （#794/#799/#853~#856 全是这样）。所以组件用**中性灰**棋盘格：
+   浅字深字都读得出，同时棋盘纹路仍然在提示「这是透明件」。 */
+.card-media.on-light { background:
+    linear-gradient(45deg, #FFFFFF 25%, transparent 25%, transparent 75%, #FFFFFF 75%),
+    linear-gradient(45deg, #FFFFFF 25%, #FBFAF7 25%, #FBFAF7 75%, #FFFFFF 75%);
+  background-size: calc(20px * var(--gallery-scale)) calc(20px * var(--gallery-scale));
+  background-position: 0 0, calc(10px * var(--gallery-scale)) calc(10px * var(--gallery-scale)); }
+.card-media.on-check { background:
+    linear-gradient(45deg, #8A8A93 25%, transparent 25%, transparent 75%, #8A8A93 75%),
+    linear-gradient(45deg, #8A8A93 25%, #9E9EA7 25%, #9E9EA7 75%, #8A8A93 75%);
+  background-size: calc(20px * var(--gallery-scale)) calc(20px * var(--gallery-scale));
+  background-position: 0 0, calc(10px * var(--gallery-scale)) calc(10px * var(--gallery-scale)); }
+.card-badge { position: absolute; padding: calc(6px * var(--gallery-scale)) calc(8px * var(--gallery-scale)); border-radius: calc(8px * var(--gallery-scale)); background: rgba(20,17,13,.72); backdrop-filter: blur(6px); font-size: calc(11px * var(--gallery-scale)); line-height: 1; color: #f4efe7; }
+.card-duration { right: calc(10px * var(--gallery-scale)); bottom: calc(10px * var(--gallery-scale)); }
+.card-no { left: calc(10px * var(--gallery-scale)); top: calc(10px * var(--gallery-scale)); color: #4ade80; font-weight: 700; }
+.card-fresh { right: calc(10px * var(--gallery-scale)); top: calc(10px * var(--gallery-scale)); color: #4ade80; border: 1px solid rgba(74,222,128,.55); font-weight: 800; }
+/* .card-vip / .card-free / .sp-vip / .sp-free / .sp-new / .sp-off 已删。
+   2026-10-07 马哥拍板：这个站没有收费免费之分。
+   这些角标不只是「多余的标签」——每张卡片右上角原本都挂着一枚
+   （要么「免费」要么「会员预览」），整屏看下去像一份报价单。
+   连 .card-fresh ~ .card-free 那条避让规则一起删：free 不存在了，
+   让位给谁去。 */
+.card-body { display: grid; gap: calc(6px * var(--gallery-scale)); padding: calc(14px * var(--gallery-scale)) calc(16px * var(--gallery-scale)) calc(16px * var(--gallery-scale)); }
+.template-name { font-size: calc(17px * var(--gallery-scale)); }
+.template-description { color: var(--muted); font-size: calc(12.5px * var(--gallery-scale)); line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.template-meta { color: var(--muted); font-size: calc(11px * var(--gallery-scale)); letter-spacing: .08em; }
+.card-footer { margin-top: auto; display: flex; gap: calc(8px * var(--gallery-scale)); padding: calc(12px * var(--gallery-scale)) calc(16px * var(--gallery-scale)) calc(14px * var(--gallery-scale)); }
+.copy-prompt, .copy-json { flex: 1; padding: calc(10px * var(--gallery-scale)) calc(12px * var(--gallery-scale)); border: 1px solid var(--line); border-radius: calc(10px * var(--gallery-scale)); background: transparent; color: var(--accent); font-size: calc(12.5px * var(--gallery-scale)); font-weight: 600; letter-spacing: .04em; cursor: pointer; transition: 160ms ease; }
+.copy-prompt:hover, .copy-json:hover { border-color: var(--accent); background: var(--accent-soft); }
+.copy-prompt.copied, .copy-json.copied { background: var(--accent); border-color: var(--accent); color: #fff; }
+.copy-prompt:disabled, .copy-json:disabled { cursor: default; }
 
 /* ── 表单控件 ── */
 input, select { width: 100%; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--fg); padding: 12px 14px; outline: none; }
@@ -138,6 +196,7 @@ input:focus, select:focus { border-color: var(--accent); }
 .guide-card { padding: 24px; border: 1px solid var(--line); border-radius: 20px; background: var(--panel); }
 .guide-card strong { display: block; margin-bottom: 10px; color: var(--accent); font: 800 13px/1 "MiSans SemiBold", "PingFang SC", "Microsoft YaHei", sans-serif; letter-spacing: .12em; }
 .guide-card h3 { margin: 0 0 12px; font-size: 26px; letter-spacing: -.04em; }
+.follow-lede { margin: -4px 0 12px; color: var(--accent); font-size: 15px; font-weight: 700; letter-spacing: .02em; }
 .guide-card p, .guide-card li { color: var(--muted); line-height: 1.7; }
 .guide-card ul, .guide-card ol { margin: 10px 0 0; padding-left: 20px; }
 .follow-points { display: grid; gap: 8px; }
@@ -236,7 +295,9 @@ input:focus, select:focus { border-color: var(--accent); }
   .search-wrap { order: 3; flex-basis: 100%; max-width: none; }
   .topbar-right { margin-left: 0; }
   #stage { overflow: visible; }
-  .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); padding: 18px; }
+  /* 移动端同样按 --gallery-scale 放大：下限 230 → 287.5，
+     于是 900px 宽下从 3 列变 2 列，卡片看得更清而不是塞满屏。 */
+  .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(calc(230px * var(--gallery-scale)), 1fr)); padding: calc(18px * var(--gallery-scale)); }
   .workspace-grid { grid-template-columns: 1fr; }
   .preview-panel { position: static; }
   .guide-grid { grid-template-columns: 1fr; }

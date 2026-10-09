@@ -39,10 +39,10 @@
       "id": "chapter",
       "role": "chapter",
       "note": "章节转场，告诉观众进入正题",
-      "templateId": "docu-title-chapter",
+      "templateId": "chapter-marker",
       "duration": 3,
       "position": "cc",
-      "values": { "chapterNo": "01", "chapterTitle": "问题到底在哪", "subtitle": "三个被忽略的事实", "accent": "#4ade80" }
+      "values": { "chapterNumber": "01", "chapterTitle": "问题到底在哪", "accent": "#4ade80" }
     },
     {
       "id": "metric-1",

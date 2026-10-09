@@ -1,6 +1,6 @@
 import { MODES } from "./modes-data.js?v=20260825-pace2";
 
-const state = { catalog: null, selected: null, values: {}, output: null, view: "home", category: "全部", series: "standard", staticDemo: false, playing: null };
+const state = { catalog: null, selected: null, values: {}, output: null, view: "home", category: "全部", series: "component", staticDemo: false, playing: null };
 const stage = document.querySelector("#stage");
 const stageContent = document.querySelector("#stage-content");
 const tabbar = document.querySelector("#tabbar");
@@ -21,7 +21,10 @@ const showLibrary = document.querySelector("#show-library");
 const showModes = document.querySelector("#show-modes");
 const showPlayground = document.querySelector("#show-playground");
 const showStandard = document.querySelector("#show-standard");
-const STATIC_CATALOG_VERSION = "20260923-free-379";
+// 2026-10-07：pop 族 64 条原子动效组件入库（手绘弹跳风，从一支 30s 短视频逐帧拆出）。
+// 这个值是 catalog.static.json 的缓存键——不 bump，浏览器继续拿 940 条的旧目录，
+// 新组件在素材池里根本不出现（服务器是新文件，前台却没变）。
+const STATIC_CATALOG_VERSION = "20261007-pop-1004";
 const ALL_CATEGORY = "全部";
 
 async function api(url, options) {
@@ -87,6 +90,15 @@ function previewDownloadMarkup(template) {
 
 function defaults(template) {
   return Object.fromEntries(template.schema.map((item) => [item.id, item.default]));
+}
+
+/* 全站「在架资产数」的唯一口径：status === "ready"
+   （archive = 已下线折起、draft = 未完工，都不算在架）。
+   顶栏、首页页脚、开放标准页全从这里取数；station 外壳面包屑
+   再从同源 iframe 的 #template-count 读，不再各自写死。
+   素材池过滤器那排小数字是「当前分类条数」，口径不同，页面上已注明。 */
+function liveAssetCount() {
+  return state.catalog.templates.filter((template) => template.status === "ready").length;
 }
 
 /* ── P1 外部 HTML 变量自描述约定 ──────────────────────────────────
@@ -169,58 +181,69 @@ function escapeHtml(value) {
 
 /* ── 系列大类 ── */
 
-const SERIES_SECTIONS = [
-  { key: "standard", title: "标准版 · 暗色科技", subtitle: "深色底 + 荧光绿强调，适合科技感、教程、录屏叠加（免费开源）", match: (t) => !t.id.startsWith("shot-") && !t.id.startsWith("sc2-") && !["shot", "sc2", "cream", "member-area", "form", "board", "file", "glass", "hero3d", "fx", "teach", "page"].includes(t.series) },
-  { key: "cream", title: "奶油贴纸版", subtitle: "奶油纸面 + 贴纸硬投影，适合知识讲解、口播配图（免费开源）", match: (t) => t.series === "cream" },
-  { key: "families", title: "新风格族", member: true, subtitle: "公文表单、白板黄卡、档案拼贴、玻璃拟态、3D Hero、模式特效、教学外壳、书页系——2026-08 新增八组", match: (t) => ["form", "board", "file", "glass", "hero3d", "fx", "teach", "page"].includes(t.series) },
-  { key: "shot", title: "视觉动效", member: false, subtitle: "近期上新：镜头语言级动效、口播荧光绿包装、拼贴纪实、SC2 差异化复刻——描线实体化、乱码解码、关键词接力、波形语音等", match: (t) => t.id.startsWith("shot-") || t.id.startsWith("sc2-") || t.series === "shot" || t.series === "sc2" },
+/* ── 一级：用途 ──────────────────────────────────────────────────────
+   一度是按「视觉风格」分档（标准版 / 奶油贴纸 / 新风格族 / 视觉动效），
+   量出来的问题：314 条 series 为空全挤进「标准版·暗色科技」；8 个风格族参差
+   2~14 条，hero3d 只有 2 条撑不起一个档；category 碎成 27 个、其中 21 个 ≤6 条。
+
+   关键错位：用户是按「我要一个字幕条 / 一张数据卡」来找素材的，
+   不是按「我要奶油风」。所以一级改成用途，风格降为二级筛选——
+   这样「奶油风的数据卡」能被找到，而只有 2 条的风格族也不再需要独立成档。
+
+   顺序即推荐度：先给可叠加在自己实拍上的件，再给最常用的几类。
+
+   2026-10-07 马哥指出「太长 + 分配不均」，改了两处：
+   · **7 档并成 6 档**：字幕与标题(54) + 收尾与品牌(30) → 文字与收尾(84)。
+     量级从 4.7 倍（142 vs 30）压到 1.69 倍（142 vs 84）。
+     没选「拆胖档」：按 name 的语义分，真正的段落转场只有约 35 条，
+     拆出来是 35/107，比原来差得更远。
+   · **subtitle 全部砍到一行**。原来每档 3~4 行描述，把这一排撑到近 200px 高，
+     十张卡片的文字长度还不一样，越看越乱。                            */
+
+const USAGE_SECTIONS = [
+  { key: "component", title: "叠加组件", subtitle: "盖在你自己实拍上的挂件", match: (t) => t.component === true },
+  { key: "镜头与转场", title: "镜头与转场", subtitle: "段落之间怎么接", match: (t) => t.category === "镜头与转场" },
+  { key: "封面与卡片", title: "封面与卡片", subtitle: "整屏底板与信息卡", match: (t) => t.category === "封面与卡片" },
+  { key: "图解与流程", title: "图解与流程", subtitle: "把一件事讲清楚", match: (t) => t.category === "图解与流程" },
+  { key: "数据与图表", title: "数据与图表", subtitle: "数字怎么动", match: (t) => t.category === "数据与图表" },
+  { key: "文字与收尾", title: "文字与收尾", subtitle: "字幕、大字、尾卡、署名", match: (t) => t.category === "文字与收尾" },
+  // 下线档放最后：条目一条没删，只是不进默认列表。必须留入口，否则就是静默删除。
+  { key: "archive", title: "重复条目 · 已下线", subtitle: "同一套版式复制出来的变体，需要哪套随时可恢复", match: (t) => t.status === "archive" },
 ];
+
+/* 主排只放 6 个用途档 + 全部资产。
+   原来这里还并排放着「免费新增」和「重复条目」两张卡片——但它们根本不是用途分类：
+   一个是时间切片、一个是归档开关，和分类混在同一排、占同样的视觉权重，
+   这才是「分配不均」最刺眼的那部分（680 / 4 / 324 和 142 / 139 / ... 并排）。
+
+   · 「免费新增」：**整个删掉**。免费/收费的区分本身要去掉，
+     一个 4 条的时间切片更不值得占一整张卡。
+   · 「重复条目」：**降级**成导航行下方的一个小链接，见 renderArchiveLink()。
+     324 条一条没删，只是不再假装自己是一个「分类」。 */
 const SERIES_NAV = [
-  { key: "all", title: "全部资产", sub: "满屏模板 + 组件同池，449 个契约资产一览" },
-  ...SERIES_SECTIONS.map((s) => ({ key: s.key, title: s.title, sub: s.subtitle, member: !!s.member })),
-  { key: "new", title: "免费新增", sub: "2026-09 新开源：纪实档案族 · 转场包 · 新品，全部免费，点进来直接挑", fresh: true },
+  ...USAGE_SECTIONS.filter((s) => s.key !== "archive").map((s) => ({ key: s.key, title: s.title, sub: s.subtitle })),
+  { key: "all", title: "全部资产", sub: "按用途横向一览" },
 ];
 
-function seriesOf(template) {
-  const found = SERIES_SECTIONS.find((s) => s.match(template));
-  return found ? found.key : "standard";
-}
-
-/* 二级分类：标准版用 category；视觉动效/奶油贴纸按 tags 归桶（按顺序命中） */
-const SUBCAT_RULES = {
-  shot: [
-    ["SC2 差异化复刻", ["差异化复刻"]],
-    ["开场片头", ["开场"]],
-    ["转场", ["转场"]],
-    ["标题字卡", ["标题", "字卡"]],
-    ["数据指标", ["数据", "指标", "数字"]],
-    ["入场登场", ["入场", "登场"]],
-    ["运镜镜头", ["运镜", "镜头", "3D"]],
-    ["节奏卡点", ["节奏"]],
-    ["品牌收尾", ["品牌", "收尾", "结尾"]],
-    ["交互界面", ["交互", "UI", "界面"]],
-    ["口播包装", ["口播", "荧光绿", "霓虹"]],
-    ["拼贴纪实", ["拼贴", "Vox", "纪录片"]],
-    ["图解演示", ["B-roll", "图表", "手绘", "白板", "地图"]],
-  ],
-  cream: [
-    ["数据图表", ["数据", "数字", "增长", "趋势", "指标"]],
-    ["对比对照", ["对比", "对照", "类比"]],
-    ["流程层级", ["流程", "流程图", "层级"]],
-    ["透明叠加", ["透明"]],
-    ["插画场景", ["插画", "场景", "Mock"]],
-  ],
+/* 二级：风格。retaxonomy.py 把原来的 15 个 series 收敛成这 9 个。
+   night 是混剪那一族（规格包里的「夜航」同源：深蓝底 + 暖橙光）。 */
+const STYLE_LABELS = {
+  dark: "暗色科技", cream: "奶油贴纸", archive: "档案公文",
+  teach: "教学外壳", page: "书页系", glass: "玻璃拟态",
+  board: "白板黄卡", hero3d: "3D Hero", night: "夜航混剪",
+  component: "可叠加组件",
 };
-const FAMILY_LABELS = { form: "公文表单", board: "白板黄卡", file: "档案拼贴", glass: "玻璃拟态", hero3d: "3D Hero", fx: "模式特效", teach: "教学外壳", page: "书页系（瑞士风）" };
+function styleOf(template) {
+  if (template.component === true) return "component";
+  return STYLE_LABELS[template.series] ? template.series : "dark";
+}
+function seriesOf(template) {
+  const found = USAGE_SECTIONS.find((s) => s.match(template));
+  return found ? found.key : "封面与卡片";
+}
 function subcatOf(template) {
-  if (FAMILY_LABELS[template.series]) return FAMILY_LABELS[template.series];
-  const rules = SUBCAT_RULES[seriesOf(template)];
-  if (!rules) return template.category;
-  const tags = template.tags || [];
-  for (const [label, keys] of rules) {
-    if (tags.some((tag) => keys.includes(tag))) return label;
-  }
-  return "其他";
+  const s = styleOf(template);
+  return STYLE_LABELS[s] || s;
 }
 
 /* ── 画廊视图 ── */
@@ -235,10 +258,17 @@ function subcatCounts(pool) {
 }
 
 function seriesPool() {
-  if (state.series === "all") return state.catalog.templates;
-  if (state.series === "new") return state.catalog.templates.filter((t) => t.isNew);
-  const section = SERIES_SECTIONS.find((s) => s.key === state.series);
-  return section ? state.catalog.templates.filter(section.match) : state.catalog.templates;
+  // 下线条目默认不进任何列表，只有「重复条目 · 已下线」这一档把它们放出来。
+  // 马哥要的是「全部保留，只是别堆在主视图里」，所以这里是**过滤展示**，
+  // 不是删数据：catalog 条目、模板文件、预览片全都还在，回一个字段就能全放回来。
+  if (state.series === "archive") {
+    return state.catalog.templates.filter((t) => t.status === "archive");
+  }
+  const live = state.catalog.templates.filter((t) => t.status !== "archive");
+  if (state.series === "all") return live;
+  if (state.series === "new") return live.filter((t) => t.isNew);
+  const section = USAGE_SECTIONS.find((s) => s.key === state.series);
+  return section ? live.filter(section.match) : live;
 }
 
 function filteredTemplates() {
@@ -256,6 +286,10 @@ function renderTabs(resultCount) {
   tabbar.innerHTML = items.map(([name, count]) =>
     `<button class="tab ${state.category === name ? "active" : ""}" type="button" role="tab" data-category="${name}">${name}<span class="tab-count">${count}</span></button>`
   ).join("");
+  // 这排数字是「当前分类条数」（当前系列池里的分类分布），
+  // 不是全站在架总数——顶栏那个才是。两行口径差着几百条，
+  // 不注明就会被当成同一本账打架。
+  tabbar.insertAdjacentHTML("beforeend", `<span class="tab-scope">数字为当前分类条数</span>`);
   tabbar.querySelectorAll(".tab").forEach((tab) => tab.addEventListener("click", () => {
     state.category = tab.dataset.category;
     renderGallery();
@@ -266,16 +300,27 @@ function renderSeriesNav(resultCount) {
   const nav = document.createElement("div");
   nav.className = "series-nav";
   nav.style.setProperty("--series-count", SERIES_NAV.length);
+  // 计数口径跟着 seriesPool 走：默认列表不含已下线，所以 "全部资产" 也不该把
+  // 324 条算进去，否则标题写着 522、点进去只有 198，越看越不信任这个库
+  const liveTotal = state.catalog.templates.filter((t) => t.status !== "archive").length;
   for (const item of SERIES_NAV) {
-    const count = item.key === "all"
-      ? state.catalog.templates.length
-      : item.key === "new"
-        ? state.catalog.templates.filter((t) => t.isNew).length
-        : state.catalog.templates.filter(SERIES_SECTIONS.find((s) => s.key === item.key).match).length;
+    let count;
+    if (item.key === "all") {
+      count = liveTotal;
+    } else if (item.key === "archive") {
+      count = state.catalog.templates.length - liveTotal;
+    } else {
+      const saved = state.series;
+      state.series = item.key;
+      count = seriesPool().length;
+      state.series = saved;
+    }
     const pill = document.createElement("button");
     pill.type = "button";
     pill.className = `series-pill ${state.series === item.key ? "active" : ""}`;
-    pill.innerHTML = `<span class="sp-title">${item.title}${item.fresh ? '<span class="sp-new">免费新增</span>' : item.member ? '<span class="sp-vip">会员</span>' : '<span class="sp-free">免费</span>'}</span><span class="sp-sub">${item.sub}</span><span class="sp-count">${count} 个模板</span>`;
+    // 原来这里给每张卡片挂「免费 / 会员 / 免费新增」角标。
+    // 2026-10-07 马哥拍板：没有收费免费之说。全删。
+    pill.innerHTML = `<span class="sp-title">${item.title}</span><span class="sp-sub">${item.sub}</span><span class="sp-count">${count} 个</span>`;
     pill.addEventListener("click", () => {
       state.series = item.key;
       state.category = ALL_CATEGORY;
@@ -285,8 +330,27 @@ function renderSeriesNav(resultCount) {
   }
   const total = document.createElement("span");
   total.className = "tab-result series-total";
-  total.textContent = `${resultCount} / ${state.catalog.templates.length}`;
+  total.textContent = `${resultCount} / ${state.series === "archive" ? state.catalog.templates.length : liveTotal}`;
   nav.append(total);
+
+  /* 归档 324 条的小链接。
+     原来它是主排里的一张完整卡片，和「镜头与转场 142」占同样的视觉权重——
+     但它不是用途分类，是一个归档开关。降级成一行小字之后，
+     主排只剩 7 个等权的用途档 + 全部资产，这才是它们该有的样子。
+     条目一条没删，state.series='archive' 的取数逻辑原样保留。 */
+  const archCount = state.catalog.templates.length - liveTotal;
+  if (archCount > 0) {
+    const arch = document.createElement("button");
+    arch.type = "button";
+    arch.className = `archive-link ${state.series === "archive" ? "active" : ""}`;
+    arch.innerHTML = `已折起的重复条目 <b>${archCount}</b> 条 · 一条没删，点开可恢复`;
+    arch.addEventListener("click", () => {
+      state.series = "archive";
+      state.category = ALL_CATEGORY;
+      renderGallery();
+    });
+    nav.append(arch);
+  }
   return nav;
 }
 
@@ -339,19 +403,22 @@ function closeGetModal() {
 
 function openGetPromptModal(template) {
   closeGetModal();
-  const isMember = template.tier !== "free";
+  // 原来这里按 tier 分两套话术：「会员预览模板：仅会员渠道发放」
+  // vs「公开模板：免费开源」。2026-10-07 马哥拍板没有收费免费之说，
+  // 两套并成一套，不再按 tier 分叉。tier 字段仍留在 catalog 里不动
+  // （外部还有脚本读它），只是前端不再拿它做任何判断。
   const overlay = document.createElement("div");
   overlay.className = "modal-overlay";
   overlay.innerHTML = `
     <div class="unlock-modal" role="dialog" aria-modal="true" aria-label="获取提示词">
       <button class="unlock-close" type="button" aria-label="关闭">×</button>
       <h3>获取「${template.name}」提示词</h3>
-      <p class="member-note">${isMember
-        ? "会员预览模板：完整提示词与模板源文件仅会员渠道发放。<br />详情见首页「关注我们」。"
-        : "公开模板：379 个模板已免费开源（本体 + 预览，含 443 个提示词），直接下载；<br />生产 Skill 加微信进群免费领；完整版 Skill、会员动效系列与成片流水线在知识星球逐步开放。"}</p>
+      <p class="member-note">站内不复制文件，样例与获取方式在这里：<br />
+        GitHub 开源样例可直接下载；生产 Skill 加微信进群领取；<br />
+        成片流水线与更多系列在知识星球逐步开放。</p>
       <div class="get-actions">
-        ${isMember ? "" : `<a class="button primary" href="${GITHUB_REPO}" target="_blank" rel="noreferrer">GitHub 免费下载样例</a>`}
-        <a class="button${isMember ? " primary" : ""}" href="#follow-us" id="get-goto-qr">扫码进社区</a>
+        <a class="button primary" href="${GITHUB_REPO}" target="_blank" rel="noreferrer">GitHub 下载样例</a>
+        <a class="button" href="#follow-us" id="get-goto-qr">扫码进社区</a>
       </div>
     </div>`;
   document.body.append(overlay);
@@ -369,33 +436,39 @@ function buildCard(template) {
   const fragment = cardTemplate.content.cloneNode(true);
   const card = fragment.querySelector(".template-card");
   card.dataset.id = template.id;
-  const isMember = template.tier !== "free";
-  card.dataset.tier = isMember ? "member" : "free";
+  // 原来这里算 isMember 并写 card.dataset.tier，卡片上再按它挂「会员预览 / 免费」。
+  // 2026-10-07 起不再有收费免费之分，dataset.tier 一并去掉——
+  // 留着的话 styles.css 里那条 `[data-tier="member"]` 的样式会继续生效，
+  // 页面上看着还是「一部分要钱」。
   fragment.querySelector(".card-duration").textContent = `${template.duration}s`;
   const media = fragment.querySelector(".card-media");
+  /* 组件与浅色系换底，但两者的底色不能一样：
+     · 组件是透明件，字色多为浅米白 → 用中性灰棋盘格，浅字深字都读得出
+     · 奶油贴纸 / 书页系 / 白板黄卡本身就是浅纸面 → 用白格
+     早先两者都用白格，结果 8 个新组件的预览在卡片上一片灰白、几乎看不见字。 */
+  if (template.component === true) {
+    media.classList.add("on-check");
+  } else if (template.series === "cream" || template.series === "page"
+             || template.series === "board") {
+    media.classList.add("on-light");
+  }
   const noBadge = document.createElement("span");
   noBadge.className = "card-badge card-no";
   noBadge.textContent = template.no ? `#${template.no}` : "#--";
   noBadge.title = "公众号回复该编号，获取对应教程文章";
   media.append(noBadge);
+  // 「新」角标保留（那是时间信息，不是收费信息），
+  // 但原来 title 写的是「2026-09 免费新增」，把免费两个字去掉。
   if (template.isNew) {
     const newBadge = document.createElement("span");
     newBadge.className = "card-badge card-fresh";
     newBadge.textContent = "新";
-    newBadge.title = "2026-09 免费新增";
+    newBadge.title = "2026-09 新增";
     media.append(newBadge);
   }
-  if (isMember) {
-    const vipBadge = document.createElement("span");
-    vipBadge.className = "card-badge card-vip";
-    vipBadge.textContent = "会员预览";
-    media.append(vipBadge);
-  } else {
-    const freeBadge = document.createElement("span");
-    freeBadge.className = "card-badge card-free";
-    freeBadge.textContent = "免费";
-    media.append(freeBadge);
-  }
+  // 原来这里按 tier===member 挂「会员预览」，其余一律挂「免费」——
+  // 也就是每张卡片都有一枚收费性质的角标。2026-10-07 全部删掉：
+  // 这个站的素材没有收费免费之分，卡上不该出现这两种标签中的任何一种。
   if (template.origin === "community") {
     const communityBadge = document.createElement("span");
     communityBadge.className = "card-badge badge-community";
@@ -418,6 +491,38 @@ function buildCard(template) {
     event.stopPropagation();
     openGetPromptModal(template);
   });
+  /* 「复制 JSON」：把这张卡片变成一份最小 compose/2，直接粘进测试区
+     「导入 compose.json」或喂给 Agent。字段口径与测试区导出（pgComposeJson）
+     及导入器（pgLoadCompose）保持一致：站内图层 templateId 即卡片 id，
+     duration 取 catalog 的时长并夹在 3–600（同导入器的夹取），
+     values 先按 schema 默认值填满，用户粘进去就能改。 */
+  const jsonButton = fragment.querySelector(".copy-json");
+  jsonButton.addEventListener("click", async (event) => {
+    event.stopPropagation();
+    const duration = Math.max(3, Math.min(600, Number(template.duration) || 6));
+    const compose = {
+      version: "compose/2",
+      generator: "动效工作站 · 开放编辑器",
+      canvas: { width: 1920, height: 1080 },
+      duration,
+      base: { type: "upload", name: "你的底片.mp4" },
+      layers: [{
+        templateId: template.id,
+        position: "cc", x: 0, y: 0, scale: 100,
+        start: 0, end: duration,
+        motion: null,
+        values: defaults(template),
+      }],
+    };
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(compose, null, 2));
+      jsonButton.textContent = "已复制 ✓";
+      jsonButton.classList.add("copied");
+    } catch {
+      jsonButton.textContent = "复制失败";
+    }
+    setTimeout(() => { jsonButton.textContent = "复制 JSON"; jsonButton.classList.remove("copied"); }, 1600);
+  });
   card.addEventListener("mouseenter", () => {
     const current = card.querySelector("video");
     if (!current) return;
@@ -438,10 +543,12 @@ function buildCard(template) {
 
 function renderGallery() {
   state.view = "gallery";
-  syncHash(state.series === "new" ? "#new" : "#library");
+  // 原来还认 #new（「免费新增」那个已删档的深链）。该档整个下线了，
+  // 落到 #library 即可；留着判断只会让一个没人能点到的状态继续活着。
+  syncHash("#library");
   updateNav();
   stopPlaying();
-  tabbar.style.display = state.series === "all" || state.series === "new" ? "none" : "";
+  tabbar.style.display = state.series === "all" ? "none" : "";
   const items = filteredTemplates();
   renderTabs(items.length);
   stageContent.innerHTML = "";
@@ -452,14 +559,6 @@ function renderGallery() {
     return;
   }
   const searching = !!search.value.trim();
-  if (state.series === "new") {
-    // 免费新增：不细分功能，一整面平铺
-    const grid = document.createElement("div");
-    grid.className = "gallery-grid";
-    items.forEach((template) => grid.append(buildCard(template)));
-    stageContent.append(grid);
-    return;
-  }
   const groupedAll = state.series === "all" && state.category === ALL_CATEGORY && !searching;
   const groupedSeries = state.series !== "all" && state.category === ALL_CATEGORY && !searching;
   if (!groupedAll && !groupedSeries) {
@@ -486,14 +585,15 @@ function renderGallery() {
     }
     return;
   }
-  for (const section of SERIES_SECTIONS) {
+  for (const section of USAGE_SECTIONS) {
     const sectionItems = items.filter(section.match);
     if (!sectionItems.length) continue;
     const wrap = document.createElement("section");
     wrap.className = `series-section series-${section.key}`;
     const head = document.createElement("div");
     head.className = "series-header";
-    head.innerHTML = `<div class="series-title-row"><h2>${section.title}${section.member ? '<span class="sp-vip">会员</span>' : '<span class="sp-free">免费</span>'}</h2><span class="series-count">${sectionItems.length} 个模板</span></div><p>${section.subtitle}</p>`;
+    // 分节头原来也给每节挂「会员 / 免费」角标，一并去掉。
+    head.innerHTML = `<div class="series-title-row"><h2>${section.title}</h2><span class="series-count">${sectionItems.length} 个模板</span></div><p>${section.subtitle}</p>`;
     wrap.append(head);
     // 系列内按二级分类再分小节，不再是一整坨
     const buckets = new Map();
@@ -608,7 +708,7 @@ function renderHome() {
   updateNav();
   stopPlaying();
   tabbar.style.display = "none";
-  const total = state.catalog.templates.filter((t) => t.status === "ready").length;
+  const total = liveAssetCount();
   const showcase = showcaseTemplates();
   stageContent.innerHTML = `
     <div class="home-hero">
@@ -671,6 +771,28 @@ function renderHome() {
       </div>
     </section>
 
+    <section class="home-section" id="cases">
+      <div class="howto-head">
+        <p class="kicker">REAL CASES</p>
+        <h2>他们这样用<span class="sec-period">。</span></h2>
+        <p>不是演示片，是三条真实在跑的生产线。点开任意一张，去看它背后的素材，或直接进测试区上手。</p>
+      </div>
+      <div class="showcase-grid">
+        <figure class="showcase-item case-item" data-target="library" role="button" tabindex="0">
+          <video muted loop playsinline preload="none" data-auto="1" data-src="./renders/book-page-shell/sample.webm"></video>
+          <figcaption>「公众号推文视频」——绿排版长文改成的成片，公众号日更在用。</figcaption>
+        </figure>
+        <figure class="showcase-item case-item" data-target="playground" role="button" tabindex="0">
+          <video muted loop playsinline preload="none" data-auto="1" data-src="./renders/mode-demos/T00.mp4"></video>
+          <figcaption>「抖音教学片」——T00 动效教学片骨架，8 条抖音 HyperFrames 教学视频共用。</figcaption>
+        </figure>
+        <figure class="showcase-item case-item" data-target="playground" role="button" tabindex="0">
+          <video muted loop playsinline preload="none" data-auto="1" data-src="./app/assets/hero-skill.webm"></video>
+          <figcaption>「宣传片系列」——模板库宣传片 v5–v8，全部用站内流水线验收后发布。</figcaption>
+        </figure>
+      </div>
+    </section>
+
     <section class="home-section" id="usage">
       <div class="howto-head">
         <p class="kicker">TWO WAYS</p>
@@ -684,9 +806,9 @@ function renderHome() {
           <ul>
             <li>挑模板 → 复制提示词 → 粘贴给任意 AI，输出自包含动效页面</li>
             <li>浏览器打开即播放，录屏进剪辑软件即用</li>
-            <li><strong>379 个模板已免费开源</strong>（模板本体 + 预览 + 379 个提示词），直接下载</li>
+            <li><strong>素材全部可下载</strong>（模板本体 + 预览 + 对应提示词），站内不区分收费与免费档</li>
           </ul>
-          <a class="button primary cp-cta" href="${GITHUB_REPO}" target="_blank" rel="noreferrer">GitHub 免费下载</a>
+          <a class="button primary cp-cta" href="${GITHUB_REPO}" target="_blank" rel="noreferrer">GitHub 下载</a>
         </article>
         <article class="compare-card pro">
           <span class="cp-tag">用法二</span>
@@ -706,7 +828,7 @@ function renderHome() {
       <div class="howto-head">
         <p class="kicker">HOW TO GET</p>
         <h2>三步出片<span class="sec-period">。</span></h2>
-        <p>模板开源：379 个免费开源（模板本体 + 预览 + 379 个提示词），会员版 64 个新风格族除外。</p>
+        <p>素材全部可下载：模板本体 + 预览 + 对应提示词，站内不区分收费与免费档。</p>
       </div>
       <div class="guide-grid">
         <article class="guide-card">
@@ -735,12 +857,13 @@ function renderHome() {
         </article>
         <article class="guide-card qr-card" id="follow-us">
           <strong>关注我们</strong>
+          <p class="follow-lede">素材全免费，生产线在星球。</p>
           <h3>完整版逐步开放，加微信进社区</h3>
           <div class="qr-row">
             <div class="unlock-qr qr-feature"><img class="qr-image" src="./app/assets/qr-wechat-personal.jpg?v=2" alt="个人微信二维码" data-label="个人微信" /><span class="qr-name">个人微信 · 唯一入口：领 Skill / 进社区 / 会员咨询</span></div>
           </div>
           <ul class="follow-points">
-            <li><strong>GitHub 全量开源</strong>：379 个模板（本体 + 预览）已上 GitHub 免费开源，含 379 个提示词直接下载；会员版 64 个新风格族除外；上不去的，在公众号「老马AI研习社」后台领同款打包</li>
+            <li><strong>GitHub 开源</strong>：模板（本体 + 预览）已上 GitHub，含对应提示词直接下载；站内不分收费免费档，全部一视同仁；上不去的，在公众号「老马AI研习社」后台领同款打包</li>
             <li><strong>个人微信 · 唯一入口</strong>：免费领生产 Skill、进社区、知识星球入口、会员与定制咨询，都从这里走</li>
             <li><strong>知识星球逐步开放</strong>：会员新模板族、专属生产工具箱（skill + 脚本）、成片流水线文档（现有 26 套，持续增加）——星球入口在社区公布</li>
           </ul>
@@ -771,13 +894,22 @@ function renderHome() {
     event.preventDefault();
     stage.querySelector(target)?.scrollIntoView({ behavior: "smooth" });
   }));
-  stage.querySelectorAll(".showcase-item").forEach((item) => {
+  stage.querySelectorAll(".showcase-item:not(.case-item)").forEach((item) => {
     const video = item.querySelector("video");
     if (video) observer.observe(item);
     item.addEventListener("click", () => {
       const template = state.catalog.templates.find((t) => t.id === item.dataset.id);
       if (template) selectTemplate(template);
     });
+  });
+  /* 案例区：不链外部（没有可验证的外链），点击跳站内视图——
+     素材池看它背后的素材，测试区直接上手。 */
+  stage.querySelectorAll(".case-item").forEach((item) => {
+    const video = item.querySelector("video");
+    if (video) observer.observe(item);
+    const go = () => { if (item.dataset.target === "playground") renderPlayground(); else renderGallery(); };
+    item.addEventListener("click", go);
+    item.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
   });
   scrollStageTop();
 }
@@ -952,7 +1084,7 @@ function renderStandard() {
 
       <section class="std-section">
         <h3>图层类型 ① 站内图层</h3>
-        <p>引用素材池 449 个契约资产（templateId 即素材池卡片 id）：</p>
+        <p>引用素材池 ${liveAssetCount()} 个契约资产（templateId 即素材池卡片 id）：</p>
         <pre class="std-code">{
   "templateId": "lyrics-beat-card",
   "position": "cc",      <i>// 九宫格锚点：tl/tc/tr/cl/cc/cr/bl/bc/br</i>
@@ -1139,9 +1271,14 @@ let pgDraw = null;   // { index, points: [[nx,ny]...] }
 async function pgFetchTemplate(templateId) {
   if (!pgHtmlCache.has(templateId)) {
     // 组件从 components/<id>.html 取；模板从 templates/<id>/index.html 取
+    // path 存的是**裸 id**（不含 components/ 前缀），前缀由这里统一拼。
+    // 原来这行是 `./${entry.path}.html`，而 1682 行的 pgLayerHtml 写的是
+    // `./components/${entry.path}.html` —— 两处规则相反：path 带前缀时
+    // 1682 拼出 components/components/<id>.html → 404；不带前缀时这行
+    // 拼出 ./<id>.html → 404。任何一种存法都只能让一处能用。
     const entry = state.catalog && state.catalog.templates && state.catalog.templates.find(t => t.id === templateId);
     const isComponent = !!(entry && entry.component === true);
-    const url = isComponent ? `./${entry.path}.html` : `./templates/${templateId}/index.html`;
+    const url = isComponent ? `./components/${entry.path}.html` : `./templates/${templateId}/index.html`;
     pgHtmlCache.set(templateId, fetch(url).then((r) => {
       if (!r.ok) throw new Error("模板加载失败：" + templateId);
       return r.text();
@@ -3240,7 +3377,7 @@ function routeHash() {
 }
 
 state.catalog = await loadCatalog();
-document.querySelector("#template-count").textContent = state.catalog.templates.filter((template) => template.status === "ready").length;
+document.querySelector("#template-count").textContent = liveAssetCount();
 
 /* P3 刷新恢复：catalog 就绪后（pgLoadCompose 依赖素材池）再还原会话草稿 */
 (function pgRestoreSession() {
