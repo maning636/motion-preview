@@ -1606,6 +1606,7 @@ const PG_ANCHORS = {
   cl: [8, 50], cc: [50, 50], cr: [92, 50],
   bl: [8, 88], bc: [50, 88], br: [92, 88],
 };
+const PG_ANCHOR_KEYS = new Set(Object.keys(PG_ANCHORS));
 
 function pgLayerDefaults(template) {
   const n = pgState.layers.length;
@@ -1649,6 +1650,349 @@ function pgComposeJson() {
         ? { name, ...layer, motion: layer.motion || null }
         : { ...layer, motion: layer.motion || null }),
   };
+}
+
+/* ── P5 验收卡：把「查过了」变成一张能贴出去的 PNG ──────────────────
+   唯一硬规矩：卡上每个数字都来自 pgQcReport() 的实测值，本模块里不存在
+   任何写死的「合规」「0 处」。跑不了的检查项 checked=false，卡上写「未检查」——
+   一张假装全绿的验收卡，比没有卡更糟，因为它是拿去当验收凭证用的。
+
+   为什么单独写而不是复用 pg_audit：pg_audit 审的是**本站页面自己的 DOM**
+   （控件重叠 / 文字截断 / 横向滚动），跟用户这片片子出不出框毫无关系。
+   这里要审的是 compose 内容，所以另起一套，但几何模型与 pgApplyPositions
+   同源：同一份 PG_ANCHORS、同一个 34% 基准宽、同一个 pgMotionOffsetPx，
+   不另写一份"看起来差不多"的公式。                                          */
+
+const PG_QC_UNCHECKED = "未检查";
+const PG_CERT_SITE = { name: "动效工作站", domain: "maning789link.top" };
+const PG_CERT_SIZE = { w: 1080, h: 1350, dpr: 2 };   // 4:5 竖版，2 倍图适合朋友圈/简介
+
+/* 某层在 1920×1080 设计画布上扫到的最小外框（含运动轨迹途中甩出去的最远处）。
+   路径运动不单调，所以按时间采样而不是只看首尾两端。 */
+function pgLayerFrameBox(layer, canvas) {
+  const W = canvas.width, H = canvas.height;
+  const [ax, ay] = PG_ANCHORS[layer.position] || PG_ANCHORS.cc;
+  const ratio = 34 * (Math.max(20, Math.min(200, Number(layer.scale) || 100)) / 100) / 100;
+  const hw = W * ratio / 2, hh = H * ratio / 2;
+  const cx = ((ax + (Number(layer.x) || 0)) / 100) * W;
+  const cy = ((ay + (Number(layer.y) || 0)) / 100) * H;
+  let x0 = cx - hw, x1 = cx + hw, y0 = cy - hh, y1 = cy + hh;
+  const m = layer.motion;
+  const secs = m ? Number(m.secs) : 0;
+  if (m && Number.isFinite(secs) && secs > 0) {
+    const from = Number(layer.start) || 0;
+    const to = Math.min(Number(layer.end) || from, from + secs);
+    const STEPS = 24;
+    for (let i = 0; i <= STEPS; i++) {
+      const o = pgMotionOffsetPx(layer, from + (to - from) * i / STEPS, W, H);
+      x0 = Math.min(x0, cx - hw + o.dx); x1 = Math.max(x1, cx + hw + o.dx);
+      y0 = Math.min(y0, cy - hh + o.dy); y1 = Math.max(y1, cy + hh + o.dy);
+    }
+  }
+  return { x0, y0, x1, y1, w: x1 - x0, h: y1 - y0 };
+}
+
+/* compose/2 契约核对。返回 { ok, reasons }，reasons 是能直接贴到卡上的人话。 */
+function pgQcContract(compose) {
+  const reasons = [];
+  if (!compose || typeof compose !== "object") return { ok: false, reasons: ["编排对象没生成出来"] };
+  if (compose.version !== "compose/2") reasons.push("version 不是 compose/2");
+  const cv = compose.canvas || {};
+  if (Number(cv.width) !== 1920 || Number(cv.height) !== 1080) reasons.push("画布不是 1920×1080");
+  const d = Number(compose.duration);
+  if (!Number.isFinite(d) || d < 3 || d > 600) reasons.push("时长越界（须 3–600s）");
+  if (!Array.isArray(compose.layers)) reasons.push("缺 layers 数组");
+  else compose.layers.forEach((l, i) => {
+    const tag = `第 ${i + 1} 层`;
+    if (!l || typeof l !== "object") { reasons.push(tag + "不是对象"); return; }
+    if (l.type === "external") {
+      if (typeof l.html !== "string" || !l.html.trim()) reasons.push(tag + "外部层没有 HTML");
+    } else if (!l.templateId) reasons.push(tag + "缺 templateId");
+    if (!PG_ANCHOR_KEYS.has(l.position)) reasons.push(tag + "锚点非法");
+    const s = Number(l.start), e = Number(l.end);
+    if (!Number.isFinite(s) || !Number.isFinite(e)) reasons.push(tag + "入出点不是数字");
+    else if (e <= s) reasons.push(tag + "出点不晚于入点");
+    else if (Number.isFinite(d) && e > d + 1e-6) reasons.push(tag + "出点超出成片时长");
+    const sc = Number(l.scale);
+    if (!Number.isFinite(sc) || sc < 20 || sc > 200) reasons.push(tag + "缩放越界");
+  });
+  return { ok: reasons.length === 0, reasons };
+}
+
+/* 主入口：跑完全部检查，产出验收卡要用的那份数据。
+   checked=false 的项不是"通过"而是"没查"，渲染层据此显示「未检查」。 */
+function pgQcReport() {
+  const now = new Date();
+  const layers = pgState.layers;
+  const hasLayers = layers.length > 0;
+  const catalog = state.catalog && Array.isArray(state.catalog.templates) ? state.catalog.templates : null;
+
+  let compose = null, contract = null;
+  try { compose = pgComposeJson(); } catch (e) { compose = null; }
+  if (compose) { try { contract = pgQcContract(compose); } catch (e) { contract = null; } }
+
+  const canvas = (compose && compose.canvas) || { width: 1920, height: 1080 };
+  const checks = [];
+  const unchecked = (key, label, detail) =>
+    ({ key, label, checked: false, pass: false, value: PG_QC_UNCHECKED, detail });
+
+  /* 1. 契约。
+     注意：没有图层时不能因为"空数组结构合法"就报合规——空片子"通过验收"
+     是最容易被甲方当场问住的那种假通过，这里一律走「未检查」。 */
+  if (!hasLayers) {
+    checks.push(unchecked("contract", "compose/2 合规", "还没有图层，无从验收"));
+  } else {
+    checks.push(contract
+      ? { key: "contract", label: "compose/2 合规", checked: true, pass: contract.ok,
+          value: contract.ok ? "合规" : `${contract.reasons.length} 处不符`,
+          detail: contract.ok ? `${compose.layers.length} 层 · ${canvas.width}×${canvas.height}` : contract.reasons.slice(0, 2).join("；") }
+      : unchecked("contract", "compose/2 合规", "编排对象未生成"));
+  }
+
+  /* 2. 出框：按运动包络扫，画布 1920×1080 */
+  if (hasLayers) {
+    const out = [];
+    layers.forEach((layer, i) => {
+      const b = pgLayerFrameBox(layer, canvas);
+      const sides = [];
+      if (b.x0 < -0.5) sides.push("左");
+      if (b.x1 > canvas.width + 0.5) sides.push("右");
+      if (b.y0 < -0.5) sides.push("上");
+      if (b.y1 > canvas.height + 0.5) sides.push("下");
+      if (sides.length) out.push({ index: i + 1, name: layer.name || layer.templateId || "未命名", sides });
+    });
+    checks.push({ key: "outFrame", label: "出框", checked: true, pass: out.length === 0,
+      value: `${out.length} 处`,
+      detail: out.length
+        ? out.slice(0, 3).map((o) => `第 ${o.index} 层 ${o.name} 出${o.sides.join("")}`).join("；")
+        : `全部图层在 ${canvas.width}×${canvas.height} 内` });
+  } else {
+    checks.push(unchecked("outFrame", "出框", "还没有图层"));
+  }
+
+  /* 3. 时段重叠：两层的可见时段相交 = 同一秒有两样东西抢画面 */
+  if (hasLayers) {
+    const spans = layers.map((l) => [Number(l.start) || 0, Number(l.end) || 0]).filter(([s, e]) => e > s);
+    let pairs = 0;
+    for (let i = 0; i < spans.length; i++) for (let j = i + 1; j < spans.length; j++) {
+      if (Math.min(spans[i][1], spans[j][1]) - Math.max(spans[i][0], spans[j][0]) > 1e-6) pairs++;
+    }
+    checks.push({ key: "overlap", label: "时段重叠", checked: true, pass: pairs === 0, value: `${pairs} 处`,
+      detail: pairs ? "有层在同一秒同时上屏" : "各层时段互不打架" });
+  } else {
+    checks.push(unchecked("overlap", "时段重叠", "还没有图层"));
+  }
+
+  /* 4. 裸底时长：全程没有任何动效层在屏的秒数（成片里最容易被甲方问住的一项） */
+  if (hasLayers) {
+    const d = Math.max(0, Number(pgState.duration) || 0);
+    const spans = layers.map((l) => [Math.max(0, Number(l.start) || 0), Math.min(d, Number(l.end) || 0)])
+      .filter(([s, e]) => e > s).sort((a, b) => a[0] - b[0]);
+    let covered = 0, cursor = 0;
+    for (const [s, e] of spans) { const a = Math.max(s, cursor); if (e > a) { covered += e - a; cursor = e; } }
+    const bare = Math.max(0, d - covered);
+    checks.push({ key: "bare", label: "裸底时长", checked: true, pass: bare <= 0.05, value: `${bare.toFixed(1)}s`,
+      detail: bare > 0.05 ? "这段只有底片、没有动效" : "全程有动效覆盖" });
+  } else {
+    checks.push(unchecked("bare", "裸底时长", "还没有图层"));
+  }
+
+  /* 5. 素材可溯源：这一项依赖 catalog，catalog 没载入就诚实地「未检查」 */
+  if (hasLayers && catalog) {
+    const miss = layers.filter((l) => l.type !== "external")
+      .filter((l) => { const t = catalog.find((x) => x.id === l.templateId); return !t || t.status !== "ready"; })
+      .map((l) => l.templateId);
+    checks.push({ key: "assets", label: "素材可溯源", checked: true, pass: miss.length === 0, value: miss.length ? `${miss.length} 个失效` : "全部命中",
+      detail: miss.length ? miss.slice(0, 3).join("、") : "全部命中素材池 ready 资产" });
+  } else {
+    checks.push(unchecked("assets", "素材可溯源", hasLayers ? "素材池未载入" : "还没有图层"));
+  }
+
+  const pad2 = (n) => String(n).padStart(2, "0");
+  const ymd = `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+  const stamp = `${now.getFullYear()}${pad2(now.getMonth() + 1)}${pad2(now.getDate())}`;
+  return {
+    site: { ...PG_CERT_SITE },
+    date: ymd,
+    stamp,
+    fileName: `验收卡-${PG_CERT_SITE.name}-${stamp}.png`,
+    version: compose ? compose.version : null,
+    duration: Number(pgState.duration) || 0,
+    layerCount: layers.length,
+    externalCount: layers.filter((l) => l.type === "external").length,
+    canvas,
+    catalogLoaded: !!catalog,
+    /* 汇总口径：只有全部"已检查"且全过才算通过；任何一项未检查都不算通过 */
+    pass: checks.every((c) => c.checked && c.pass),
+    checkedCount: checks.filter((c) => c.checked).length,
+    checks,
+  };
+}
+
+/* ── 卡面绘制：深色底 + 站点绿，跟操作台/舞台同一套配色 ──────────────── */
+function pgCertRoundRect(g, x, y, w, h, r) {
+  const rr = Math.min(r, w / 2, h / 2);
+  g.beginPath();
+  g.moveTo(x + rr, y);
+  g.arcTo(x + w, y, x + w, y + h, rr);
+  g.arcTo(x + w, y + h, x, y + h, rr);
+  g.arcTo(x, y + h, x, y, rr);
+  g.arcTo(x, y, x + w, y, rr);
+  g.closePath();
+}
+
+function pgCertFont(g, weight, size) {
+  g.font = `${weight} ${size}px "MiSans SemiBold", "PingFang SC", "Microsoft YaHei", sans-serif`;
+}
+
+function pgCertDraw(report) {
+  const { w: W, h: H, dpr } = PG_CERT_SIZE;
+  const canvas = document.createElement("canvas");
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  const g = canvas.getContext("2d");
+  g.scale(dpr, dpr);
+
+  const INK = "#f4efe7", MUTED = "#9a8f7c", LINE = "#2a251d", GREEN = "#4ade80", AMBER = "#e0a33e", RED = "#f87171";
+  const PAD = 76;
+
+  g.fillStyle = "#14110d";
+  g.fillRect(0, 0, W, H);
+  const glow = g.createRadialGradient(W * 0.18, -60, 0, W * 0.18, -60, W * 0.9);
+  glow.addColorStop(0, "rgba(74,222,128,.16)");
+  glow.addColorStop(1, "rgba(74,222,128,0)");
+  g.fillStyle = glow;
+  g.fillRect(0, 0, W, 420);
+
+  /* 抬头 */
+  g.fillStyle = GREEN;
+  g.fillRect(PAD, 92, 20, 20);
+  pgCertFont(g, 800, 42);
+  g.fillStyle = INK;
+  g.fillText(report.site.name, PAD + 38, 116);
+  g.letterSpacing = "4px";
+  pgCertFont(g, 600, 20);
+  g.fillStyle = GREEN;
+  g.fillText("OPEN MOTION CONTROL DECK", PAD + 38, 152);
+  g.letterSpacing = "0px";
+
+  /* 主结论 */
+  pgCertFont(g, 800, 58);
+  g.fillStyle = INK;
+  g.fillText("此片经动效工作站验收", PAD, 268);
+  pgCertFont(g, 400, 25);
+  g.fillStyle = MUTED;
+  g.fillText("下列每一项都来自本次实际检查，没跑的写「未检查」", PAD, 314);
+
+  /* 验收项 */
+  const rowH = 132, gap = 18;
+  let y = 372;
+  for (const c of report.checks) {
+    g.fillStyle = "#1e1a14";
+    pgCertRoundRect(g, PAD, y, W - PAD * 2, rowH, 20);
+    g.strokeStyle = LINE;
+    g.lineWidth = 2;
+    g.stroke();
+
+    const tick = !c.checked ? "?" : (c.pass ? "✓" : "✕");
+    const tone = !c.checked ? AMBER : (c.pass ? GREEN : RED);
+    g.fillStyle = tone;
+    g.beginPath();
+    g.arc(PAD + 46, y + 44, 20, 0, Math.PI * 2);
+    g.fill();
+    pgCertFont(g, 800, 26);
+    g.fillStyle = "#14110d";
+    g.textAlign = "center";
+    g.fillText(tick, PAD + 46, y + 54);
+    g.textAlign = "left";
+
+    pgCertFont(g, 700, 32);
+    g.fillStyle = INK;
+    g.fillText(c.label, PAD + 86, y + 56);
+    pgCertFont(g, 800, 34);
+    g.fillStyle = tone;
+    g.textAlign = "right";
+    g.fillText(c.value, W - PAD - 28, y + 56);
+    g.textAlign = "left";
+
+    pgCertFont(g, 400, 22);
+    g.fillStyle = MUTED;
+    pgCertDrawClipped(g, c.detail, PAD + 86, y + 96, W - PAD * 2 - 114);
+    y += rowH + gap;
+  }
+
+  /* 数据条 */
+  const barY = y + 6;
+  g.fillStyle = "#0d0b08";
+  pgCertRoundRect(g, PAD, barY, W - PAD * 2, 104, 20);
+  g.strokeStyle = LINE;
+  g.lineWidth = 2;
+  g.stroke();
+  const stats = [
+    ["总时长", `${report.duration}s`],
+    ["图层", `${report.layerCount} 层`],
+    ["画布", `${report.canvas.width}×${report.canvas.height}`],
+  ];
+  const colW = (W - PAD * 2) / stats.length;
+  stats.forEach(([k, v], i) => {
+    const cx = PAD + colW * i;
+    pgCertFont(g, 400, 22);
+    g.fillStyle = MUTED;
+    g.fillText(k, cx + 30, barY + 42);
+    pgCertFont(g, 800, 34);
+    g.fillStyle = INK;
+    g.fillText(v, cx + 30, barY + 82);
+    if (i) {
+      g.strokeStyle = LINE;
+      g.lineWidth = 2;
+      g.beginPath();
+      g.moveTo(cx, barY + 24); g.lineTo(cx, barY + 80);
+      g.stroke();
+    }
+  });
+
+  /* 落款 */
+  pgCertFont(g, 400, 24);
+  g.fillStyle = MUTED;
+  g.fillText(report.date, PAD, H - 118);
+  pgCertFont(g, 700, 40);
+  g.fillStyle = INK;
+  g.textAlign = "right";
+  g.fillText(report.site.domain, W - PAD, H - 112);
+  g.textAlign = "left";
+  g.strokeStyle = LINE;
+  g.lineWidth = 2;
+  g.beginPath();
+  g.moveTo(PAD, H - 86); g.lineTo(W - PAD, H - 86);
+  g.stroke();
+  pgCertFont(g, 400, 20);
+  g.fillStyle = MUTED;
+  g.fillText(`compose/${report.version ? String(report.version).replace("compose/", "") : "?"} 编排 · 验收数据由开放编辑器当场实测`, PAD, H - 52);
+
+  return canvas;
+}
+
+/* detail 太长就截断加省略号，避免顶破卡片 */
+function pgCertDrawClipped(g, text, x, y, maxW) {
+  let t = String(text || "");
+  if (g.measureText(t).width <= maxW) { g.fillText(t, x, y); return; }
+  while (t.length > 1 && g.measureText(t + "…").width > maxW) t = t.slice(0, -1);
+  g.fillText(t + "…", x, y);
+}
+
+/* 导出：canvas → PNG → 下载。返回 { fileName, report } 供调用方提示。 */
+async function pgExportCertCard() {
+  const report = pgQcReport();
+  const canvas = pgCertDraw(report);
+  const blob = await new Promise((res) => canvas.toBlob(res, "image/png"));
+  if (!blob) throw new Error("canvas 生成 PNG 失败");
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = report.fileName;
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  return { fileName: report.fileName, report, bytes: blob.size };
 }
 
 /* 载入一份 compose/2：导入 JSON、工程文件打开、刷新恢复全部走这一条路径，
@@ -2195,6 +2539,12 @@ function pgParseSrtCuts(text) {
 window.__hfTest = {
   pgFrameDb, pgSegmentsFromDb, pgDetectSilence, pgParseSrtCuts,
   CUT_DEFAULT: { ...PG_CUT_DEFAULT },
+  // P5 验收卡：同样只暴露纯函数 + 一个读当前报告的入口，
+  // 测试可以拿已知图层逐条核对卡面数字，但改不到任何内部状态。
+  pgQcContract, pgLayerFrameBox, pgQcReport, pgCertDraw,
+  QC_UNCHECKED: PG_QC_UNCHECKED,
+  CERT_SITE: { ...PG_CERT_SITE },
+  CERT_SIZE: { ...PG_CERT_SIZE },
 };
 
 function pgLayerWidthPct(layer) {
@@ -2441,6 +2791,10 @@ function pgConsoleMarkup() {
             </div>
           </div>
           <label class="pg-duration">成片时长 <input type="number" id="pg-duration" min="3" max="600" step="1" value="${pgState.duration}"> 秒</label>
+          <button class="button pg-cert-btn" type="button" id="pg-cert" ${pgState.layers.length ? "" : "disabled"}
+            title="${pgState.layers.length
+              ? "把刚才这次检查结果做成一张 PNG，贴进视频简介、朋友圈或交付给甲方"
+              : "还没有图层，验收卡无从谈起——先铺一层或用「一键整片」"}">导出验收卡</button>
         </div>
         <div class="pg-con-body-h">
           <div class="pg-chips-zone">
@@ -2453,6 +2807,28 @@ function pgConsoleMarkup() {
 }
 
 function pgWireConsole() {
+  /* 验收卡：按钮就在操作台抬头这一行——刚整完片时视线正落在舞台和它下面 */
+  const certBtn = stageContent.querySelector("#pg-cert");
+  if (certBtn) certBtn.addEventListener("click", async (event) => {
+    const button = event.currentTarget;
+    if (!pgState.layers.length) { pgToast("还没有图层，先铺一层或用「一键整片」"); return; }
+    try {
+      const { fileName, report } = await pgExportCertCard();
+      const bad = report.checks.filter((c) => c.checked && !c.pass).length;
+      const skip = report.checks.filter((c) => !c.checked).length;
+      button.textContent = "已下载 ✓";
+      pgToast(`验收卡 ${fileName}${bad ? ` · ${bad} 项未达标，卡上如实标了` : ""}${skip ? ` · ${skip} 项未检查` : ""}`, 4200);
+      // 只发 format / layers 这类已经在白名单里的聚合量。
+      // 检查项过没过是用户片子自身的内容信号，不外发——pg_contract 的白名单是隐私闸门，
+      // 不为了多埋一个点去动它。
+      PG_TRACK.track("export", { format: "cert-card", layers: report.layerCount });
+    } catch (e) {
+      button.textContent = "生成失败";
+      pgToast("验收卡生成失败：" + String(e.message || e).slice(0, 40));
+    }
+    setTimeout(() => { button.textContent = "导出验收卡"; }, 2000);
+  });
+
   stageContent.querySelectorAll("[data-convert]").forEach((btn) => btn.addEventListener("click", () => {
     const ui = Number(btn.dataset.convert);
     const u = pgState.unknownLayers[ui];

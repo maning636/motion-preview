@@ -949,6 +949,14 @@ body.modes-full-page { height: auto; overflow: auto; }
 .pg-duration { flex: none; font-size: 11px; color: rgba(244, 239, 231, .62); }
 .pg-duration input { width: 58px; height: 25px; padding: 4px 7px; border-radius: 7px; }
 
+/* P5 导出验收卡：跟在成片时长后面，同属"这片做完了"的收口位置。
+   高度锁 26px —— 操作台抬头目前由 .pg-pre 的 28px 撑着，
+   按钮一旦高过 28px 就会把抬头撑高，.pg-con-body-h 的纵向预算跟着被挤掉，
+   pg_motion_test 的"最坏情况操作台无纵向裁切"就是这么红的。 */
+.pg-cert-btn { flex: none; white-space: nowrap; height: 26px; padding: 0 11px; border-color: rgba(74, 222, 128, .45); color: #4ade80; background: rgba(74, 222, 128, .08); }
+.pg-cert-btn:hover:not(:disabled) { background: rgba(74, 222, 128, .18); border-color: #4ade80; }
+.pg-cert-btn:disabled { opacity: .38; cursor: not-allowed; border-color: rgba(255, 255, 255, .12); color: rgba(244, 239, 231, .5); background: transparent; }
+
 /* 操作台横向分区 */
 .pg-con-body-h { display: flex; gap: 0; align-items: stretch; min-height: 0; overflow-x: auto; overflow-y: hidden; padding-bottom: 2px; }
 .pg-con-body-h > * { flex: none; }
