@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"accent","name":"角色色","type":"color","label":"角色色","default":"#FF6B35"},{"id":"accent2","name":"手部色","type":"color","label":"手部色","default":"#FFC93C"},{"id":"text","name":"小字","type":"string","label":"打招呼小字","default":"嗨!"},{"id":"duration","name":"时长","type":"number","label":"时长（秒）","default":3.2}]'>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=480, height=270" />
+<title>挥手打招呼</title>
+<style>
+  @font-face {
+    font-family: 'MiSans';
+    src: url('/templates/_fonts/MiSansSemiBold.ttf') format('truetype');
+    font-weight: 400 900;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 480px; height: 270px; overflow: hidden;
+    background: transparent;
+    font-family: 'MiSans', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  }
+  #stage { position: relative; width: 480px; height: 270px; overflow: hidden; }
+  :root {
+    --ink: #241C18;
+    --fg: #FFF8EE;
+  }
+
+  .pop-shadow { position: absolute; left: 152px; top: 188px; width: 100px; height: 18px;
+    border-radius: 50%; background: rgba(27, 27, 36, .26); }
+
+  .pop-hero { position: absolute; left: 152px; top: 106px; width: 130px; height: 92px;
+    transform-origin: 12% 100%; opacity: 0; }
+  .pop-leg { position: absolute; top: 71px; width: 20px; height: 21px;
+    border-radius: 3px 3px 9px 9px; background: var(--ac); border: 3px solid var(--ink); }
+  .pop-leg-l { left: 22px; }
+  .pop-leg-r { left: 54px; }
+  .pop-arm { position: absolute; top: 34px; width: 24px; height: 15px; z-index: 1;
+    border-radius: 15px; background: var(--ac); border: 3px solid var(--ink); }
+  .pop-arm-l { left: -7px; transform-origin: 100% 50%; }
+  .pop-body { position: absolute; left: 14px; top: 0; width: 72px; height: 74px; z-index: 2;
+    border-radius: 24px 26px 22px 26px; background: var(--ac); border: 3px solid var(--ink); }
+  .pop-eye { position: absolute; top: 23px; width: 20px; height: 23px;
+    border-radius: 50%; background: var(--ink); }
+  .pop-eye-l { left: 12px; }
+  .pop-eye-r { left: 40px; }
+  .pop-mouth-o { position: absolute; left: 25px; top: 49px; width: 22px; height: 19px;
+    border-radius: 50%; background: var(--ink); }
+
+  /* 抬起来挥的右臂：整条绕肩膀转 */
+  .pop-wave-arm { position: absolute; left: 82px; top: 34px; width: 26px; height: 16px;
+    border-radius: 16px; background: var(--ac); border: 3px solid var(--ink);
+    transform-origin: 0 50%; rotate: -40deg; }
+  .pop-hand { position: absolute; left: 18px; top: -11px; width: 38px; height: 38px;
+    border-radius: 50%; background: var(--ac2); border: 3px solid var(--ink); }
+
+  /* 手边的两条弧形速度线，跟着手臂一起转 */
+  .pop-arc { position: absolute; left: 50px; top: -12px; width: 44px; height: 26px;
+    border-top: 4px solid var(--ink); border-radius: 44px 44px 0 0; opacity: 0; }
+
+  /* 「嗨」用「浅色字 + 细深色描边」，**不用 -webkit-text-stroke**。
+     描边内外都扩，4px 描边加在 30px 汉字上会把字腔全部填死，
+     「嗨」糊成一坨白。8 方向 1px text-shadow 叠出细描边 + 一层硬阴影。 */
+  .pop-hi { position: absolute; left: 246px; top: 36px; width: 132px; text-align: center;
+    font-size: 30px; font-weight: 800; color: var(--fg); opacity: 0;
+    text-shadow:
+      1px  1px 0 var(--ink), -1px  1px 0 var(--ink),  1px -1px 0 var(--ink), -1px -1px 0 var(--ink),
+      0    1px 0 var(--ink),  0   -1px 0 var(--ink),  1px  0px 0 var(--ink), -1px  0px 0 var(--ink),
+      3px  3px 0 rgba(36, 28, 24, .55); }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script src="../templates/_lib/gsap.min.js"></script>
+<script>
+(() => {
+  const FALLBACK = {"accent":"#FF6B35","accent2":"#FFC93C","text":"嗨!","duration":3.2};
+  const v = (window.__hyperframes && window.__hyperframes.getVariables)
+    ? window.__hyperframes.getVariables() : FALLBACK;
+  const root = document.documentElement;
+  root.style.setProperty('--ac', v.accent || FALLBACK.accent);
+  root.style.setProperty('--ac2', v.accent2 || FALLBACK.accent2);
+  const dur = parseFloat(v.duration) || FALLBACK.duration;
+
+  const stage = document.getElementById('stage');
+  function put(tag, cls, css, text, parent) {
+    const el = document.createElement(tag);
+    if (cls) el.className = cls;
+    if (css) el.style.cssText = css;
+    if (text != null) el.textContent = text;
+    (parent || stage).appendChild(el);
+    return el;
+  }
+  function fitText(el, avail, max, min) {
+    const ws = el.style.whiteSpace;
+    el.style.whiteSpace = 'nowrap';
+    const natural = el.scrollWidth;
+    el.style.whiteSpace = ws;
+    if (natural > avail) el.style.fontSize = Math.max(min, Math.floor(max * avail / natural)) + 'px';
+  }
+
+  // ——— 方块小角色（举右手）———
+  const shadow = put('div', 'pop-shadow');
+  const hero = put('div', 'pop-hero');
+  put('div', 'pop-leg pop-leg-l', '', null, hero);
+  put('div', 'pop-leg pop-leg-r', '', null, hero);
+  put('div', 'pop-arm pop-arm-l', '', null, hero);
+  const body = put('div', 'pop-body', '', null, hero);
+  put('div', 'pop-eye pop-eye-l', '', null, body);
+  put('div', 'pop-eye pop-eye-r', '', null, body);
+  put('div', 'pop-mouth-o', '', null, body);
+
+  const waveArm = put('div', 'pop-wave-arm', '', null, hero);
+  const arc1 = put('div', 'pop-arc', '', null, waveArm);
+  const arc2 = put('div', 'pop-arc', '', null, waveArm);
+  arc2.style.top = '-34px';
+  arc2.style.left = '58px';
+  const hand = put('div', 'pop-hand', '', null, waveArm);
+
+  const hiTxt = (v.text == null || v.text === '') ? FALLBACK.text : v.text;
+  const hi = put('div', 'pop-hi', '', hiTxt);
+  fitText(hi, 132, 30, 14);
+
+  const tl = gsap.timeline({ paused: true });
+  window.__timelines = window.__timelines || {};
+  window.__timelines.main = tl;
+
+  // 入场：手臂先甩上去
+  tl.fromTo(shadow, { opacity: 0, scale: .6 }, { opacity: .26, scale: 1, duration: .26, ease: 'power2.out' }, 0);
+  tl.fromTo(hero, { scale: .6, opacity: 0 }, { scale: 1, opacity: 1, duration: .3, ease: 'back.out(2.4)' }, 0);
+  tl.fromTo(waveArm, { rotate: -40 }, { rotate: -122, duration: .34, ease: 'back.out(2.8)' }, .04);
+
+  // 「嗨」弹出来
+  tl.fromTo(hi, { scale: .25, opacity: 0, rotate: -18 },
+    { scale: 1, opacity: 1, rotate: -6, duration: .22, ease: 'back.out(3)' }, .30);
+
+  // 挥手 3 下：摆过去 → 甩回来，每下都带手部过冲和弧线
+  const STEP = .19;
+  const SWING = [-14, 14, -14, 14, -14, 10];
+  let at = .48;
+  SWING.forEach((deg, i) => {
+    tl.to(waveArm, { rotate: -122 + deg, duration: STEP, ease: i % 2 ? 'power2.out' : 'power3.out' }, at);
+    // 手部随摆动弹一下
+    tl.to(hand, { scale: i % 2 ? 1.12 : .9, duration: STEP * .5, ease: 'power2.out' }, at);
+    // 弧线跟着闪
+    tl.fromTo(arc1, { opacity: 0, scaleX: .5 }, { opacity: .55, scaleX: 1, duration: .1, ease: 'power2.out' }, at + .02);
+    tl.to(arc1, { opacity: 0, duration: .14, ease: 'power2.in' }, at + .12);
+    if (i === 1 || i === 3) {
+      tl.fromTo(arc2, { opacity: 0, scaleX: .5 }, { opacity: .45, scaleX: 1, duration: .1, ease: 'power2.out' }, at + .02);
+      tl.to(arc2, { opacity: 0, duration: .14, ease: 'power2.in' }, at + .12);
+    }
+    at += STEP;
+  });
+
+  // 挥完手放下来一点，保持招手姿态
+  tl.to(waveArm, { rotate: -118, duration: .2, ease: 'back.out(2.2)' }, at + .05);
+  tl.to(hero, { rotate: -1.6, duration: .2, ease: 'back.out(2.2)' }, at + .05);
+  tl.to(hi, { opacity: 0, y: -14, duration: .18, ease: 'power2.in' }, Math.max(at + .5, dur - .48));
+
+  tl.to({}, { duration: .3 }, Math.max(.1, dur - .3));
+  tl.play(0);
+})();
+</script>
+</body>
+</html>

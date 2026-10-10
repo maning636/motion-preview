@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"accent","name":"角色色","type":"color","label":"角色色","default":"#FF6B35"},{"id":"duration","name":"时长","type":"number","label":"时长（秒）","default":3.0}]'>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=480, height=270" />
+<title>方块角色跳跃</title>
+<style>
+  @font-face {
+    font-family: 'MiSans';
+    src: url('/templates/_fonts/MiSansSemiBold.ttf') format('truetype');
+    font-weight: 400 900;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 480px; height: 270px; overflow: hidden;
+    background: transparent;
+    font-family: 'MiSans', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  }
+  #stage { position: relative; width: 480px; height: 270px; overflow: hidden; }
+  :root {
+    --ink: #241C18;
+    --fg: #FFF8EE;
+    --ac2: #FFC93C;
+    --dust: #F7E2BE;
+  }
+
+  .pop-shadow { position: absolute; left: 190px; top: 186px; width: 100px; height: 18px;
+    border-radius: 50%; background: rgba(27, 27, 36, .30); opacity: 0; transform-origin: 50% 50%; }
+  .pop-ring { position: absolute; left: 204px; top: 186px; width: 72px; height: 18px;
+    border-radius: 50%; border: 3px solid var(--ink); background: var(--dust); opacity: 0; }
+  .pop-speck { position: absolute; left: 236px; top: 184px; width: 10px; height: 10px;
+    border-radius: 50%; border: 2px solid var(--ink); background: var(--dust); opacity: 0; }
+
+  .pop-hero { position: absolute; left: 190px; top: 104px; width: 100px; height: 92px;
+    transform-origin: 50% 100%; opacity: 0; }
+  .pop-leg { position: absolute; top: 71px; width: 20px; height: 21px;
+    border-radius: 3px 3px 9px 9px; background: var(--ac); border: 3px solid var(--ink); }
+  .pop-leg-l { left: 22px; }
+  .pop-leg-r { left: 54px; }
+  .pop-arm { position: absolute; top: 34px; width: 24px; height: 15px; z-index: 1;
+    border-radius: 15px; background: var(--ac); border: 3px solid var(--ink); }
+  .pop-arm-l { left: -7px; transform-origin: 100% 50%; }
+  .pop-arm-r { left: 83px; transform-origin: 0 50%; }
+  .pop-body { position: absolute; left: 14px; top: 0; width: 72px; height: 74px; z-index: 2;
+    border-radius: 24px 26px 22px 26px; background: var(--ac); border: 3px solid var(--ink); }
+  .pop-eye { position: absolute; top: 23px; width: 20px; height: 23px;
+    border-radius: 50%; background: var(--ink); }
+  .pop-eye-l { left: 12px; }
+  .pop-eye-r { left: 40px; }
+  .pop-mouth-o { position: absolute; left: 25px; top: 49px; width: 22px; height: 19px;
+    border-radius: 50%; background: var(--ink); }
+
+  /* 起跳时头顶的三条速度线 */
+  .pop-rise { position: absolute; left: 200px; width: 6px; height: 26px;
+    border-radius: 3px; background: var(--ac2); border: 2px solid var(--ink); opacity: 0;
+    transform-origin: 50% 0%; }
+  .pop-rise-1 { top: 96px; }
+  .pop-rise-2 { top: 88px; }
+  .pop-rise-3 { top: 104px; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script src="../templates/_lib/gsap.min.js"></script>
+<script>
+(() => {
+  const FALLBACK = {"accent":"#FF6B35","duration":3.0};
+  const v = (window.__hyperframes && window.__hyperframes.getVariables)
+    ? window.__hyperframes.getVariables() : FALLBACK;
+  const root = document.documentElement;
+  root.style.setProperty('--ac', v.accent || FALLBACK.accent);
+  const dur = parseFloat(v.duration) || FALLBACK.duration;
+
+  const stage = document.getElementById('stage');
+  function put(tag, cls, css, text, parent) {
+    const el = document.createElement(tag);
+    if (cls) el.className = cls;
+    if (css) el.style.cssText = css;
+    if (text != null) el.textContent = text;
+    (parent || stage).appendChild(el);
+    return el;
+  }
+
+  // ——— 方块小角色 ———
+  const shadow = put('div', 'pop-shadow');
+  const ringA = put('div', 'pop-ring');
+  const ringB = put('div', 'pop-ring');
+  const hero = put('div', 'pop-hero');
+  const armL = put('div', 'pop-arm pop-arm-l', '', null, hero);
+  const armR = put('div', 'pop-arm pop-arm-r', '', null, hero);
+  put('div', 'pop-leg pop-leg-l', '', null, hero);
+  put('div', 'pop-leg pop-leg-r', '', null, hero);
+  const body = put('div', 'pop-body', '', null, hero);
+  put('div', 'pop-eye pop-eye-l', '', null, body);
+  put('div', 'pop-eye pop-eye-r', '', null, body);
+  put('div', 'pop-mouth-o', '', null, body);
+
+  const rise = [
+    put('div', 'pop-rise pop-rise-1'),
+    put('div', 'pop-rise pop-rise-2'),
+    put('div', 'pop-rise pop-rise-3')
+  ];
+
+  const SPECK = [
+    [-46, -16, -150, .50],
+    [-26, -32,  120, .46],
+    [ 24, -34, -100, .52],
+    [ 44, -18,  190, .48],
+    [  0, -40,   70, .44]
+  ];
+  const specks = SPECK.map(() => put('div', 'pop-speck'));
+
+  const tl = gsap.timeline({ paused: true });
+  window.__timelines = window.__timelines || {};
+  window.__timelines.main = tl;
+
+  // 入场
+  tl.fromTo(shadow, { opacity: 0, scale: .6 }, { opacity: .32, scale: 1, duration: .26, ease: 'power2.out' }, 0);
+  tl.fromTo(hero, { scale: .7, opacity: 0, y: 10 },
+    { scale: 1, opacity: 1, y: 0, duration: .28, ease: 'back.out(2.2)' }, 0);
+
+  // 起跳前蓄力压缩
+  tl.to(hero, { scaleY: .78, scaleX: 1.14, y: 9, duration: .17, ease: 'power2.in' }, .30);
+  tl.to(armL, { rotate: -34, duration: .17, ease: 'power2.in' }, .30);
+  tl.to(armR, { rotate: 34, duration: .17, ease: 'power2.in' }, .30);
+  tl.to(shadow, { scaleX: 1.14, scaleY: .8, duration: .17, ease: 'power2.in' }, .30);
+
+  // 腾空：拉伸 + 上跳
+  tl.to(hero, { scaleY: 1.16, scaleX: .90, y: -86, duration: .30, ease: 'power2.out' }, .47);
+  tl.to(armL, { rotate: -72, duration: .30, ease: 'power2.out' }, .47);
+  tl.to(armR, { rotate: 72, duration: .30, ease: 'power2.out' }, .47);
+  tl.to(shadow, { scaleX: .62, scaleY: .45, opacity: .16, duration: .30, ease: 'power2.out' }, .47);
+
+  // 头顶速度线：起跳时冒出来，落地前收掉
+  rise.forEach((el, i) => {
+    const t = .48 + i * .04;
+    tl.fromTo(el, { scaleY: .2, opacity: 0 }, { scaleY: 1, opacity: .7, duration: .1, ease: 'power2.out' }, t);
+    tl.to(el, { scaleY: 1.4, opacity: 0, duration: .18, ease: 'power2.in' }, .60 + i * .04);
+  });
+
+  // 最高点微微张开嘴，然后下坠
+  tl.to(body, { scaleY: 1.05, duration: .12, yoyo: true, repeat: 1, ease: 'sine.inOut' }, .62);
+
+  // 落地：下压
+  tl.to(hero, { scaleY: .76, scaleX: 1.16, y: 0, duration: .12, ease: 'power2.in' }, .78);
+  tl.to(armL, { rotate: -18, duration: .12, ease: 'power2.in' }, .78);
+  tl.to(armR, { rotate: 18, duration: .12, ease: 'power2.in' }, .78);
+
+  // 落地压扁回弹
+  tl.to(hero, { scaleY: 1, scaleX: 1, duration: .14, ease: 'back.out(3.4)' }, .90);
+  tl.to(armL, { rotate: 0, duration: .18, ease: 'back.out(2.6)' }, .90);
+  tl.to(armR, { rotate: 0, duration: .18, ease: 'back.out(2.6)' }, .90);
+  tl.to(shadow, { scaleX: 1, scaleY: 1, opacity: .32, duration: .2, ease: 'back.out(2)' }, .78);
+
+  // 落地扬尘
+  tl.fromTo(ringA, { scale: .24, opacity: .9 }, { scale: 1.9, opacity: 0, duration: .46, ease: 'power2.out' }, .78);
+  tl.fromTo(ringB, { scale: .18, opacity: .7 }, { scale: 1.3, opacity: 0, duration: .4, ease: 'power2.out' }, .86);
+  specks.forEach((el, i) => {
+    const a = SPECK[i], t = .79 + i * .018;
+    tl.fromTo(el, { x: 0, y: 0, scale: .25, opacity: 0 },
+      { scale: 1, opacity: .95, duration: .07, ease: 'back.out(2.4)' }, t);
+    tl.to(el, { x: a[0], y: a[1], rotation: a[2], scale: .55, opacity: 0, duration: a[3], ease: 'power1.out' }, t + .07);
+  });
+
+  // 落地后站稳的高频小抖
+  tl.to(hero, { x: 2.5, duration: .05, repeat: 3, yoyo: true, ease: 'none' }, 1.02);
+
+  tl.to({}, { duration: .3 }, Math.max(.1, dur - .3));
+  tl.play(0);
+})();
+</script>
+</body>
+</html>

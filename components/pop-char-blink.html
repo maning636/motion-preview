@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"accent","name":"角色色","type":"color","label":"角色色","default":"#FF6B35"},{"id":"duration","name":"时长","type":"number","label":"时长（秒）","default":3.6}]'>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=480, height=270" />
+<title>方块角色眨眼与张望</title>
+<style>
+  @font-face {
+    font-family: 'MiSans';
+    src: url('/templates/_fonts/MiSansSemiBold.ttf') format('truetype');
+    font-weight: 400 900;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 480px; height: 270px; overflow: hidden;
+    background: transparent;
+    font-family: 'MiSans', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  }
+  #stage { position: relative; width: 480px; height: 270px; overflow: hidden; }
+  :root {
+    --ink: #241C18;
+    --fg: #FFF8EE;
+  }
+
+  .pop-hero { position: absolute; left: 190px; top: 106px; width: 100px; height: 92px;
+    transform-origin: 50% 100%; opacity: 0; }
+  .pop-leg { position: absolute; top: 71px; width: 20px; height: 21px;
+    border-radius: 3px 3px 9px 9px; background: var(--ac); border: 3px solid var(--ink); }
+  .pop-leg-l { left: 22px; }
+  .pop-leg-r { left: 54px; }
+  .pop-arm { position: absolute; top: 34px; width: 24px; height: 15px; z-index: 1;
+    border-radius: 15px; background: var(--ac); border: 3px solid var(--ink); }
+  .pop-arm-l { left: -7px; transform-origin: 100% 50%; }
+  .pop-arm-r { left: 83px; transform-origin: 0 50%; }
+  .pop-head { position: absolute; left: 14px; top: 0; width: 72px; height: 74px; z-index: 2;
+    transform-origin: 50% 96%; }
+  .pop-body { position: absolute; left: 0; top: 0; width: 72px; height: 74px;
+    border-radius: 24px 26px 22px 26px; background: var(--ac); border: 3px solid var(--ink); }
+
+  /* 眼白 + 瞳孔 + 眼皮三层 */
+  .pop-orb { position: absolute; top: 21px; width: 26px; height: 28px;
+    border-radius: 50%; background: var(--fg); border: 3px solid var(--ink); overflow: hidden; }
+  .pop-orb-l { left: 9px; }
+  .pop-orb-r { left: 37px; }
+  .pop-pupil { position: absolute; left: 7px; top: 8px; width: 12px; height: 12px;
+    border-radius: 50%; background: var(--ink); }
+  .pop-lid { position: absolute; left: 0; top: 0; width: 26px; height: 21px;
+    border-radius: 0 0 26px 26px; background: var(--ink); transform: scaleY(0);
+    transform-origin: 50% 0%; }
+  .pop-mouth { position: absolute; left: 21px; top: 54px; width: 30px; height: 14px;
+    border-bottom: 4px solid var(--ink); border-radius: 0 0 16px 16px; }
+  .pop-cheek { position: absolute; top: 48px; width: 12px; height: 8px;
+    border-radius: 50%; background: #FF9E80; opacity: .8; }
+  .pop-cheek-l { left: 3px; }
+  .pop-cheek-r { left: 57px; }
+
+  /* 问号：扫视到一半时冒出来的小提示。
+     深墨画在深底上等于隐形，所以走「浅色字 + 细深色描边」，
+     和同批 pop-char-pop-in / pop-arm-wave 的小字同一套做法。 */
+  .pop-q { position: absolute; left: 104px; top: -2px; width: 30px; height: 30px;
+    font-size: 26px; font-weight: 800; color: var(--fg); opacity: 0;
+    text-shadow:
+      1px 1px 0 var(--ink), -1px 1px 0 var(--ink), 1px -1px 0 var(--ink), -1px -1px 0 var(--ink),
+      0 1px 0 var(--ink),  0 -1px 0 var(--ink), 1px 0 0 var(--ink),  -1px 0 0 var(--ink),
+      2px 3px 0 rgba(36, 28, 24, .60); }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script src="../templates/_lib/gsap.min.js"></script>
+<script>
+(() => {
+  const FALLBACK = {"accent":"#FF6B35","duration":3.6};
+  const v = (window.__hyperframes && window.__hyperframes.getVariables)
+    ? window.__hyperframes.getVariables() : FALLBACK;
+  const root = document.documentElement;
+  root.style.setProperty('--ac', v.accent || FALLBACK.accent);
+  const dur = parseFloat(v.duration) || FALLBACK.duration;
+
+  /* ── 时间轴先建、先注册 ─────────────────────────────────────
+     注册必须排在**任何可能抛异常的代码之前**。注册之后的代码一旦抛错，
+     预览至少还能拿到一条已注册的空时间轴（报 duration=0，症状可读）；
+     注册之前抛错则是「整条组件没有时间轴」，画面全黑且毫无线索。
+     反面教材：旧版在这里用 tl.tween(...) 驱动整段——那不是 GSAP 的 API，
+     直接抛 TypeError，收口的 tl.play(0) 从没执行，渲出来只有 0.34 秒。 */
+  const tl = gsap.timeline({ paused: true });
+  window.__timelines = window.__timelines || {};
+  window.__timelines.main = tl;
+
+  const stage = document.getElementById('stage');
+  function put(tag, cls, css, text, parent) {
+    const el = document.createElement(tag);
+    if (cls) el.className = cls;
+    if (css) el.style.cssText = css;
+    if (text != null) el.textContent = text;
+    (parent || stage).appendChild(el);
+    return el;
+  }
+
+  // ——— 方块小角色（会转头的版本）———
+  const hero = put('div', 'pop-hero');
+  put('div', 'pop-leg pop-leg-l', '', null, hero);
+  put('div', 'pop-leg pop-leg-r', '', null, hero);
+  put('div', 'pop-arm pop-arm-l', '', null, hero);
+  put('div', 'pop-arm pop-arm-r', '', null, hero);
+  const head = put('div', 'pop-head', '', null, hero);
+  put('div', 'pop-body', '', null, head);
+  const orbL = put('div', 'pop-orb pop-orb-l', '', null, head);
+  const orbR = put('div', 'pop-orb pop-orb-r', '', null, head);
+  const pupL = put('div', 'pop-pupil', '', null, orbL);
+  const pupR = put('div', 'pop-pupil', '', null, orbR);
+  const lidL = put('div', 'pop-lid', '', null, orbL);
+  const lidR = put('div', 'pop-lid', '', null, orbR);
+  put('div', 'pop-cheek pop-cheek-l', '', null, head);
+  put('div', 'pop-cheek pop-cheek-r', '', null, head);
+  put('div', 'pop-mouth', '', null, head);
+  const qmark = put('div', 'pop-q', '', '?', hero);
+
+  // ——— 确定性伪随机（时间 → 画面，纯函数，不使用运行时随机数）———
+  // 固定种子的正弦散列：同样的输入永远得到同样的输出
+  function rnd(seed) {
+    const s = Math.sin(seed * 12.9898 + 4.1414) * 43758.5453;
+    return s - Math.floor(s);
+  }
+  // 把「扫视」拆成若干停留片段：看左、看右、看上、眨眼
+  const N = 7;
+  const STEP = Math.max(.30, dur - .8) / N;
+  const shots = [];
+  for (let i = 0; i < N; i++) {
+    shots.push({
+      t: .40 + i * STEP,
+      gx: Math.round((rnd(i + 1) * 2 - 1) * 5),
+      gy: Math.round((rnd(i + 21) * 2 - 1) * 3),
+      bl: rnd(i + 41) < .34            // 三成机会顺带眨一下
+    });
+  }
+
+  /* ── 「时间 → 画面」在构建期算完，烘成真实补间 ───────────────
+     两个坑叠在一起，旧版两个都踩了：
+
+     1) `tl.tween()` **不是 GSAP 的 API**。写错名字不报语法错
+        （node --check 是绿的），运行时才抛 TypeError，脚本当场死。
+     2) GSAP 3.12.7 在 `seek()` / `time(t)` 时**既不触发 onUpdate
+        也不触发 onComplete**。而云渲染的 settle 正是来回扫时间轴，
+        所以靠回调驱动的样式会全部停在旧帧。
+
+     因此这里没有任何 onUpdate / onComplete：每个片段的瞳孔位移、
+     眼皮 scaleY、头转角，都是提前算好的值，用 tl.fromTo/to 串成真补间。
+     seek 到任意时刻都能得到那一帧该有的画面。 */
+
+  // 眨眼：0.19s 拆成 闭合 → 保持 → 张开 三段真实补间
+  function blinkAt(t0) {
+    [lidL, lidR].forEach(function (lid) {
+      tl.fromTo(lid, { scaleY: 0 }, { scaleY: 1, duration: .07, ease: 'power2.in' }, t0);
+      tl.fromTo(lid, { scaleY: 1 }, { scaleY: 1, duration: .04, ease: 'none' }, t0 + .07);
+      tl.fromTo(lid, { scaleY: 1 }, { scaleY: 0, duration: .08, ease: 'power2.out' }, t0 + .11);
+    });
+  }
+
+  // 入场
+  tl.fromTo(hero, { scale: .6, opacity: 0, y: 12 },
+    { scale: 1, opacity: 1, y: 0, duration: .34, ease: 'back.out(2.4)' }, 0);
+
+  // 扫视：逐段真实补间（片段 i 的姿态 → 片段 i+1 的姿态）
+  for (let i = 0; i < shots.length - 1; i++) {
+    const a = shots[i], b = shots[i + 1];
+    const d = b.t - a.t;
+    const E = 'power2.inOut';                    // 眼球转过去要有起停
+    tl.fromTo([pupL, pupR], { x: a.gx, y: a.gy }, { x: b.gx, y: b.gy, duration: d, ease: E }, a.t);
+    tl.fromTo(head, { rotation: a.gx * .8 }, { rotation: b.gx * .8, duration: d, ease: E }, a.t);
+    // 扫视途中冒问号（只在这一段真要挪眼时才冒）
+    if (a.gx !== b.gx) {
+      tl.fromTo(qmark, { opacity: 0, scale: .68, rotation: -8 },
+        { opacity: .85, scale: 1, rotation: 0, duration: .12, ease: 'back.out(2.6)' }, a.t + d * .30);
+      tl.to(qmark, { opacity: 0, scale: 1.16, duration: .14, ease: 'power2.in' }, a.t + d * .62);
+    }
+  }
+
+  // 各片段起点的眨眼（此时头已摆到位，眨完正好对上下一个注视点）
+  shots.forEach(function (s) { if (s.bl) blinkAt(s.t); });
+
+  /* ── 收尾：最后一段之后不能是一张冻住的图 ─────────────────────
+     扫视走完还剩将近一秒，旧版这段是完全静止的，静帧抽出来像卡住。
+     这里补一段轻微的待机晃动 + 一次收尾眨眼。
+     ⚠️ 全部收尾动作必须**压在 dur 之内**：越过 dur 的补间会把
+     tl.duration() 撑大（实测撑到 4.24s，比声明的 3.6s 长了一截），
+     渲染器按 --dur 取样就会截短最后一秒。 */
+  const TAIL = shots[shots.length - 1].t;
+  const hold = shots[shots.length - 1];
+  /* 剩余时间按比例切四段，整段刚好落在 dur 上 */
+  const rest = Math.max(.4, dur - TAIL);
+  const S1 = rest * .26, S2 = rest * .24, S3 = rest * .18;
+  tl.fromTo(head, { rotation: hold.gx * .8 }, { rotation: hold.gx * .8 + 2.4, duration: S1, ease: 'sine.inOut' }, TAIL);
+  tl.to(head, { rotation: hold.gx * .8 - 2.0, duration: S2, ease: 'sine.inOut' }, TAIL + S1);
+  blinkAt(TAIL + S1 + S2 * .35);
+  tl.fromTo([pupL, pupR], { x: hold.gx, y: hold.gy },
+    { x: hold.gx - 2, y: hold.gy, duration: S3, ease: 'sine.inOut' }, TAIL + S1 + S2);
+  tl.to([pupL, pupR], { x: hold.gx, y: hold.gy + 1, duration: S3, ease: 'sine.inOut' },
+    TAIL + S1 + S2 + S3);
+
+  tl.to({}, { duration: .3 }, Math.max(.1, dur - .3));
+  tl.play(0);
+})();
+</script>
+</body>
+</html>

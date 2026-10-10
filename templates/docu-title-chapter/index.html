@@ -195,6 +195,11 @@
       const vars = window.__hyperframes?.getVariables?.() || {};
       const duration = Math.max(1, Number(vars.duration) || 6);
       const tl = gsap.timeline({ paused: true, defaults: { ease: "power3.out" } });
+          // 注册到 window.__timelines：云渲染的 settle/逐帧定位靠它驱动时间轴。
+          // 此前有一批素材没注册，导致渲染停在第 0 帧（主体初始 opacity:0 → 整层空）。
+          // gsap 时间轴就地 mutate，先存引用即可，后续 tl.to() 作用在同一对象上。
+          window.__timelines = window.__timelines || {};
+          window.__timelines.main = tl;
       window.__timelines = window.__timelines || {};
 
       // 入场：序号 → 主标题（拉幕式 clip-path 从上往下揭幕）→ 朱砂线 → 副标题 → 印章

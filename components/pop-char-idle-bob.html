@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"accent","name":"角色色","type":"color","label":"角色色","default":"#FF6B35"},{"id":"accent2","name":"点缀色","type":"color","label":"点缀色","default":"#2EC4B6"},{"id":"duration","name":"时长","type":"number","label":"时长（秒）","default":3.4}]'>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=480, height=270" />
+<title>方块角色待机呼吸</title>
+<style>
+  @font-face {
+    font-family: 'MiSans';
+    src: url('/templates/_fonts/MiSansSemiBold.ttf') format('truetype');
+    font-weight: 400 900;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 480px; height: 270px; overflow: hidden;
+    background: transparent;
+    font-family: 'MiSans', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  }
+  #stage { position: relative; width: 480px; height: 270px; overflow: hidden; }
+  :root {
+    --ink: #241C18;
+    --fg: #FFF8EE;
+  }
+
+  .pop-shadow { position: absolute; left: 190px; top: 188px; width: 100px; height: 18px;
+    border-radius: 50%; background: rgba(27, 27, 36, .26); opacity: 0; }
+
+  .pop-hero { position: absolute; left: 190px; top: 106px; width: 100px; height: 92px;
+    transform-origin: 50% 100%; opacity: 0; }
+  .pop-rig { position: absolute; left: 0; top: 0; width: 100px; height: 92px;
+    transform-origin: 50% 100%; }
+  .pop-leg { position: absolute; top: 71px; width: 20px; height: 21px;
+    border-radius: 3px 3px 9px 9px; background: var(--ac); border: 3px solid var(--ink); }
+  .pop-leg-l { left: 22px; }
+  .pop-leg-r { left: 54px; }
+  .pop-arm { position: absolute; top: 34px; width: 24px; height: 15px; z-index: 1;
+    border-radius: 15px; background: var(--ac); border: 3px solid var(--ink); }
+  .pop-arm-l { left: -7px; transform-origin: 100% 50%; }
+  .pop-arm-r { left: 83px; transform-origin: 0 50%; }
+  .pop-body { position: absolute; left: 14px; top: 0; width: 72px; height: 74px; z-index: 2;
+    border-radius: 24px 26px 22px 26px; background: var(--ac); border: 3px solid var(--ink); }
+  .pop-eye { position: absolute; top: 23px; width: 20px; height: 23px;
+    border-radius: 50%; background: var(--ink); }
+  .pop-eye-l { left: 12px; }
+  .pop-eye-r { left: 40px; }
+  .pop-mouth { position: absolute; left: 21px; top: 53px; width: 30px; height: 14px;
+    border-bottom: 4px solid var(--ink); border-radius: 0 0 16px 16px; }
+  /* 头顶偶尔飘起的小音符：让「待机」不空 */
+  .pop-note { position: absolute; left: 100px; width: 22px; height: 22px; opacity: 0; }
+  .pop-note-1 { top: 2px; }
+  .pop-note-2 { top: 10px; left: 122px; width: 16px; height: 16px; }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script src="../templates/_lib/gsap.min.js"></script>
+<script>
+(() => {
+  const FALLBACK = {"accent":"#FF6B35","accent2":"#2EC4B6","duration":3.4};
+  const v = (window.__hyperframes && window.__hyperframes.getVariables)
+    ? window.__hyperframes.getVariables() : FALLBACK;
+  const root = document.documentElement;
+  root.style.setProperty('--ac', v.accent || FALLBACK.accent);
+  root.style.setProperty('--ac2', v.accent2 || FALLBACK.accent2);
+  const dur = parseFloat(v.duration) || FALLBACK.duration;
+
+  const stage = document.getElementById('stage');
+  function put(tag, cls, css, text, parent) {
+    const el = document.createElement(tag);
+    if (cls) el.className = cls;
+    if (css) el.style.cssText = css;
+    if (text != null) el.textContent = text;
+    (parent || stage).appendChild(el);
+    return el;
+  }
+
+  // ——— 方块小角色：hero(上下呼吸) > rig(左右摇摆) > 四肢与身体 ———
+  const shadow = put('div', 'pop-shadow');
+  const hero = put('div', 'pop-hero');
+  const rig = put('div', 'pop-rig', '', null, hero);
+  const armL = put('div', 'pop-arm pop-arm-l', '', null, rig);
+  const armR = put('div', 'pop-arm pop-arm-r', '', null, rig);
+  put('div', 'pop-leg pop-leg-l', '', null, rig);
+  put('div', 'pop-leg pop-leg-r', '', null, rig);
+  const body = put('div', 'pop-body', '', null, rig);
+  put('div', 'pop-eye pop-eye-l', '', null, body);
+  put('div', 'pop-eye pop-eye-r', '', null, body);
+  put('div', 'pop-mouth', '', null, body);
+
+  const note1 = put('div', 'pop-note pop-note-1', '', '♪', hero);
+  const note2 = put('div', 'pop-note pop-note-2', '', '·', hero);
+  note1.style.color = '#241C18';
+  note2.style.color = '#241C18';
+
+  const tl = gsap.timeline({ paused: true });
+  window.__timelines = window.__timelines || {};
+  window.__timelines.main = tl;
+
+  // 入场
+  tl.fromTo(shadow, { opacity: 0, scale: .7 }, { opacity: .26, scale: 1, duration: .26, ease: 'power2.out' }, 0);
+  tl.fromTo(hero, { scale: .5, opacity: 0, y: 16 },
+    { scale: 1, opacity: 1, y: 0, duration: .32, ease: 'back.out(2.6)' }, 0);
+
+  // 循环段：repeat 用固定次数算出来，保证时间轴有限长、云渲染能扫完
+  const loopStart = .34;
+  const loopDur = Math.max(.6, dur - loopStart);
+  const BREATH = .58, SWAY = .92, ARM = .74;
+  const rBreath = Math.max(1, Math.round(loopDur / (BREATH * 2)));
+  const rSway = Math.max(1, Math.round(loopDur / (SWAY * 2)));
+  const rArm = Math.max(1, Math.round(loopDur / (ARM * 2)));
+
+  // 上下微弹
+  tl.to(hero, { y: -6, scaleY: 1.04, scaleX: .97, duration: BREATH, ease: 'sine.inOut',
+    yoyo: true, repeat: rBreath }, loopStart);
+
+  // 身体轻微摇摆（摇的是 rig 层，四肢和躯干一起拧，方形本身不变形）
+  tl.to(rig, { rotate: 2.6, duration: SWAY, ease: 'sine.inOut', yoyo: true, repeat: rSway }, loopStart);
+
+  // 手臂摆动（错开相位，像轻轻晃）
+  tl.to(armL, { rotate: -16, duration: ARM, ease: 'sine.inOut', yoyo: true, repeat: rArm }, loopStart);
+  tl.to(armR, { rotate: 16, duration: ARM, ease: 'sine.inOut', yoyo: true, repeat: rArm }, loopStart + ARM * .5);
+
+  // 影子随呼吸轻微缩放
+  tl.to(shadow, { scaleX: .9, scaleY: .85, duration: BREATH, ease: 'sine.inOut',
+    yoyo: true, repeat: rBreath }, loopStart);
+
+  // 小音符飘起
+  const noteTimes = [];
+  let nt = loopStart + .5;
+  while (nt < dur - .35) { noteTimes.push(nt); nt += .78; }
+  noteTimes.forEach((t, i) => {
+    const el = i % 2 ? note2 : note1;
+    tl.fromTo(el, { opacity: 0, y: 6, scale: .5, rotate: -12 },
+      { opacity: .8, y: -8, scale: 1, rotate: 10, duration: .3, ease: 'back.out(2.6)' }, t);
+    tl.to(el, { opacity: 0, y: -22, duration: .32, ease: 'power2.in' }, t + .3);
+  });
+
+  tl.to({}, { duration: .3 }, Math.max(.1, dur - .3));
+  tl.play(0);
+})();
+</script>
+</body>
+</html>

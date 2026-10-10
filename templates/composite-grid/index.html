@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN" data-composition-variables='[{"id":"title","type":"string","label":"标题","default":"组合视图"},{"id":"subtitle","type":"string","label":"副标题","default":"多个组件同屏展示"},{"id":"mediaTL","type":"string","label":"左上视频","default":"/renders/bar-chart-grow/sample.webm"},{"id":"mediaTR","type":"string","label":"右上视频","default":"/renders/number-counter/sample.webm"},{"id":"mediaBL","type":"string","label":"左下视频","default":"/renders/simple-flow-chart/sample.webm"},{"id":"mediaBR","type":"string","label":"右下视频","default":"/renders/pull-quote-hero/sample.webm"},{"id":"scaleTL","type":"number","label":"左上缩放","default":0.5},{"id":"scaleTR","type":"number","label":"右上缩放","default":0.5},{"id":"scaleBL","type":"number","label":"左下缩放","default":0.5},{"id":"scaleBR","type":"number","label":"右下缩放","default":0.5},{"id":"duration","type":"number","label":"总时长（秒）","default":6},{"id":"accent","type":"color","label":"强调色","default":"#00FF00"},{"id":"background","type":"color","label":"背景色","default":"#12100E"},{"id":"foreground","type":"color","label":"文字色","default":"#F4EFE7"}]'>
+<html lang="zh-CN" data-composition-variables='[{"id":"title","type":"string","label":"标题","default":"组合视图"},{"id":"subtitle","type":"string","label":"副标题","default":"多个组件同屏展示"},{"id":"mediaTL","type":"string","label":"左上视频","default":"/hub/renders/bar-chart-grow/sample.webm"},{"id":"mediaTR","type":"string","label":"右上视频","default":"/hub/renders/big-number-card/sample.webm"},{"id":"mediaBL","type":"string","label":"左下视频","default":"/hub/renders/simple-flow-chart/sample.webm"},{"id":"mediaBR","type":"string","label":"右下视频","default":"/hub/renders/pull-quote-hero/sample.webm"},{"id":"scaleTL","type":"number","label":"左上缩放","default":0.5},{"id":"scaleTR","type":"number","label":"右上缩放","default":0.5},{"id":"scaleBL","type":"number","label":"左下缩放","default":0.5},{"id":"scaleBR","type":"number","label":"右下缩放","default":0.5},{"id":"duration","type":"number","label":"总时长（秒）","default":6},{"id":"accent","type":"color","label":"强调色","default":"#00FF00"},{"id":"background","type":"color","label":"背景色","default":"#12100E"},{"id":"foreground","type":"color","label":"文字色","default":"#F4EFE7"}]'>
   <head>
     <meta charset="UTF-8" /><meta name="viewport" content="width=1920, height=1080" />
     <script src="../_lib/gsap.min.js"></script>
@@ -49,10 +49,15 @@
       (function() {
         const v = window.__hyperframes?.getVariables ? window.__hyperframes.getVariables() : {
           title: "组合视图", subtitle: "多个组件同屏展示",
-          mediaTL: "/renders/bar-chart-grow/sample.webm", scaleTL: 0.5,
-          mediaTR: "/renders/number-counter/sample.webm", scaleTR: 0.5,
-          mediaBL: "/renders/simple-flow-chart/sample.webm", scaleBL: 0.5,
-          mediaBR: "/renders/pull-quote-hero/sample.webm", scaleBR: 0.5,
+          /* 路径要带 /hub/ 前缀：素材挂在 /hub/templates/… 下，
+             写根相对的 /renders/… 会解析成 https://maning789link.top/renders/… → 404，
+             四个格子全空（线上预览就是这么坏的：四个空框）。
+             另一处 number-counter 这个素材压根不存在（本地和线上都没有），
+             换成同族的 big-number-card。 */
+          mediaTL: "/hub/renders/bar-chart-grow/sample.webm", scaleTL: 0.5,
+          mediaTR: "/hub/renders/big-number-card/sample.webm", scaleTR: 0.5,
+          mediaBL: "/hub/renders/simple-flow-chart/sample.webm", scaleBL: 0.5,
+          mediaBR: "/hub/renders/pull-quote-hero/sample.webm", scaleBR: 0.5,
           accent: "#00FF00", background: "#12100E", foreground: "#F4EFE7"
         };
         document.documentElement.style.setProperty('--accent', v.accent);

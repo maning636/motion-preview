@@ -114,7 +114,14 @@
       const nodes = [], arrows = [];
       const steps = SP(v.steps);
       const subs = SPN(v.latencies).map(x => x + "ms");
-      const hot = (function(){ const r = []; for (let i = highlightStart - 1; i <= highlightEnd - 1; i++) r.push(i); return r; })();
+      /* 高亮区间必须从 v 上取：原来这里写的是裸的 highlightStart / highlightEnd，
+         那两个名字从来没有被声明过（值在 v.highlightStart 上），
+         一跑到这行就 ReferenceError，后面的建节点、注册时间轴全都没了。
+         症状是这条模板在**编辑器和预览里都是空的**，而不是"少了个高亮"。
+         同族模板 complex-flow 的写法是对的：Number(v.highlightStart) || 1。 */
+      const hStart = Math.max(1, Number(v.highlightStart) || 1);
+      const hEnd = Math.max(hStart, Number(v.highlightEnd) || hStart);
+      const hot = (function(){ const r = []; for (let i = hStart - 1; i <= hEnd - 1; i++) r.push(i); return r; })();
       steps.forEach((s, i) => {
         if (i > 0) arrows.push(addArrow());
         nodes.push(addNode(s, subs[i] || "", hot.includes(i) ? "焦点" : null, "chip-lime"));

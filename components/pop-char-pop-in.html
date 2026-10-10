@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN" data-composition-variables='[{"id":"accent","name":"角色色","type":"color","label":"角色色","default":"#FF6B35"},{"id":"word","name":"落地字","type":"string","label":"落地小字","default":"落地!"},{"id":"duration","name":"时长","type":"number","label":"时长（秒）","default":3.2}]'>
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=480, height=270" />
+<title>方块角色弹入</title>
+<style>
+  @font-face {
+    font-family: 'MiSans';
+    src: url('/templates/_fonts/MiSansSemiBold.ttf') format('truetype');
+    font-weight: 400 900;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 480px; height: 270px; overflow: hidden;
+    background: transparent;
+    font-family: 'MiSans', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif;
+  }
+  #stage { position: relative; width: 480px; height: 270px; overflow: hidden; }
+  :root {
+    --ac2: #FFC93C;
+    --ink: #241C18;
+    --fg: #FFF8EE;
+    --dust: #F7E2BE;
+  }
+
+  .pop-shadow { position: absolute; left: 190px; top: 188px; width: 100px; height: 18px;
+    border-radius: 50%; background: rgba(27, 27, 36, .30); opacity: 0; }
+  .pop-ring { position: absolute; left: 204px; top: 188px; width: 72px; height: 18px;
+    border-radius: 50%; border: 3px solid var(--ink); background: var(--dust); opacity: 0; }
+  .pop-speck { position: absolute; left: 236px; top: 186px; width: 10px; height: 10px;
+    border-radius: 50%; border: 2px solid var(--ink); background: var(--dust); opacity: 0; }
+
+  .pop-hero { position: absolute; left: 190px; top: 106px; width: 100px; height: 92px;
+    transform-origin: 50% 100%; opacity: 0; }
+  .pop-leg { position: absolute; top: 71px; width: 20px; height: 21px;
+    border-radius: 3px 3px 9px 9px; background: var(--ac); border: 3px solid var(--ink); }
+  .pop-leg-l { left: 22px; }
+  .pop-leg-r { left: 54px; }
+  .pop-arm { position: absolute; top: 34px; width: 24px; height: 15px; z-index: 1;
+    border-radius: 15px; background: var(--ac); border: 3px solid var(--ink); }
+  .pop-arm-l { left: -7px; transform-origin: 100% 50%; }
+  .pop-arm-r { left: 83px; transform-origin: 0 50%; }
+  .pop-body { position: absolute; left: 14px; top: 0; width: 72px; height: 74px; z-index: 2;
+    border-radius: 24px 26px 22px 26px; background: var(--ac); border: 3px solid var(--ink); }
+  .pop-eye { position: absolute; top: 23px; width: 20px; height: 23px;
+    border-radius: 50%; background: var(--ink); }
+  .pop-eye-l { left: 12px; }
+  .pop-eye-r { left: 40px; }
+  .pop-mouth { position: absolute; left: 21px; top: 53px; width: 30px; height: 14px;
+    border-bottom: 4px solid var(--ink); border-radius: 0 0 16px 16px; }
+
+  /* 小字用「浅色字 + 细深色描边」，**不用 -webkit-text-stroke**。
+     描边是内外都扩的：26px 汉字加 3px 描边，字腔（笔画之间的封闭空隙）
+     会被填死，「落地」两个字直接糊成一坨白，读不出来。
+     改用 8 方向 1px text-shadow 叠出细描边，字腔全留，
+     再补一层大偏移硬阴影做立体感。 */
+  .pop-word { position: absolute; left: 288px; top: 92px; width: 108px; text-align: center;
+    font-size: 26px; font-weight: 800; color: var(--fg); opacity: 0;
+    text-shadow:
+      1px  1px 0 var(--ink), -1px  1px 0 var(--ink),  1px -1px 0 var(--ink), -1px -1px 0 var(--ink),
+      0    1px 0 var(--ink),  0   -1px 0 var(--ink),  1px  0px 0 var(--ink), -1px  0px 0 var(--ink),
+      3px  3px 0 rgba(36, 28, 24, .55); }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<script src="../templates/_lib/gsap.min.js"></script>
+<script>
+(() => {
+  const FALLBACK = {"accent":"#FF6B35","word":"落地!","duration":3.2};
+  const v = (window.__hyperframes && window.__hyperframes.getVariables)
+    ? window.__hyperframes.getVariables() : FALLBACK;
+  const root = document.documentElement;
+  root.style.setProperty('--ac', v.accent || FALLBACK.accent);
+  const dur = parseFloat(v.duration) || FALLBACK.duration;
+
+  const stage = document.getElementById('stage');
+  function put(tag, cls, css, text, parent) {
+    const el = document.createElement(tag);
+    if (cls) el.className = cls;
+    if (css) el.style.cssText = css;
+    if (text != null) el.textContent = text;
+    (parent || stage).appendChild(el);
+    return el;
+  }
+  function fitText(el, avail, max, min) {
+    const ws = el.style.whiteSpace;
+    el.style.whiteSpace = 'nowrap';
+    const natural = el.scrollWidth;
+    el.style.whiteSpace = ws;
+    if (natural > avail) el.style.fontSize = Math.max(min, Math.floor(max * avail / natural)) + 'px';
+  }
+
+  // ——— 布景：影子 / 扬尘 ———
+  const shadow = put('div', 'pop-shadow');
+  const ringA = put('div', 'pop-ring');
+  const ringB = put('div', 'pop-ring');
+
+  // ——— 方块小角色（每条组件自画一套）———
+  const hero = put('div', 'pop-hero');
+  put('div', 'pop-leg pop-leg-l', '', null, hero);
+  put('div', 'pop-leg pop-leg-r', '', null, hero);
+  const armL = put('div', 'pop-arm pop-arm-l', '', null, hero);
+  const armR = put('div', 'pop-arm pop-arm-r', '', null, hero);
+  const body = put('div', 'pop-body', '', null, hero);
+  put('div', 'pop-eye pop-eye-l', '', null, body);
+  put('div', 'pop-eye pop-eye-r', '', null, body);
+  put('div', 'pop-mouth', '', null, body);
+
+  // 落地小字
+  const wordTxt = (v.word == null || v.word === '') ? FALLBACK.word : v.word;
+  const word = put('div', 'pop-word', '', wordTxt);
+  fitText(word, 108, 26, 13);
+
+  // 尘土颗粒：固定轨迹，纯数据，不含随机
+  const SPECK = [
+    [-44, -14, -140, .50],
+    [-28, -31,  130, .46],
+    [ 22, -33,  -95, .52],
+    [ 42, -17,  200, .48],
+    [-10, -39,   55, .44],
+    [  8, -35, -165, .46]
+  ];
+  const specks = SPECK.map(() => put('div', 'pop-speck'));
+
+  const tl = gsap.timeline({ paused: true });
+  window.__timelines = window.__timelines || {};
+  window.__timelines.main = tl;
+
+  // 0.00 影子先压扁出场
+  tl.fromTo(shadow, { opacity: 0, scaleX: .5 }, { opacity: .32, scaleX: 1, duration: .34, ease: 'power2.out' }, 0);
+
+  // 0.00 从天上砸落
+  tl.fromTo(hero,
+    { y: -150, scale: 1.3, opacity: 0, rotate: -9 },
+    { y: 0, scale: 1, opacity: 1, rotate: 0, duration: .34, ease: 'power4.in' }, 0);
+
+  // 0.34 落地压扁 → 回弹
+  tl.to(hero, { scaleY: .80, scaleX: 1.10, duration: .085, ease: 'power2.out' }, .34);
+  tl.to(hero, { scaleY: 1, scaleX: 1, duration: .12, ease: 'back.out(3.2)' }, .425);
+
+  // 落地高频抖动
+  tl.to(hero, { x: 3, duration: .05, repeat: 3, yoyo: true, ease: 'none' }, .425);
+
+  // 脚下扬尘圈
+  tl.fromTo(ringA, { scale: .22, opacity: .9 }, { scale: 1.9, opacity: 0, duration: .46, ease: 'power2.out' }, .34);
+  tl.fromTo(ringB, { scale: .18, opacity: .7 }, { scale: 1.35, opacity: 0, duration: .40, ease: 'power2.out' }, .42);
+
+  // 尘土颗粒
+  specks.forEach((el, i) => {
+    const a = SPECK[i], t = .35 + i * .018;
+    tl.fromTo(el, { x: 0, y: 0, scale: .25, opacity: 0 },
+      { scale: 1, opacity: .95, duration: .07, ease: 'back.out(2.4)' }, t);
+    tl.to(el, { x: a[0], y: a[1], rotation: a[2], scale: .55, opacity: 0, duration: a[3], ease: 'power1.out' }, t + .07);
+  });
+
+  // 手臂被砸得甩一下
+  tl.to(armL, { rotate: -16, duration: .07, yoyo: true, repeat: 1, ease: 'power1.out' }, .34);
+  tl.to(armR, { rotate: 16, duration: .07, yoyo: true, repeat: 1, ease: 'power1.out' }, .34);
+
+  // 落地小字
+  tl.fromTo(word,
+    { scale: .25, opacity: 0, rotate: -16, y: 8 },
+    { scale: 1, opacity: 1, rotate: -6, y: 0, duration: .24, ease: 'back.out(3)' }, .46);
+  tl.to(word, { opacity: 0, y: -12, duration: .16, ease: 'power2.in' }, Math.max(.95, dur - .5));
+
+  tl.to({}, { duration: .3 }, Math.max(.1, dur - .3));
+  tl.play(0);
+})();
+</script>
+</body>
+</html>
