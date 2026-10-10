@@ -1,0 +1,12 @@
+{
+  "title": "组合视图",
+  "subtitle": "多个组件同屏展示",
+  "mediaTL": "/renders/bar-chart-grow/sample.webm",
+  "mediaTR": "/renders/number-counter/sample.webm",
+  "mediaBL": "/renders/simple-flow-chart/sample.webm",
+  "mediaBR": "/renders/pull-quote-hero/sample.webm",
+  "scaleTL": 0.5,
+  "scaleTR": 0.5,
+  "scaleBL": 0.5,
+  "scaleBR": 0.5
+}

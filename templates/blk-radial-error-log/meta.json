@@ -1,0 +1,16 @@
+{
+ "name": "环形仪表 · 这次出错的账要算清",
+ "description": "左侧 240° 环形仪表读主指标，右侧清单逐条列出构成",
+ "category": "数据可视化",
+ "tags": [
+  "积木社",
+  "target",
+  "sun",
+  "calm"
+ ],
+ "duration": 5,
+ "size": "1920×1080",
+ "status": "ready",
+ "slot": "card",
+ "when": "数据卡片 / 环形仪表"
+}
