@@ -1845,8 +1845,33 @@ function pgCertFont(g, weight, size) {
   g.font = `${weight} ${size}px "MiSans SemiBold", "PingFang SC", "Microsoft YaHei", sans-serif`;
 }
 
+/* 卡面竖向排布。行高固定在能舒展排下内容的 120px，整块（验收项 + 数据条）
+   在"抬头之下、落款之上"这条带子里垂直居中，落款永远钉在底边。
+   ——之前行高写死 132px、落款跟画布底边走，5 个检查项刚好把数据条压到
+   日期那一行上，两块叠字；这是看导出图才发现的，所以抽成纯函数 +
+   把"不许叠"写成断言。项数多到一条带子塞不下时按 needH 加高画布，
+   宁可长一截也不叠字。 */
+function pgCertLayout(checkCount, H) {
+  const HEAD_BOTTOM = 340, STATS_H = 104, STATS_GAP = 18, ROW_GAP = 16, FOOT_H = 150;
+  const n = Math.max(1, checkCount);
+  const bandTop = HEAD_BOTTOM + 32;
+  const avail = H - FOOT_H - 14 - bandTop;
+  const rowH = Math.min(120, Math.max(80, Math.floor(avail / n)));
+  const blockH = n * rowH + (n - 1) * ROW_GAP + STATS_GAP + STATS_H;
+  const grew = blockH > avail;
+  const top = bandTop + Math.max(0, Math.floor((avail - blockH) / 2));
+  const barY = top + n * rowH + (n - 1) * ROW_GAP + STATS_GAP;
+  return {
+    rowH, rowsTop: top, barY, barBottom: barY + STATS_H,
+    needH: grew ? bandTop + blockH + FOOT_H + 14 : H,
+    grew,
+  };
+}
+
 function pgCertDraw(report) {
-  const { w: W, h: H, dpr } = PG_CERT_SIZE;
+  const { w: W, h: H0, dpr } = PG_CERT_SIZE;
+  const L = pgCertLayout(report.checks.length, H0);
+  const H = Math.max(H0, L.needH);      // 项数多到装不下就加高，宁可长一截也不叠字
   const canvas = document.createElement("canvas");
   canvas.width = W * dpr;
   canvas.height = H * dpr;
@@ -1885,11 +1910,10 @@ function pgCertDraw(report) {
   g.fillText("下列每一项都来自本次实际检查，没跑的写「未检查」", PAD, 314);
 
   /* 验收项 */
-  const rowH = 132, gap = 18;
-  let y = 372;
+  let y = L.rowsTop;
   for (const c of report.checks) {
     g.fillStyle = "#1e1a14";
-    pgCertRoundRect(g, PAD, y, W - PAD * 2, rowH, 20);
+    pgCertRoundRect(g, PAD, y, W - PAD * 2, L.rowH, 20);
     g.strokeStyle = LINE;
     g.lineWidth = 2;
     g.stroke();
@@ -1898,31 +1922,31 @@ function pgCertDraw(report) {
     const tone = !c.checked ? AMBER : (c.pass ? GREEN : RED);
     g.fillStyle = tone;
     g.beginPath();
-    g.arc(PAD + 46, y + 44, 20, 0, Math.PI * 2);
+    g.arc(PAD + 46, y + L.rowH / 2 - 16, 20, 0, Math.PI * 2);
     g.fill();
     pgCertFont(g, 800, 26);
     g.fillStyle = "#14110d";
     g.textAlign = "center";
-    g.fillText(tick, PAD + 46, y + 54);
+    g.fillText(tick, PAD + 46, y + L.rowH / 2 - 6);
     g.textAlign = "left";
 
     pgCertFont(g, 700, 32);
     g.fillStyle = INK;
-    g.fillText(c.label, PAD + 86, y + 56);
+    g.fillText(c.label, PAD + 86, y + L.rowH / 2 - 4);
     pgCertFont(g, 800, 34);
     g.fillStyle = tone;
     g.textAlign = "right";
-    g.fillText(c.value, W - PAD - 28, y + 56);
+    g.fillText(c.value, W - PAD - 28, y + L.rowH / 2 - 4);
     g.textAlign = "left";
 
     pgCertFont(g, 400, 22);
     g.fillStyle = MUTED;
-    pgCertDrawClipped(g, c.detail, PAD + 86, y + 96, W - PAD * 2 - 114);
-    y += rowH + gap;
+    pgCertDrawClipped(g, c.detail, PAD + 86, y + L.rowH / 2 + 30, W - PAD * 2 - 114);
+    y += L.rowH + 16;
   }
 
   /* 数据条 */
-  const barY = y + 6;
+  const barY = L.barY;
   g.fillStyle = "#0d0b08";
   pgCertRoundRect(g, PAD, barY, W - PAD * 2, 104, 20);
   g.strokeStyle = LINE;
@@ -1951,7 +1975,7 @@ function pgCertDraw(report) {
     }
   });
 
-  /* 落款 */
+  /* 落款：钉在画布底边（画布若被加高，跟着加高后的底边走） */
   pgCertFont(g, 400, 24);
   g.fillStyle = MUTED;
   g.fillText(report.date, PAD, H - 118);
@@ -2541,7 +2565,7 @@ window.__hfTest = {
   CUT_DEFAULT: { ...PG_CUT_DEFAULT },
   // P5 验收卡：同样只暴露纯函数 + 一个读当前报告的入口，
   // 测试可以拿已知图层逐条核对卡面数字，但改不到任何内部状态。
-  pgQcContract, pgLayerFrameBox, pgQcReport, pgCertDraw,
+  pgQcContract, pgLayerFrameBox, pgQcReport, pgCertDraw, pgCertLayout,
   QC_UNCHECKED: PG_QC_UNCHECKED,
   CERT_SITE: { ...PG_CERT_SITE },
   CERT_SIZE: { ...PG_CERT_SIZE },
