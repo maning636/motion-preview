@@ -351,6 +351,14 @@ function renderSeriesNav(resultCount) {
     });
     nav.append(arch);
   }
+
+  /* 「全部资产」口径注脚（2026-10 拍板）：这个数 = 在架 ready + 可浏览草稿
+     （draft 在画廊里能点开看，所以算进全部资产），不含已归档折起的条目；
+     顶栏那个数是另一口径（纯在架 ready）。两个数差着几百，不注明就会打架。 */
+  const scope = document.createElement("span");
+  scope.className = "tab-scope series-scope";
+  scope.textContent = `全部资产 ${liveTotal} 条 = 在架 + 可浏览草稿，不含已归档 ${archCount} 条（顶栏数字是纯在架口径）`;
+  nav.append(scope);
   return nav;
 }
 
@@ -432,6 +440,41 @@ function openGetPromptModal(template) {
   });
 }
 
+/* 「复制 JSON」共用的最小 compose/2 产出：素材卡、首页案例卡、
+   测试区素材库条目三处共用同一格式。字段口径与测试区导出
+   （pgComposeJson）及导入器（pgLoadCompose）保持一致：站内图层
+   templateId 即卡片 id，duration 取 catalog 的时长并夹在 3–600
+   （同导入器的夹取），values 先按 schema 默认值填满，用户粘进去就能改。 */
+function composeJsonForTemplate(template) {
+  const duration = Math.max(3, Math.min(600, Number(template.duration) || 6));
+  return {
+    version: "compose/2",
+    generator: "动效工作站 · 开放编辑器",
+    canvas: { width: 1920, height: 1080 },
+    duration,
+    base: { type: "upload", name: "你的底片.mp4" },
+    layers: [{
+      templateId: template.id,
+      position: "cc", x: 0, y: 0, scale: 100,
+      start: 0, end: duration,
+      motion: null,
+      values: defaults(template),
+    }],
+  };
+}
+
+/* 三处复制按钮共用的点击行为：写剪贴板 + 「已复制 ✓」反馈。 */
+async function copyTemplateJson(template, button, resetLabel = "复制 JSON") {
+  try {
+    await navigator.clipboard.writeText(JSON.stringify(composeJsonForTemplate(template), null, 2));
+    button.textContent = "已复制 ✓";
+    button.classList.add("copied");
+  } catch {
+    button.textContent = "复制失败";
+  }
+  setTimeout(() => { button.textContent = resetLabel; button.classList.remove("copied"); }, 1600);
+}
+
 function buildCard(template) {
   const fragment = cardTemplate.content.cloneNode(true);
   const card = fragment.querySelector(".template-card");
@@ -492,36 +535,11 @@ function buildCard(template) {
     openGetPromptModal(template);
   });
   /* 「复制 JSON」：把这张卡片变成一份最小 compose/2，直接粘进测试区
-     「导入 compose.json」或喂给 Agent。字段口径与测试区导出（pgComposeJson）
-     及导入器（pgLoadCompose）保持一致：站内图层 templateId 即卡片 id，
-     duration 取 catalog 的时长并夹在 3–600（同导入器的夹取），
-     values 先按 schema 默认值填满，用户粘进去就能改。 */
+     「导入 compose.json」或喂给 Agent。格式由 composeJsonForTemplate 统一产出。 */
   const jsonButton = fragment.querySelector(".copy-json");
-  jsonButton.addEventListener("click", async (event) => {
+  jsonButton.addEventListener("click", (event) => {
     event.stopPropagation();
-    const duration = Math.max(3, Math.min(600, Number(template.duration) || 6));
-    const compose = {
-      version: "compose/2",
-      generator: "动效工作站 · 开放编辑器",
-      canvas: { width: 1920, height: 1080 },
-      duration,
-      base: { type: "upload", name: "你的底片.mp4" },
-      layers: [{
-        templateId: template.id,
-        position: "cc", x: 0, y: 0, scale: 100,
-        start: 0, end: duration,
-        motion: null,
-        values: defaults(template),
-      }],
-    };
-    try {
-      await navigator.clipboard.writeText(JSON.stringify(compose, null, 2));
-      jsonButton.textContent = "已复制 ✓";
-      jsonButton.classList.add("copied");
-    } catch {
-      jsonButton.textContent = "复制失败";
-    }
-    setTimeout(() => { jsonButton.textContent = "复制 JSON"; jsonButton.classList.remove("copied"); }, 1600);
+    copyTemplateJson(template, jsonButton);
   });
   card.addEventListener("mouseenter", () => {
     const current = card.querySelector("video");
@@ -778,8 +796,9 @@ function renderHome() {
         <p>不是演示片，是三条真实在跑的生产线。点开任意一张，去看它背后的素材，或直接进测试区上手。</p>
       </div>
       <div class="showcase-grid">
-        <figure class="showcase-item case-item" data-target="library" role="button" tabindex="0">
+        <figure class="showcase-item case-item" data-target="library" data-template="book-page-shell" role="button" tabindex="0">
           <video muted loop playsinline preload="none" data-auto="1" data-src="./renders/book-page-shell/sample.webm"></video>
+          <button class="case-copy-json" type="button" tabindex="-1">复制 JSON</button>
           <figcaption>「公众号推文视频」——绿排版长文改成的成片，公众号日更在用。</figcaption>
         </figure>
         <figure class="showcase-item case-item" data-target="playground" role="button" tabindex="0">
@@ -910,6 +929,18 @@ function renderHome() {
     const go = () => { if (item.dataset.target === "playground") renderPlayground(); else renderGallery(); };
     item.addEventListener("click", go);
     item.addEventListener("keydown", (e) => { if (e.key === "Enter") go(); });
+    /* 有对应素材的案例卡挂「复制 JSON」（同款 compose/2 格式）。
+       没有对得上 compose/2 图层数据的案例卡（T00 教学片是制片逻辑、
+       宣传片是多模板混剪）不给按钮——不编造 JSON。 */
+    const jsonBtn = item.querySelector(".case-copy-json");
+    if (jsonBtn) {
+      const template = state.catalog.templates.find((t) => t.id === item.dataset.template);
+      if (!template) jsonBtn.remove();
+      else jsonBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        copyTemplateJson(template, jsonBtn);
+      });
+    }
   });
   scrollStageTop();
 }
@@ -3316,6 +3347,7 @@ function renderPlayground() {
       <div class="pg-item" data-add="${t.id}" role="button" tabindex="0">
         <video muted loop playsinline preload="none" data-src="${assetUrl(t.preview)}"></video>
         <div class="pg-item-info"><strong>${escapeHtml(t.name)}</strong><span>${escapeHtml(t.category)} · ${t.duration}s</span></div>
+        <button class="pg-json" type="button" tabindex="-1" title="复制该条目的 compose/2 JSON">JSON</button>
         <button class="pg-add" type="button" tabindex="-1" aria-label="加为图层"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
       </div>`).join("") || `<p class="pg-empty-layer">没有匹配的模板。</p>`;
     list.querySelectorAll(".pg-item").forEach((item) => {
@@ -3335,6 +3367,14 @@ function renderPlayground() {
       };
       item.addEventListener("click", add);
       item.addEventListener("keydown", (e) => { if (e.key === "Enter") add(); });
+      /* 每条目一个「复制 JSON」小按钮：同款 compose/2 格式，
+         与素材卡 / 案例卡共用 copyTemplateJson；不触发整行上屏。 */
+      const jsonBtn = item.querySelector(".pg-json");
+      jsonBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const template = state.catalog.templates.find((t) => t.id === item.dataset.add);
+        if (template) copyTemplateJson(template, jsonBtn, "JSON");
+      });
     });
   }
   renderPgList();
