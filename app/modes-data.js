@@ -594,11 +594,6 @@ export const MODES = [
     ],
     "beats": [
       {
-        "range": "时间点",
-        "name": "beat",
-        "text": "内容"
-      },
-      {
         "range": "0–1.5s",
         "name": "线稿擦出",
         "text": "蒙版 wipe 从左向右扫出铅笔线稿（右半还是空白）"
@@ -690,11 +685,6 @@ export const MODES = [
     ],
     "beats": [
       {
-        "range": "时间",
-        "name": "beat",
-        "text": "内容"
-      },
-      {
         "range": "0–2.0s",
         "name": "SPIN",
         "text": "八瓣花 SVG mask 在局部圆形窗口内旋转 360°（spin 360°/2.0s）；花瓣窗口内景物钉住不动，转的是蒙版不是照片"
@@ -775,11 +765,6 @@ export const MODES = [
       "成片 9.6s 循环"
     ],
     "beats": [
-      {
-        "range": "时间",
-        "name": "beat",
-        "text": "内容"
-      },
       {
         "range": "0–0.62s",
         "name": "目录栏入场",

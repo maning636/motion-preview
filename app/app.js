@@ -1,4 +1,4 @@
-import { MODES } from "./modes-data.js?v=20260825-pace2";
+import { MODES } from "./modes-data.js?v=20261011-v52";
 import { HANDBOOK_SAMPLE_ID, HANDBOOK_PLAN, HANDBOOK_PILLARS, HANDBOOK_OTHERS } from "./handbook-data.js?v=20261011-v50";
 
 const state = { catalog: null, selected: null, values: {}, output: null, view: "home", category: "全部", series: "component", staticDemo: false, playing: null };
@@ -797,6 +797,7 @@ function renderHome() {
         ${showcase.map((t) => `
           <figure class="showcase-item" data-id="${t.id}">
             <video muted loop playsinline preload="none" data-auto="1" data-src="${assetUrl(t.preview)}"></video>
+            <button class="showcase-copy-json" type="button" tabindex="-1" title="复制该素材的 compose/2 JSON">复制 JSON</button>
             <figcaption>${t.name}</figcaption>
           </figure>`).join("")}
       </div>
@@ -935,6 +936,17 @@ function renderHome() {
       const template = state.catalog.templates.find((t) => t.id === item.dataset.id);
       if (template) selectTemplate(template);
     });
+    /* 「复制 JSON」：与素材卡 / 案例卡 / 测试区条目同一份 compose/2，
+       点它只写剪贴板，不触发整卡打开详情。 */
+    const jsonBtn = item.querySelector(".showcase-copy-json");
+    if (jsonBtn) {
+      const template = state.catalog.templates.find((t) => t.id === item.dataset.id);
+      if (!template) jsonBtn.remove();
+      else jsonBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        copyTemplateJson(template, jsonBtn);
+      });
+    }
   });
   /* 案例区：不链外部（没有可验证的外链），点击跳站内视图——
      素材池看它背后的素材，测试区直接上手。 */
