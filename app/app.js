@@ -1,4 +1,5 @@
 import { MODES } from "./modes-data.js?v=20260825-pace2";
+import { HANDBOOK_SAMPLE_ID, HANDBOOK_PLAN, HANDBOOK_PILLARS, HANDBOOK_OTHERS } from "./handbook-data.js?v=20261011-v50";
 
 const state = { catalog: null, selected: null, values: {}, output: null, view: "home", category: "全部", series: "component", staticDemo: false, playing: null };
 const stage = document.querySelector("#stage");
@@ -21,6 +22,7 @@ const showLibrary = document.querySelector("#show-library");
 const showModes = document.querySelector("#show-modes");
 const showPlayground = document.querySelector("#show-playground");
 const showStandard = document.querySelector("#show-standard");
+const showHandbook = document.querySelector("#show-handbook");
 // 2026-10-07：pop 族 64 条原子动效组件入库（手绘弹跳风，从一支 30s 短视频逐帧拆出）。
 // 这个值是 catalog.static.json 的缓存键——不 bump，浏览器继续拿 940 条的旧目录，
 // 新组件在素材池里根本不出现（服务器是新文件，前台却没变）。
@@ -714,6 +716,7 @@ function updateNav() {
   showModes.classList.toggle("active", state.view === "modes");
   showPlayground.classList.toggle("active", state.view === "playground");
   showStandard.classList.toggle("active", state.view === "standard");
+  showHandbook.classList.toggle("active", state.view === "handbook");
 }
 
 /* ── 首页视图（四段式产品橱窗） ── */
@@ -896,6 +899,7 @@ function renderHome() {
             <li><strong>个人微信 · 唯一入口</strong>：免费领生产 Skill、进社区、知识星球入口、会员与定制咨询，都从这里走</li>
             <li><strong>知识星球逐步开放</strong>：会员新模板族、专属生产工具箱（skill + 脚本）、成片流水线文档（现有 26 套，持续增加）——星球入口在社区公布</li>
           </ul>
+          <p class="follow-sample"><button class="hb-entry" type="button" id="follow-handbook">免费样品：T00 动效教学片完整 beats 骨架（其余 25 套见会员手册，168 元/年）→</button></p>
         </article>
       </div>
     </section>
@@ -907,6 +911,7 @@ function renderHome() {
   stage.querySelector("#hero-playground").addEventListener("click", renderPlayground);
   stage.querySelector("#hero-standard").addEventListener("click", renderStandard);
   stage.querySelector("#hero-playground-2").addEventListener("click", renderPlayground);
+  stage.querySelector("#follow-handbook")?.addEventListener("click", renderHandbook);
   stage.querySelector(".hpb-media")?.addEventListener("click", renderPlayground);
   stage.querySelector(".hpb-media")?.addEventListener("keydown", (e) => { if (e.key === "Enter") renderPlayground(); });
   stage.querySelectorAll(".qr-image").forEach((img) => {
@@ -970,6 +975,7 @@ function renderModes() {
         <p class="kicker">PRODUCTION LOGIC</p>
         <h2>26 条制片逻辑<span class="sec-period">。</span></h2>
         <p>每条逻辑一段用法说明 + 一条教学示例视频（含口播与实时字幕）。完整 beats 骨架与配套模板清单见会员手册。</p>
+        <button class="hb-entry" type="button" id="modes-handbook">先看一条完整样品（T00 全部骨架，免费公开）→</button>
       </header>
       ${MODES.map((mode) => `
         <section class="mode-panel ${mode.id === "T00" ? "mode-meta" : ""} ${mode.brief ? "mode-simple" : ""}" id="mode-${mode.id}">
@@ -1017,6 +1023,7 @@ function renderModes() {
     const template = byId.get(chip.dataset.tpl);
     if (template) selectTemplate(template);
   }));
+  stageContent.querySelector("#modes-handbook")?.addEventListener("click", renderHandbook);
   stageContent.querySelectorAll(".mode-media video").forEach((video) => {
     observer.observe(video.closest(".mode-media"));
     video.addEventListener("play", () => {
@@ -1228,11 +1235,154 @@ const v = (window.__hyperframes &amp;&amp; window.__hyperframes.getVariables)
   scrollStageTop();
 }
 
+/* ── 会员手册样品视图（商业化阶段 1.3） ──
+   付费墙最好的推销是样品，所以这一页只干一件事：把一条完整的制片逻辑
+   摊开给人看——时间轴、六拍骨架、配套模板，一样不给。
+   T00 的骨架不在页面上另写一份，直接从 MODES 里现取（同一份真源）；
+   其余 25 条只报名 + 一句话价值，beats 正文一个字都不上页面。
+   星球明码与链接分别读 HANDBOOK_PLAN 与 PG_ZSXQ_URL，站内各只有一处。 */
+
+/* "0–5%" / "15–55%" → 跨度（百分点），用来把六拍按真实长度画在时间轴上。
+   解析不出来时给 1，不让一条脏数据把整条轴画崩。 */
+function hbSpanPct(range) {
+  const m = String(range ?? "").match(/(\d+(?:\.\d+)?)\s*[–—\-~至]\s*(\d+(?:\.\d+)?)/);
+  if (!m) return 1;
+  return Math.max(0.5, Number(m[2]) - Number(m[1]));
+}
+
+function renderHandbook() {
+  state.view = "handbook";
+  syncHash("#handbook");
+  updateNav();
+  stopPlaying();
+  tabbar.style.display = "none";
+  const sample = MODES.find((m) => m.id === HANDBOOK_SAMPLE_ID);
+  const byId = new Map(state.catalog.templates.map((t) => [t.id, t]));
+  if (!sample) return;
+  stageContent.innerHTML = `
+    <div class="modes-wrap hb-wrap">
+      <header class="modes-head hb-head">
+        <p class="kicker">MEMBERSHIP HANDBOOK · 样品</p>
+        <h2>26 套制片逻辑，先摊开一条给你看<span class="sec-period">。</span></h2>
+        <p class="hb-lede">素材全免费，生产线在星球。这 26 套制片逻辑就是那份生产线，完整形态收在知识星球的会员手册里——但我们把 <strong>T00 动效教学片</strong> 的整条骨架原样公开：六拍怎么排、每拍拍什么、配哪些模板，一拍不藏。</p>
+      </header>
+
+      <section class="hb-sample" aria-labelledby="hb-sample-title">
+        <div class="hb-sample-top">
+          <div class="hb-sample-id">
+            <span class="hb-no">${escapeHtml(sample.id)}</span>
+            <div class="hb-sample-names">
+              <h3 id="hb-sample-title">${escapeHtml(sample.name)}</h3>
+              <p class="hb-sub">${escapeHtml(sample.sub || "")}</p>
+            </div>
+          </div>
+          <span class="hb-free">完整骨架 · 免费公开</span>
+        </div>
+
+        <p class="hb-tagline">${escapeHtml(sample.tagline)}</p>
+        <div class="mode-chips">${(sample.chips || []).map((chip) => `<span class="mode-chip">${escapeHtml(chip)}</span>`).join("")}
+          <span class="mode-chip">${sample.beats.length} 拍</span>
+        </div>
+
+        <div class="hb-axis" role="img" aria-label="六拍按真实长度占比的时间轴">
+          ${sample.beats.map((beat, i) => `<span class="hb-seg" style="flex-grow:${hbSpanPct(beat.range)}" title="${escapeHtml(beat.range + " " + beat.name)}"><i>${i + 1}</i></span>`).join("")}
+        </div>
+        <div class="hb-axis-scale"><span>0%</span><span>100%</span></div>
+
+        <ol class="hb-beats">
+          ${sample.beats.map((beat, i) => `
+            <li class="hb-beat">
+              <span class="hb-beat-no">${String(i + 1).padStart(2, "0")}</span>
+              <div class="hb-beat-main">
+                <div class="hb-beat-top">
+                  <strong class="hb-beat-name">${escapeHtml(beat.name)}</strong>
+                  <span class="hb-beat-range">${escapeHtml(beat.range)}</span>
+                </div>
+                <div class="hb-beat-bar" aria-hidden="true"><i style="width:${hbSpanPct(beat.range)}%"></i></div>
+                <p class="hb-beat-text">${escapeHtml(beat.text)}</p>
+              </div>
+            </li>`).join("")}
+        </ol>
+
+        <p class="hb-brief"><strong>这条为什么值钱：</strong>${escapeHtml(sample.brief || "")}</p>
+
+        ${(sample.segments || []).length ? `
+        <div class="hb-sub-sec">
+          <p class="hb-sub-label">核心四件套（其余是替换件）</p>
+          <div class="mode-tpls">${sample.segments.map((id) => {
+            const tpl = sample.templates.find((t) => t.id === id);
+            return tpl ? `<button class="tpl-chip" type="button" data-tpl="${escapeHtml(id)}" title="查看模板详情">${escapeHtml(tpl.name || id)}</button>` : "";
+          }).join("")}</div>
+        </div>` : ""}
+
+        <div class="hb-sub-sec hb-tpls-full">
+          <p class="hb-sub-label">配套模板清单 · 共 ${(sample.templates || []).length} 件（点开即进测试区可改）</p>
+          <div class="mode-tpls">
+            ${(sample.templates || []).map((tpl) => tpl.pending
+              ? `<span class="tpl-chip pending" title="待入库：模板补齐后开放">${escapeHtml(tpl.name || tpl.id)}</span>`
+              : `<button class="tpl-chip" type="button" data-tpl="${escapeHtml(tpl.id)}" title="查看模板详情">${escapeHtml(tpl.name || tpl.id)}</button>`).join("")}
+          </div>
+        </div>
+      </section>
+
+      <section class="hb-others" aria-labelledby="hb-others-title">
+        <div class="hb-others-head">
+          <h3 id="hb-others-title">其余 25 套 · 见会员手册</h3>
+          <p>下面每条只报名 + 一句话「它解决什么」。完整的 beats 骨架、配套模板清单、每套的使用规矩和样例成片，都在知识星球会员手册里。</p>
+        </div>
+        <ul class="hb-rest">
+          ${HANDBOOK_OTHERS.map((m) => `
+            <li class="hb-rest-item">
+              <span class="hb-rest-no">${escapeHtml(m.id)}</span>
+              <div class="hb-rest-main">
+                <strong>${escapeHtml(m.name)}</strong>
+                <p>${escapeHtml(m.value)}</p>
+              </div>
+              <span class="hb-rest-lock">见会员手册</span>
+            </li>`).join("")}
+        </ul>
+      </section>
+
+      <section class="hb-price" aria-labelledby="hb-price-title">
+        <div class="hb-price-card">
+          <p class="kicker">MEMBERSHIP · 明码</p>
+          <h3 id="hb-price-title">${escapeHtml(HANDBOOK_PLAN.platform)}「${escapeHtml(HANDBOOK_PLAN.name)}」</h3>
+          <p class="hb-price-num"><b>${HANDBOOK_PLAN.price}</b><span>${escapeHtml(HANDBOOK_PLAN.unit)}</span></p>
+          <p class="hb-price-note">${escapeHtml(HANDBOOK_PLAN.note)}</p>
+          <a class="hb-cta" id="hb-join" href="${PG_ZSXQ_URL}" target="_blank" rel="noreferrer">加入星球 · ${HANDBOOK_PLAN.price} ${escapeHtml(HANDBOOK_PLAN.unit)} →</a>
+          <p class="hb-price-fine">站内素材、编辑器、开放标准、验收工具全部免费；这里收的只是生产线的 know-how。</p>
+        </div>
+        <div class="hb-pillars">
+          <p class="hb-sub-label">付费买的是什么 · 一周三更</p>
+          ${HANDBOOK_PILLARS.map((p) => `
+            <div class="hb-pillar">
+              <span class="hb-pillar-when">${escapeHtml(p.when)}</span>
+              <div>
+                <strong>${escapeHtml(p.title)}</strong>
+                <p>${escapeHtml(p.text)}</p>
+              </div>
+            </div>`).join("")}
+        </div>
+      </section>
+
+      <footer class="site-footer">
+        <span>样品 = T00 完整 beats 骨架，源与「制片逻辑」页同源：app/modes-data.js</span>
+        <span>其余 25 套见${escapeHtml(HANDBOOK_PLAN.platform)}「${escapeHtml(HANDBOOK_PLAN.name)}」会员手册</span>
+      </footer>
+    </div>`;
+  stageContent.querySelectorAll(".hb-sample .tpl-chip[data-tpl]").forEach((chip) => chip.addEventListener("click", () => {
+    const template = byId.get(chip.dataset.tpl);
+    if (template) selectTemplate(template);
+  }));
+  scrollStageTop();
+}
+
 showHome.addEventListener("click", renderHome);
 showLibrary.addEventListener("click", renderGallery);
 showModes.addEventListener("click", renderModes);
 showPlayground.addEventListener("click", renderPlayground);
 showStandard.addEventListener("click", renderStandard);
+showHandbook.addEventListener("click", renderHandbook);
 search.addEventListener("input", renderGallery);
 
 async function savePreset() {
@@ -2764,6 +2914,16 @@ window.__hfTest = {
     RULES: PG_SUBMIT_RULES,
     STEPS: PG_SUBMIT_STEPS.slice(),
   },
+  // 会员手册样品页：hbSpanPct 是纯函数（字符串进、数值出），
+  // HANDBOOK 是常量与只读数据的深拷贝快照——不挂 MODES 本身，
+  // 免得测试改一份就能改到线上的骨架真源。
+  hbSpanPct,
+  HANDBOOK: {
+    SAMPLE_ID: HANDBOOK_SAMPLE_ID,
+    PLAN: { ...HANDBOOK_PLAN },
+    PILLARS: HANDBOOK_PILLARS.map((p) => ({ ...p })),
+    OTHERS: HANDBOOK_OTHERS.map((m) => ({ ...m })),
+  },
 };
 
 function pgLayerWidthPct(layer) {
@@ -4059,6 +4219,7 @@ function routeHash() {
   else if (h === "#modes") renderModes();
   else if (h === "#playground") renderPlayground();
   else if (h === "#standard") renderStandard();
+  else if (h === "#handbook") renderHandbook();
   else if (h === "#new") { state.series = "new"; state.category = ALL_CATEGORY; renderGallery(); }
   else renderHome();
 }

@@ -385,6 +385,87 @@ body.modes-full-page { height: auto; overflow: auto; }
 .mode-media-full { display: grid; gap: 6px; align-self: start; }
 .mode-media-full .mode-video-box .mode-media-empty { width: 100%; height: 100%; display: grid; place-items: center; }
 
+/* ── 会员手册样品页（#handbook · 商业化阶段 1.3） ──
+   付费墙的橱窗：一条完整骨架（T00）+ 25 条报名 + 星球明码。
+   配色沿用主站暖底 + --accent 绿；时间轴条用站内深底 + #4ade80，
+   与测试区舞台层、卡片编号同一套"深底荧光绿"的写法。 */
+.hb-wrap { padding-bottom: 34px; }
+.hb-head { max-width: 840px; }
+.modes-head .hb-lede { margin: 14px 0 0; color: var(--fg); font-size: 15px; line-height: 1.95; }
+.modes-head .hb-lede strong { color: var(--accent-deep); }
+.hb-entry { margin-top: 16px; padding: 9px 16px; border: 1px solid var(--accent); border-radius: 999px; background: var(--accent-soft); color: var(--accent-deep); font-size: 13px; font-weight: 700; cursor: pointer; transition: 160ms ease; }
+.hb-entry:hover { background: var(--accent); color: #fff; }
+.follow-sample { margin: 12px 0 0; }
+.follow-sample .hb-entry { margin-top: 0; text-align: left; }
+
+.hb-sample { padding: 26px 28px; border: 1px solid var(--accent); border-radius: 20px; background: linear-gradient(160deg, var(--accent-soft), var(--panel) 55%); box-shadow: var(--warm-shadow); }
+.hb-sample-top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.hb-sample-id { display: flex; align-items: center; gap: 14px; min-width: 0; }
+.hb-no { color: var(--accent); font: 800 34px/1 "MiSans SemiBold", "PingFang SC", "Microsoft YaHei", sans-serif; letter-spacing: -.02em; }
+.hb-sample-names h3 { margin: 0; font-size: 26px; letter-spacing: -.03em; }
+.hb-sub { margin: 4px 0 0; color: var(--muted); font-size: 12.5px; letter-spacing: .04em; }
+.hb-free { flex: 0 0 auto; padding: 7px 13px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 12px; font-weight: 800; letter-spacing: .04em; }
+.hb-tagline { margin: 14px 0 0; color: var(--fg); font-size: 14px; line-height: 1.85; }
+
+/* 时间轴：每段 flex-grow = 该拍真实跨度，六段加起来正好铺满一条片 */
+.hb-axis { display: flex; gap: 2px; height: 32px; margin-top: 22px; border-radius: 8px; overflow: hidden; background: #14110d; }
+.hb-seg { display: grid; place-items: center; min-width: 5px; background: linear-gradient(180deg, rgba(74,222,128,.32), rgba(74,222,128,.13)); }
+.hb-seg i { font-style: normal; color: #4ade80; font: 800 11px/1 "MiSans SemiBold", "PingFang SC", sans-serif; }
+.hb-axis-scale { display: flex; justify-content: space-between; margin-top: 6px; color: var(--muted); font-size: 11px; letter-spacing: .08em; }
+
+.hb-beats { margin: 20px 0 0; padding: 0; list-style: none; display: grid; gap: 9px; }
+.hb-beat { display: grid; grid-template-columns: 30px minmax(0, 1fr); gap: 12px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel-strong); }
+.hb-beat-no { color: var(--accent); font: 800 13px/1.7 "MiSans SemiBold", "PingFang SC", "Microsoft YaHei", sans-serif; letter-spacing: .04em; }
+.hb-beat-top { display: flex; align-items: baseline; gap: 10px; }
+.hb-beat-name { font-size: 15px; letter-spacing: -.01em; }
+.hb-beat-range { margin-left: auto; color: var(--accent-deep); font-size: 12px; font-weight: 800; letter-spacing: .04em; white-space: nowrap; }
+.hb-beat-bar { margin: 7px 0 6px; height: 5px; border-radius: 999px; background: rgba(15,157,63,.13); overflow: hidden; }
+.hb-beat-bar i { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
+.hb-beat-text { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.8; }
+
+.hb-brief { margin: 18px 0 0; padding: 14px 16px; border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; background: var(--accent-soft); color: var(--fg); font-size: 13.5px; line-height: 1.9; }
+.hb-sub-sec { margin-top: 18px; }
+.hb-sub-label { margin: 0 0 8px; color: var(--muted); font-size: 12px; letter-spacing: .1em; }
+
+/* 其余 25 套：只报名 + 一句话价值 */
+.hb-others { padding: 24px 26px; border: 1px solid var(--line); border-radius: 20px; background: var(--panel); }
+.hb-others-head h3 { margin: 0 0 8px; font-size: 20px; letter-spacing: -.02em; }
+.hb-others-head p { margin: 0; color: var(--muted); font-size: 13.5px; line-height: 1.8; }
+.hb-rest { margin: 18px 0 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 10px; }
+.hb-rest-item { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: start; gap: 10px; padding: 12px 14px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel-strong); }
+.hb-rest-no { color: var(--accent); font: 800 12px/1.75 "MiSans SemiBold", "PingFang SC", "Microsoft YaHei", sans-serif; letter-spacing: .04em; }
+.hb-rest-main strong { font-size: 13.5px; }
+.hb-rest-main p { margin: 4px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.7; }
+.hb-rest-lock { align-self: center; padding: 4px 9px; border: 1px dashed var(--line); border-radius: 999px; color: var(--muted); font-size: 11px; white-space: nowrap; }
+
+/* 明码区 */
+.hb-price { display: grid; grid-template-columns: minmax(300px, .82fr) minmax(0, 1.18fr); gap: 22px; align-items: start; }
+.hb-price-card { padding: 26px 28px; border: 1px solid var(--accent); border-radius: 20px; background: linear-gradient(160deg, var(--accent-soft), var(--panel) 60%); box-shadow: var(--warm-shadow); }
+.hb-price-card h3 { margin: 8px 0 0; font-size: 22px; letter-spacing: -.02em; }
+.hb-price-num { margin: 14px 0 0; display: flex; align-items: baseline; gap: 8px; }
+.hb-price-num b { color: var(--accent-deep); font: 800 58px/1 "MiSans SemiBold", "PingFang SC", "Microsoft YaHei", sans-serif; letter-spacing: -.03em; }
+.hb-price-num span { color: var(--muted); font-size: 15px; }
+.hb-price-note { margin: 10px 0 0; color: var(--muted); font-size: 13px; }
+.hb-cta { display: inline-block; margin-top: 18px; padding: 12px 22px; border-radius: 999px; background: var(--accent); color: #fff; font-size: 14px; font-weight: 800; letter-spacing: .02em; text-decoration: none; transition: 160ms ease; }
+.hb-cta:hover { background: var(--accent-deep); }
+.hb-price-fine { margin: 14px 0 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+.hb-pillars { padding: 22px 26px 10px; border: 1px solid var(--line); border-radius: 20px; background: var(--panel); }
+.hb-pillar { display: grid; grid-template-columns: 78px minmax(0, 1fr); gap: 14px; padding: 13px 0; border-top: 1px solid var(--line); }
+.hb-pillar-when { color: var(--accent); font: 800 12.5px/1.9 "MiSans SemiBold", "PingFang SC", "Microsoft YaHei", sans-serif; letter-spacing: .04em; }
+.hb-pillar strong { font-size: 14.5px; }
+.hb-pillar p { margin: 4px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.75; }
+
+@media (max-width: 1100px) { .hb-price { grid-template-columns: 1fr; } }
+@media (max-width: 900px) {
+  .hb-sample, .hb-others, .hb-price-card, .hb-pillars { padding: 20px 18px; }
+  .hb-sample-id { gap: 10px; }
+  .hb-no { font-size: 26px; }
+  .hb-sample-names h3 { font-size: 21px; }
+  .hb-beat { grid-template-columns: 24px minmax(0, 1fr); gap: 9px; }
+  .hb-rest { grid-template-columns: 1fr; }
+  .hb-pillar { grid-template-columns: 68px minmax(0, 1fr); gap: 10px; }
+}
+
 @media (max-width: 900px) {
   .modes-wrap { padding: 22px 18px 0; }
   .mode-panel { grid-template-columns: 1fr; }
