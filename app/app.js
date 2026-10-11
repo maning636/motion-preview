@@ -1684,7 +1684,7 @@ const PG_CERT_SIZE = { w: 1080, h: 1350, dpr: 2 };   // 4:5 竖版，2 倍图适
    我们人工过完品控四关，合格的在 catalog 补一条带 author 的数据。
    整条链上没有服务端接口，也没有任何自动上架逻辑——包是离线产物，
    终审的判断留给人。 */
-const PG_ZSXQ_URL = "https://wx.zsxq.com/";
+const PG_ZSXQ_URL = "https://wx.zsxq.com/group/88882585511112";   // 星球「AI制片库」电脑端公开地址（group_id 已核实）
 const PG_SUBMIT_LS = "pg.submission.v1";
 const PG_SUBMIT_GRANT = "我确认授权：这份编排可由动效工作站公开上架展示，署名我的昵称。";
 const PG_SUBMIT_GATES = ["compose 合规", "出框", "性能", "调性"];
