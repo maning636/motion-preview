@@ -515,9 +515,19 @@ function buildCard(template) {
   if (template.origin === "community") {
     const communityBadge = document.createElement("span");
     communityBadge.className = "card-badge badge-community";
-    communityBadge.textContent = template.author ? `社区 · ${template.author}` : "社区";
-    communityBadge.title = "社区投稿入选：过了契约与合规双闸门的 AI 作品";
+    communityBadge.textContent = "社区";
+    communityBadge.title = "社区投稿入选：过了品控四关的 AI 作品";
     media.append(communityBadge);
+  }
+  /* 署名与来源角标解耦：只要条目有 author 就显示「by @昵称」——
+     投稿人对作品的认领不该以 origin 为条件（我们自己的官方素材也可能来自投稿）。 */
+  const authorLine = catalogAuthorLine(template);
+  if (authorLine) {
+    const authorBadge = document.createElement("span");
+    authorBadge.className = "card-badge card-author";
+    authorBadge.textContent = authorLine;
+    authorBadge.title = `${template.author} 投稿入选：过了品控四关（compose 合规 / 出框 / 性能 / 调性）的 AI 作品`;
+    media.append(authorBadge);
   }
   fragment.querySelector(".template-name").textContent = template.name;
   fragment.querySelector(".template-description").textContent = template.description;
@@ -1667,6 +1677,180 @@ const PG_QC_UNCHECKED = "未检查";
 const PG_CERT_SITE = { name: "动效工作站", domain: "maning789link.top" };
 const PG_CERT_SIZE = { w: 1080, h: 1350, dpr: 2 };   // 4:5 竖版，2 倍图适合朋友圈/简介
 
+/* ── 投稿飞轮（零服务器）──────────────────────────────────────────────
+   投稿 = 站内生成一份「投稿包」：compose/2 编排清单（与导出/复制同源，
+   格式与导入器完全对齐）+ 一张代表帧 + 署名，合成单个 .json 下载
+   （预览帧 base64 内嵌，不为这一个功能引 zip 依赖），用户自己发到星球，
+   我们人工过完品控四关，合格的在 catalog 补一条带 author 的数据。
+   整条链上没有服务端接口，也没有任何自动上架逻辑——包是离线产物，
+   终审的判断留给人。 */
+const PG_ZSXQ_URL = "https://wx.zsxq.com/";
+const PG_SUBMIT_LS = "pg.submission.v1";
+const PG_SUBMIT_GRANT = "我确认授权：这份编排可由动效工作站公开上架展示，署名我的昵称。";
+const PG_SUBMIT_GATES = ["compose 合规", "出框", "性能", "调性"];
+const PG_SUBMIT_RULES = "品控四关（全部人工终审，不自动上架）：① compose/2 契约合规 ② 无出框、无时段打架 ③ 性能达标 ④ 调性符合站内审美。";
+const PG_SUBMIT_STEPS = [
+  "下载投稿包（一个 .json：编排清单 + 代表帧 + 署名）",
+  "发到星球「AI制片库」",
+  "我们过品控四关：compose 合规 · 出框 · 性能 · 调性",
+  "合格即上架，素材卡署名 by @昵称",
+];
+
+/* 昵称 / 星球 ID 存在本机浏览器：投稿一次之后不必每次重填。
+   读失败（无痕模式等）一律退回空档案，不抛——投稿不该因为存不下而做不成。 */
+function pgSubmissionProfile() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(PG_SUBMIT_LS) || "{}");
+    return { nick: String(raw.nick || "").slice(0, 24), zsxqId: String(raw.zsxqId || "").slice(0, 40) };
+  } catch {
+    return { nick: "", zsxqId: "" };
+  }
+}
+
+function pgSubmissionSave(profile) {
+  const clean = {
+    nick: String((profile && profile.nick) || "").trim().slice(0, 24),
+    zsxqId: String((profile && profile.zsxqId) || "").trim().slice(0, 40),
+  };
+  try { localStorage.setItem(PG_SUBMIT_LS, JSON.stringify(clean)); } catch { }
+  return clean;
+}
+
+/* 投稿-昵称-YYYYMMDD.json。昵称里的分隔符与空白要清掉再拼进文件名，
+   否则一个「../」就能把下载落到别处去。 */
+function pgSubmissionFileName(nick, date) {
+  const safe = String(nick || "").trim().replace(/[\\/:*?"<>|.\s]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 24) || "匿名";
+  const d = date ? new Date(date) : new Date();
+  const p = (n) => String(n).padStart(2, "0");
+  return `投稿-${safe}-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}.json`;
+}
+
+/* 代表帧取哪一秒：让尽可能多的图层同时在屏的那一秒——用户看到的封面最满的那一帧。
+   纯函数，好处是测试能直接对拍「第几秒该有几层在屏」。 */
+function pgSubmissionPreviewTime(compose) {
+  const layers = compose && Array.isArray(compose.layers) ? compose.layers : [];
+  const d = Math.max(0, Number(compose && compose.duration) || 0);
+  let best = 0, bestN = -1;
+  const STEPS = 60;
+  for (let i = 0; i <= STEPS; i++) {
+    const t = d * i / STEPS;
+    let n = 0;
+    for (const l of layers) {
+      if (t >= (Number(l.start) || 0) && t <= (Number(l.end) || 0)) n++;
+    }
+    if (n > bestN) { bestN = n; best = t; }
+  }
+  return { time: Math.round(best * 10) / 10, visible: Math.max(0, bestN) };
+}
+
+/* 组包。纯函数：给定编排、署名、代表帧，产出包里那份 JSON（时间除外）。
+   compose 原样放进去——它与「导出 compose.json」同源，导入器 pgLoadCompose
+   能原样吃回去，人工审核与再导入都不用二次转换。 */
+function pgSubmissionPackage(compose, profile, preview, at) {
+  const nick = String((profile && profile.nick) || "").trim();
+  const zsxqId = String((profile && profile.zsxqId) || "").trim();
+  const now = at ? new Date(at) : new Date();
+  return {
+    type: "motion-deck-submission/2",
+    submittedAt: now.toISOString(),
+    site: { ...PG_CERT_SITE },
+    author: { nick, zsxqId: zsxqId || null },
+    credit: `by @${nick}`,
+    license: { granted: true, text: PG_SUBMIT_GRANT },
+    preview: preview || null,
+    card: {
+      layers: compose.layers.length,
+      externalLayers: compose.layers.filter((l) => l.type === "external").length,
+      duration: compose.duration,
+      names: compose.layers.map((l) => l.name || l.templateId),
+    },
+    compose,
+    review: { gates: PG_SUBMIT_GATES.slice(), mode: "人工终审", rules: PG_SUBMIT_RULES },
+    channel: { name: "知识星球「AI制片库」", url: PG_ZSXQ_URL, steps: PG_SUBMIT_STEPS.slice() },
+  };
+}
+
+/* 素材卡的署名行：有 author 就显示 by @昵称，与来源角标无关——
+   官方素材也可能来自社区投稿，署名是投稿人对自己的认领，不该被角标条件绑住。 */
+function catalogAuthorLine(template) {
+  const nick = String((template && template.author) || "").trim().slice(0, 24);
+  return nick ? `by @${nick}` : "";
+}
+
+/* 代表帧：舞台是 DOM（<video> 底片 + iframe 图层），没有能直接 toDataURL 的
+   画布，也没引 html2canvas，所以按 pgApplyPositions 同一套几何在离屏画布上重画
+   一帧——底片能取到视频帧就贴真画面，取不到（headless 无编解码 / 上传底片）
+   落回深色底；每个图层按锚点、缩放、运动轨迹画到位，标上图层名与入出点。
+   位置与舞台上看到的同源，但不等于最终渲染画质——和验收卡同一个口径。 */
+function pgSubmissionPreview(compose) {
+  const { time, visible } = pgSubmissionPreviewTime(compose);
+  const W = 960, H = 540;
+  const canvas = document.createElement("canvas");
+  canvas.width = W;
+  canvas.height = H;
+  const g = canvas.getContext("2d");
+  const bg = g.createLinearGradient(0, 0, 0, H);
+  bg.addColorStop(0, "#16130f");
+  bg.addColorStop(1, "#0c0b09");
+  g.fillStyle = bg;
+  g.fillRect(0, 0, W, H);
+
+  let baseDrawn = false;
+  const media = stageContent.querySelector(".pg-base-media");
+  try {
+    if (media && (media.tagName === "VIDEO" ? media.readyState >= 2 : media.complete && media.naturalWidth > 0)) {
+      const vw = media.videoWidth || media.naturalWidth;
+      const vh = media.videoHeight || media.naturalHeight;
+      if (vw > 0 && vh > 0) {
+        const s = Math.max(W / vw, H / vh);          // cover：铺满不留黑边
+        g.drawImage(media, (W - vw * s) / 2, (H - vh * s) / 2, vw * s, vh * s);
+        g.fillStyle = "rgba(12,11,9,.35)";            // 压一层，文字压得住
+        g.fillRect(0, 0, W, H);
+        baseDrawn = true;
+      }
+    }
+  } catch { /* 跨域 / 未解码：落回深色底，不是错 */ }
+
+  let drawn = 0;
+  for (const layer of compose.layers) {
+    const s = Number(layer.start) || 0, e = Number(layer.end) || 0;
+    if (time < s || time > e) continue;
+    const [ax, ay] = PG_ANCHORS[layer.position] || PG_ANCHORS.cc;
+    const mo = pgMotionOffsetPx(layer, time, W, H);
+    const cx = ((ax + (Number(layer.x) || 0)) / 100) * W + mo.dx;
+    const cy = ((ay + (Number(layer.y) || 0)) / 100) * H + mo.dy;
+    const ratio = 34 * (Math.max(20, Math.min(200, Number(layer.scale) || 100)) / 100) / 100;
+    const bw = W * ratio, bh = H * ratio;
+    g.fillStyle = "rgba(10,14,11,.55)";
+    pgCertRoundRect(g, cx - bw / 2, cy - bh / 2, bw, bh, 10);
+    g.fill();
+    g.strokeStyle = "rgba(74,222,128,.9)";
+    g.lineWidth = 2;
+    g.stroke();
+    g.fillStyle = "#4ade80";
+    pgCertFont(g, 600, 15);
+    const name = String(layer.name || layer.templateId || "图层").slice(0, 14);
+    g.fillText(name, cx - bw / 2 + 10, cy - 2);
+    g.fillStyle = "rgba(244,239,231,.72)";
+    pgCertFont(g, 400, 12);
+    g.fillText(`${s.toFixed(1)}–${e.toFixed(1)}s`, cx - bw / 2 + 10, cy + 18);
+    drawn++;
+  }
+
+  /* 落款：站点名 + 取帧时刻。带上这一行，审核的人一眼知道这是预览帧不是成片。 */
+  g.fillStyle = "rgba(10,14,11,.6)";
+  g.fillRect(0, H - 34, W, 34);
+  g.fillStyle = "#4ade80";
+  pgCertFont(g, 700, 14);
+  g.fillText(`${PG_CERT_SITE.name} · 投稿预览帧`, 14, H - 12);
+  g.fillStyle = "rgba(244,239,231,.78)";
+  pgCertFont(g, 400, 13);
+  const stamp = `t=${time.toFixed(1)}s · ${visible} 层在屏${baseDrawn ? "" : " · 底片未取到帧"}`;
+  g.fillText(stamp, W - 14 - g.measureText(stamp).width, H - 12);
+
+  return { time, visible, width: W, height: H, format: "image/png", dataUrl: canvas.toDataURL("image/png") };
+}
+
 /* 某层在 1920×1080 设计画布上扫到的最小外框（含运动轨迹途中甩出去的最远处）。
    路径运动不单调，所以按时间采样而不是只看首尾两端。 */
 function pgLayerFrameBox(layer, canvas) {
@@ -2569,6 +2753,17 @@ window.__hfTest = {
   QC_UNCHECKED: PG_QC_UNCHECKED,
   CERT_SITE: { ...PG_CERT_SITE },
   CERT_SIZE: { ...PG_CERT_SIZE },
+  // 投稿飞轮：同样只暴露纯函数 + 只读快照。pgSubmissionSave 会写 localStorage
+  // （那是它本来的职责，测试要验的就是「记住上次填的」），不碰任何内部状态。
+  pgSubmissionProfile, pgSubmissionSave, pgSubmissionFileName,
+  pgSubmissionPreviewTime, pgSubmissionPackage, catalogAuthorLine,
+  SUBMIT: {
+    ZSXQ_URL: PG_ZSXQ_URL,
+    GRANT: PG_SUBMIT_GRANT,
+    GATES: PG_SUBMIT_GATES.slice(),
+    RULES: PG_SUBMIT_RULES,
+    STEPS: PG_SUBMIT_STEPS.slice(),
+  },
 };
 
 function pgLayerWidthPct(layer) {
@@ -3077,7 +3272,11 @@ function renderPlayground() {
           <input type="file" id="pg-import-file" accept="application/json,.json" hidden>
           <input type="file" id="pg-proj-file" accept="application/json,.json,.hfproj" hidden>
           <button class="button" type="button" id="pg-copy">复制 JSON</button>
-          <button class="button" type="button" id="pg-submit">投稿</button>
+          <div class="pg-proj-wrap pg-sub-wrap">
+            <button class="button" type="button" id="pg-submit" aria-expanded="false"
+              title="生成投稿包：一个 .json（编排清单 + 代表帧 + 署名），发到星球，我们人工过品控四关后上架署名">投稿</button>
+            <div class="pg-proj-panel pg-sub-panel" id="pg-sub-panel" hidden></div>
+          </div>
           <button class="button" type="button" id="pg-clear">清空图层</button>
           <div class="pg-proj-wrap">
             <button class="button" type="button" id="pg-proj-toggle" aria-expanded="false">工程</button>
@@ -3370,34 +3569,82 @@ function renderPlayground() {
     }
     setTimeout(() => { button.textContent = "复制 JSON"; }, 1600);
   });
-  stageContent.querySelector("#pg-submit").addEventListener("click", (event) => {
-    const button = event.currentTarget;
-    if (!pgState.layers.length) { button.textContent = "先叠图层再投稿"; setTimeout(() => { button.textContent = "投稿"; }, 1600); return; }
+  /* ── 投稿飞轮：面板 + 生成投稿包 ───────────────────────────────────
+     零服务器：没有接口、没有审核队列、没有自动上架。站内只做一件事——
+     把用户排好的编排组装成一个可下载的 .json，之后的传递与终审都在线下。 */
+  const subToggle = stageContent.querySelector("#pg-submit");
+  const subPanel = stageContent.querySelector("#pg-sub-panel");
+  const closeSub = () => {
+    if (!subPanel) return;
+    subPanel.hidden = true;
+    if (subToggle) subToggle.setAttribute("aria-expanded", "false");
+  };
+  const drawSubmitPanel = () => {
+    if (!subPanel) return;
+    const profile = pgSubmissionProfile();
     const compose = pgComposeJson();
-    const pkg = {
-      type: "motion-deck-submission/1",
-      submittedAt: new Date().toISOString(),
-      author: "",                       // 填你的名字/ID，收录后署名展示
-      contact: "",                      // 填微信号，方便收录时联系
-      note: "",                         // 一句话说明这个作品适合什么场景
-      card: {
-        layers: compose.layers.length,
-        externalLayers: compose.layers.filter((l) => l.type === "external").length,
-        duration: compose.duration,
-        names: compose.layers.map((l) => l.name || l.templateId),
-      },
-      compose,
-      rules: "收录标准：① 契约与合规双闸门 PASS ② 与任何已知出处有两处以上明显差异（风格独立）③ 可复用度 ⭐⭐ 起（变量自描述、默认好看、锚点自适应）。投稿方式：把本文件微信发给老马。",
-    };
-    const blob = new Blob([JSON.stringify(pkg, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `submission-${new Date().toISOString().slice(0, 10)}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
-    button.textContent = "投稿包已下载 ✓ 微信发给老马";
-    setTimeout(() => { button.textContent = "投稿"; }, 2600);
+    const external = compose.layers.filter((l) => l.type === "external").length;
+    const { time, visible } = pgSubmissionPreviewTime(compose);
+    subPanel.innerHTML = `
+      <p class="pg-sub-lead">投稿 = 把这个文件发给我们。我们只做人工终审，不自动上架。</p>
+      <label class="pg-sub-field">署名昵称 <input type="text" id="pg-sub-nick" maxlength="24" autocomplete="off"
+        value="${escapeHtml(profile.nick)}" placeholder="微信昵称，上架后显示为 by @昵称"></label>
+      <label class="pg-sub-field">星球 ID <span class="pg-sub-opt">选填</span><input type="text" id="pg-sub-zsxq" maxlength="40" autocomplete="off"
+        value="${escapeHtml(profile.zsxqId)}" placeholder="填了方便我们在星球里回你"></label>
+      <p class="pg-sub-sum">${compose.layers.length} 层 · ${compose.duration}s${external ? ` · 外部层 ${external}` : ""} · 代表帧 t=${time.toFixed(1)}s（${visible} 层在屏）</p>
+      <img class="pg-sub-thumb" id="pg-sub-thumb" alt="投稿包里的代表帧预览" hidden>
+      <p class="pg-sub-grant">${escapeHtml(PG_SUBMIT_GRANT)}</p>
+      <button class="button primary" type="button" id="pg-sub-go">生成投稿包并下载</button>
+      <ol class="pg-sub-steps">${PG_SUBMIT_STEPS.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ol>
+      <p class="pg-sub-note">发到 <a href="${PG_ZSXQ_URL}" target="_blank" rel="noreferrer">星球「AI制片库」</a>。${escapeHtml(PG_SUBMIT_RULES)}</p>`;
+    const go = subPanel.querySelector("#pg-sub-go");
+    const nick = subPanel.querySelector("#pg-sub-nick");
+    if (go) go.addEventListener("click", () => {
+      const name = String(nick.value || "").trim();
+      if (!name) {
+        nick.classList.add("bad");
+        nick.focus();
+        pgToast("先填昵称——上架要署你的名");
+        return;
+      }
+      nick.classList.remove("bad");
+      const clean = pgSubmissionSave({ nick: name, zsxqId: subPanel.querySelector("#pg-sub-zsxq").value });
+      const now = new Date();
+      const json = pgComposeJson();
+      const pkg = pgSubmissionPackage(json, clean, pgSubmissionPreview(json), now);
+      const fileName = pgSubmissionFileName(clean.nick, now);
+      const blob = new Blob([JSON.stringify(pkg, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      // 只发格式与层数这类已在白名单里的聚合量——昵称、星球 ID 一个都不出站。
+      PG_TRACK.track("export", { format: "submission/2", layers: json.layers.length });
+      subToggle.textContent = "投稿包已下载 ✓";
+      setTimeout(() => { subToggle.textContent = "投稿"; }, 2600);
+      pgToast(`投稿包 ${fileName} 已下载 · 按下面四步发到星球即可`, 5200);
+    });
+    /* 代表帧现画现看：用户能先看见包里那张图长什么样，再决定要不要署名上架。 */
+    const thumb = subPanel.querySelector("#pg-sub-thumb");
+    if (thumb && pgState.layers.length) {
+      const pv = pgSubmissionPreview(pgComposeJson());
+      thumb.src = pv.dataUrl;
+      thumb.hidden = false;
+    }
+  };
+  if (subToggle) subToggle.addEventListener("click", () => {
+    if (!pgState.layers.length) { pgToast("还没有图层，先铺一层或用「一键整片」"); return; }
+    if (subPanel.hidden) {
+      drawSubmitPanel();
+      subPanel.hidden = false;
+      subToggle.setAttribute("aria-expanded", "true");
+      const nick = subPanel.querySelector("#pg-sub-nick");
+      if (nick && !nick.value) nick.focus();
+    } else {
+      closeSub();
+    }
   });
   stageContent.querySelector("#pg-clear").addEventListener("click", () => {
     pgSetPlaying(false);

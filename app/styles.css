@@ -1220,6 +1220,44 @@ body.modes-full-page { height: auto; overflow: auto; }
 }
 .pg-proj-note { border-top: 1px dashed #2f2a20; padding-top: 9px; }
 
+/* ── 投稿面板：绝对定位浮层，展开不参与布局（同一屏红线的安全做法） ── */
+.pg-sub-wrap { flex: 0 0 auto; }
+.pg-sub-panel { right: auto; left: 50%; transform: translateX(-50%); width: 400px; }
+.pg-sub-lead { margin: 0; color: rgba(244, 239, 231, .72); font-size: 12.5px; line-height: 1.6; }
+.pg-sub-field { display: grid; gap: 4px; font-size: 11.5px; color: rgba(244, 239, 231, .62); }
+.pg-sub-opt { color: rgba(244, 239, 231, .34); }
+.pg-sub-field input {
+  width: 100%; min-width: 0;
+  background: #1e1a14; border: 1px solid #2f2a20; border-radius: 8px;
+  color: #f4efe7; padding: 7px 10px; font-size: 12.5px;
+}
+.pg-sub-field input:focus { border-color: #4ade80; outline: none; }
+.pg-sub-field input.bad { border-color: #f87171; }
+.pg-sub-sum { margin: 0; color: #4ade80; font-size: 11.5px; }
+.pg-sub-thumb {
+  width: 100%; display: block; border-radius: 8px;
+  border: 1px solid #2f2a20; background: #0c0b09;
+}
+.pg-sub-thumb[hidden] { display: none; }
+.pg-sub-grant {
+  margin: 0; padding: 8px 10px; border-radius: 8px;
+  background: rgba(74, 222, 128, .07); border: 1px solid rgba(74, 222, 128, .22);
+  color: rgba(244, 239, 231, .72); font-size: 11.5px; line-height: 1.55;
+}
+.pg-sub-panel #pg-sub-go { width: 100%; }
+.pg-sub-steps {
+  margin: 0; padding-left: 18px; display: grid; gap: 3px;
+  color: rgba(244, 239, 231, .66); font-size: 11.5px; line-height: 1.5;
+}
+.pg-sub-note {
+  margin: 0; border-top: 1px dashed #2f2a20; padding-top: 9px;
+  color: rgba(244, 239, 231, .48); font-size: 11.5px; line-height: 1.55;
+}
+.pg-sub-note a { color: #4ade80; }
+
+/* 素材卡署名：与「社区」来源角标并存，底色区分开 */
+.card-badge.card-author { background: rgba(74, 222, 128, .9); color: #0c1a10; font-weight: 700; }
+
 /* 轻提示浮层 */
 .pg-toast {
   position: fixed; left: 50%; bottom: 28px; z-index: 90;
