@@ -680,7 +680,7 @@ function renderWorkspace() {
         </div>
         <form class="editor" id="editor">
           <h2>内容与数据</h2>
-          <div class="preset-row"><select id="preset" aria-label="载入预设"><option value="">载入预设…</option>${template.presets.map((preset) => `<option value="${preset.id}">${preset.id}</option>`).join("")}</select><button class="button" type="button" id="save-preset">保存</button></div>
+          <div class="preset-row"><select id="preset" aria-label="载入预设"><option value="">载入预设…</option>${(template.presets || []).map((preset) => `<option value="${preset.id}">${preset.id}</option>`).join("")}</select><button class="button" type="button" id="save-preset">保存</button></div>
           <div class="field"><label for="output-format">输出格式</label><select id="output-format">${(template.formats || ["mp4"]).map((format) => `<option value="${format}" ${format === template.defaultFormat ? "selected" : ""}>${format === "webm" ? "透明 WebM（部分剪辑软件不支持）" : "剪映可用 MP4"}</option>`).join("")}</select></div>
           ${template.schema.map(fieldMarkup).join("")}
           <div class="action-row"><button class="button" type="button" id="reset">恢复默认</button><button class="button primary" type="submit" id="render">${state.staticDemo ? "本地运行后可渲染" : "生成草稿"}</button></div>
@@ -696,7 +696,7 @@ function renderWorkspace() {
     stage.querySelectorAll(`[data-key="${declaration.id}"]`).forEach((peer) => { if (peer !== event.target) peer.value = value; });
   }));
   stage.querySelector("#preset").addEventListener("change", (event) => {
-    const preset = template.presets.find((item) => item.id === event.target.value);
+    const preset = (template.presets || []).find((item) => item.id === event.target.value);
     if (preset) { state.values = { ...defaults(template), ...preset.values }; renderWorkspace(); }
   });
   stage.querySelector("#reset").addEventListener("click", () => { state.values = defaults(template); renderWorkspace(); });
