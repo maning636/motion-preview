@@ -1,5 +1,5 @@
-import { MODES } from "./modes-data.js?v=20261011-v52";
-import { HANDBOOK_SAMPLE_ID, HANDBOOK_PLAN, HANDBOOK_PILLARS, HANDBOOK_OTHERS } from "./handbook-data.js?v=20261011-v50";
+import { MODES } from "./modes-data.js?v=20261012-v53";
+import { HANDBOOK_SAMPLE_ID, HANDBOOK_PLAN, HANDBOOK_PILLARS, HANDBOOK_OTHERS } from "./handbook-data.js?v=20261012-v53";
 
 const state = { catalog: null, selected: null, values: {}, output: null, view: "home", category: "全部", series: "component", staticDemo: false, playing: null };
 const stage = document.querySelector("#stage");

@@ -61,8 +61,8 @@ window.__timelines = window.__timelines || {};
   tl.from("#desc-text", { y: 30, opacity: 0, duration: 0.5, ease: "power3.out" }, 0.4);
   tl.from("#demo-area > *", { y: 40, opacity: 0, duration: 0.4, stagger: 0.1, ease: "power2.out" }, 0.6);
 
-  // 持续微动
-  tl.to("#icon-badge", { scale: 1.05, duration: 1.5, ease: "sine.inOut", yoyo: true, repeat: -1 }, 1.5);
+  // 持续微动（只补间到片尾 6s：repeat:-1 会把时间轴拖成无限长，duration() 变非有限值）
+  tl.to("#icon-badge", { scale: 1.05, duration: 1.5, ease: "sine.inOut", yoyo: true, repeat: 2 }, 1.5);
 
   // 进度条
   tl.fromTo("#progress-bar", { width: 0 }, { width: "100%", duration: 6, ease: "none" }, 0);
@@ -74,4 +74,4 @@ window.__timelines = window.__timelines || {};
 })();
 </script>
 </body>
-</html>
+</html>

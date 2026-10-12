@@ -47,10 +47,14 @@ const tl=gsap.timeline({paused:true});
 
 $('#t1').textContent=v.card1||'';$('#t2').textContent=v.card2||'';$('#t3').textContent=v.card3||'';
 // 同一 drive 位移 × 层系数 0.35/0.7/1.4（梯度≥2倍才可辨）
+// 中景总行程 620×0.7=434px，落定时首卡整张骑到画布左边缘外 134px，
+// 「实时协作」标题的字形被切掉 93px（只剩 30%）。整排上收：行首 300px、行尾 2300px，
+// 在 1920 画布里本来就放不下，首卡必须走出去一点，但要让它的字留进来：
+// 位移收到 460×0.7=322px，首卡标题左侧还剩 18px 余量。
 const drv={x:0};
 const apply=()=>{ gsap.set('#dBg',{x:drv.x*0.35}); gsap.set('#dMid',{x:drv.x*0.7}); gsap.set('#dFg',{x:drv.x*1.4}); };
 apply();
-tl.to(drv,{x:-620,duration:F(100),ease:'power1.inOut',onUpdate:apply},F(6));
+tl.to(drv,{x:-460,duration:F(100),ease:'power1.inOut',onUpdate:apply},F(6));
 tl.to({},{duration:F(29)},F(106)); // 真静止
 
       window.__timelines.main = tl;

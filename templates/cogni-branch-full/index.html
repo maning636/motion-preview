@@ -161,7 +161,9 @@
   /* 分叉的连接线：从主轴折向标签。之前只有一个小三角，没有线，
      三个标签就浮在画面上，看不出它们和「今天」有关系。 */
   .bl{position:absolute;background:var(--pk-accent);opacity:.62}
-  .fl{position:absolute;opacity:0;width:460px}
+  /* 宽度 390 而非 460：f2 在 left:1520px，460 宽的话右边缘 1980 出画布 60px。
+     390 让右边缘落在 1910px；最长的一行说明 13 字 ×24px = 312px，不会折行。 */
+  .fl{position:absolute;opacity:0;width:390px}
   .fl .fh{font-size:34px;font-weight:800;color:var(--pk-fg)}
   .fl .fp{font-size:24px;line-height:1.5;margin-top:12px;color:var(--pk-muted)}
 

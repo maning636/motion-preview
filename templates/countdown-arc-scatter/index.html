@@ -530,9 +530,11 @@
       }, 0.6);
 
       // 脉冲点呼吸（强调紧迫感）
+      // 只补间到片尾 DIGIT_DUR：repeat:-1 会把时间轴拖成无限长，duration() 变非有限值。
+      // 1.2 + (repeat+1)*0.6 = 6 → repeat = 7
       tl.fromTo("#pulseDot",
         { scale: 0.85 },
-        { scale: 1.15, duration: 0.6, ease: "sine.inOut", yoyo: true, repeat: -1 }, 1.2);
+        { scale: 1.15, duration: 0.6, ease: "sine.inOut", yoyo: true, repeat: 7 }, 1.2);
 
       // 步数标签（stepLabel）实时刷新
       tl.eventCallback("onUpdate", () => {

@@ -107,8 +107,10 @@ tl.to(cam,{cx:1860,cy:540,z:0.62,duration:F(26),ease:'power2.inOut',onUpdate:pai
 // 飞行 f34-104（70f ease-in-out）
 tl.to(fly,{p:1,duration:F(70),ease:'power2.inOut',onUpdate:paint},F(34));
 tl.to(fly,{follow:1,duration:F(14),ease:'power1.inOut',onUpdate:paint},F(42));
-// B 接管 f112-146：变焦推到 3.1，道具/飞机淡出
-tl.to(cam,{z:3.1,duration:F(34),ease:'power2.in',onUpdate:paint},F(112));
+// B 接管 f112-146：变焦推到 2.2，道具/飞机淡出
+// 2.2 是落定变焦的上限：700×460 的卡片在 2.2 时是 1540×1012，能整张进画布；
+// 再放大（原来 3.1 → 2170×1426）就会四周出血，把「已送达」首字切掉 29px。
+tl.to(cam,{z:2.2,duration:F(34),ease:'power2.in',onUpdate:paint},F(112));
 tl.to({o:1},{o:0,duration:F(20),ease:'none',onUpdate:function(){ planeOp=this.targets()[0].o; paint(); }},F(112));
 tl.to({o:1},{o:0,duration:F(34),ease:'none',onUpdate:function(){ propOp=this.targets()[0].o; paint(); }},F(112));
 paint();

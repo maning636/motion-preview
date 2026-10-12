@@ -24,7 +24,8 @@
       .cs-kicker{ position: absolute; left: 50%; top: 104px; transform: translateX(-50%); z-index: 6;
         display: inline-block; border: 2px solid #141414; padding: 10px 24px; font-size: 20px;
         letter-spacing: .22em; background: var(--ac, #00FF00); box-shadow: 6px 6px 0 #141414; color: #141414; }
-      /* 卡堆舞台 */
+      /* 卡堆舞台。id 不要叫 stage：这是个 0×0 定位锚点，品控工具按 #stage→#root
+         顺序取画布时会先命中它，量出 0×0 就判「没有画布」，出框检查整条失效。 */
       .cs-stage{ position: absolute; left: 50%; top: 505px; width: 0; height: 0; z-index: 4; }
       .cs-card{ position: absolute; left: -230px; top: -290px; width: 460px; height: 580px;
         background: #fff; border: 3px solid #141414; box-shadow: 14px 14px 0 #141414;
@@ -53,7 +54,7 @@
         <div class="r mono" id="pageno"></div>
       </div>
       <div class="cs-kicker mono" id="kicker"></div>
-      <div class="cs-stage" id="stage"></div>
+      <div class="cs-stage" id="csStage"></div>
       <div class="cs-foot" id="foot">
         <div class="f1">@老马AI研习社</div>
         <div class="f2 mono">MOTION LIBRARY · CARD STACK</div>
@@ -83,7 +84,7 @@
         const r2 = document.createElement("div"); r2.className = "rule2";
         const d = document.createElement("div"); d.className = "d"; d.textContent = desc || "";
         el.appendChild(stripe); el.appendChild(dot); el.appendChild(no); el.appendChild(t); el.appendChild(r2); el.appendChild(d);
-        $("stage").appendChild(el);
+        $("csStage").appendChild(el);
         return el;
       });
       // 堆内三个位置：0=顶

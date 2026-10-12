@@ -38,7 +38,11 @@
       .sub-center{ position: absolute; top: 286px; left: 0; width: 100%; text-align: center; z-index: 20; }
 
       .chain{ position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-        padding: 60px 120px 0; }
+        padding: 60px 120px 0;
+        /* 默认 5 个节点：5×330 + 4×110 = 2090px，比 1920 画布宽 170px，
+           居中后首尾卡各出框 85px（描边和投影被切，字是安全的）。
+           整条链等比缩到 1902px 正好进画布，卡片内部比例和字号关系不动。 */
+        transform: scale(0.91); }
       .cnode{ position: relative; width: 330px; flex: none; text-align: center; padding: 66px 26px 38px; }
       .cnode.hot{ border-color: #1D1D20; }
       .cnode .ct{ position: absolute; top: -26px; left: 50%; transform: translateX(-50%) rotate(-2deg);

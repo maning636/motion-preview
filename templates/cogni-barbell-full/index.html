@@ -255,7 +255,10 @@
   .bb-bar{position:absolute;left:120px;top:404px;width:0;height:110px;
       border-radius:12px;overflow:hidden;opacity:0}
   .bb-bar i{position:absolute;top:0;bottom:0;width:0}
-  .bb-lb{position:absolute;top:0;opacity:0}
+  /* 宽度必须写死：.bb-bd 是 0×0 定位锚点，不给宽度的话绝对定位的 .bb-lb
+     收缩成 44px，说明文字被挤成每行 2 个字的细长一条（6 行），
+     标签底部因此伸到画布外 68px。300px 与同族 .sg-lb 一致。 */
+  .bb-lb{position:absolute;top:0;opacity:0;width:300px}
   .bb-lb .t{font-size:28px;font-weight:800;color:var(--pk-fg)}
   .bb-lb .d{font-size:22px;line-height:1.45;color:var(--pk-muted);margin-top:8px}
 

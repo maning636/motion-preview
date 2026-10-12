@@ -24,10 +24,12 @@ html, body{ width:1920px; height:1080px; overflow:hidden; background: var(--back
   border:1px solid rgba(16,185,129,.9); border-radius:52px;
   box-shadow:0 0 26px rgba(16,185,129,.4), 0 0 70px rgba(16,185,129,.14),
     inset 0 0 22px rgba(16,185,129,.06); will-change:transform; }
-#p1{ left:230px;  top:520px; }
-#p2{ left:610px;  top:436px; }
-#p3{ left:990px;  top:436px; }
-#p4{ left:1370px; top:520px; }
+/* 机身 320×660，整排上移 100px：原来 p1/p4 底边在 1180、下边框被画布切掉 100px
+   （p2/p3 也切 16px）。波浪的高低差仍是 84px。 */
+#p1{ left:230px;  top:420px; }
+#p2{ left:610px;  top:336px; }
+#p3{ left:990px;  top:336px; }
+#p4{ left:1370px; top:420px; }
 .screen{ position:absolute; left:11px; top:11px; width:298px; height:638px;
   border-radius:42px; overflow:hidden; background:#EEF2F0; }
 .notch{ position:absolute; left:50%; top:20px; width:96px; height:24px; margin-left:-48px;
